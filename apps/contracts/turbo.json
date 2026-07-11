@@ -1,0 +1,15 @@
+{
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "outputs": ["artifacts/**", "cache/**"]
+    },
+    "check-types": {
+      "dependsOn": ["build"],
+      "outputs": ["artifacts/**", "cache/**"]
+    },
+    "test": {
+      "dependsOn": ["build"]
+    }
+  }
+}

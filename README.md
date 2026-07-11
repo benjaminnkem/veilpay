@@ -1,159 +1,119 @@
-# Turborepo starter
+# VeilPay
 
-This Turborepo starter is maintained by the Turborepo core team.
+pnpm + Turborepo monorepo for VeilPay: Next.js web app, NestJS API, Hardhat smart contracts, and shared TypeScript packages.
 
-## Using this example
+## Structure
 
-Run the following command:
-
-```sh
-npx create-turbo@latest
+```
+veilpay/
+├── apps/
+│   ├── web/          # Next.js frontend (port 3000)
+│   ├── api/          # NestJS API (port 3001)
+│   └── contracts/    # Hardhat 3 smart contracts
+├── packages/
+│   ├── types/        # Shared domain types (@repo/types)
+│   └── typescript-config/  # Shared TSConfigs (@repo/typescript-config)
+├── package.json
+├── pnpm-workspace.yaml
+└── turbo.json
 ```
 
-## What's inside?
+## Prerequisites
 
-This Turborepo includes the following packages/apps:
+- Node.js **>= 22**
+- [pnpm](https://pnpm.io/) **9** (`corepack enable` then `corepack prepare pnpm@9.0.0 --activate`)
 
-### Apps and Packages
-
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `eslint-config-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
-
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
-
-### Utilities
-
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Setup
 
 ```sh
-cd my-turborepo
-turbo build
+pnpm install
 ```
 
-Without global `turbo`, use your package manager:
+## Develop
+
+Run web + API together:
 
 ```sh
-cd my-turborepo
-npx turbo build
-pnpm dlx turbo build
-pnpm exec turbo build
+pnpm dev
 ```
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+| App        | URL                     |
+| ---------- | ----------------------- |
+| Web        | http://localhost:3000   |
+| API        | http://localhost:3001   |
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo build --filter=docs
-```
-
-Without global `turbo`:
+Filter a single package:
 
 ```sh
-npx turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-pnpm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-pnpm exec turbo dev
-pnpm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
 pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=web
+pnpm exec turbo dev --filter=api
+pnpm exec turbo dev --filter=contracts
 ```
 
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
+## Build / lint / types / test
 
 ```sh
-cd my-turborepo
-turbo login
+pnpm build
+pnpm lint
+pnpm check-types
+pnpm test
 ```
 
-Without global `turbo`, use your package manager:
+## Contracts (Hardhat 3)
+
+App lives at `apps/contracts` (same workspace pattern as `web` and `api`).
 
 ```sh
-cd my-turborepo
-npx turbo login
-pnpm exec turbo login
-pnpm exec turbo login
+# Compile
+pnpm exec turbo build --filter=contracts
+# or
+pnpm --filter contracts compile
+
+# Test (Solidity + TypeScript/viem)
+pnpm --filter contracts test
+
+# Local node
+pnpm --filter contracts node
+
+# Deploy sample Counter via Ignition (local)
+pnpm --filter contracts deploy:local
 ```
 
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Optional Sepolia vars (or use `hardhat keystore set …`):
 
 ```sh
-turbo link
+cp apps/contracts/.env.example apps/contracts/.env
 ```
 
-Without global `turbo`:
+## Shared packages
 
-```sh
-npx turbo link
-pnpm exec turbo link
-pnpm exec turbo link
+### `@repo/types`
+
+Domain types (`Company`, `Employee`, `PayrollRun`, …). Import as types:
+
+```ts
+import type { Company, PayrollRun } from '@repo/types';
 ```
 
-## Useful Links
+### `@repo/typescript-config`
 
-Learn more about the power of Turborepo:
+Shared TSConfigs:
 
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+- `base.json`
+- `nextjs.json`
+- `nestjs.json`
+- `hardhat.json`
+
+Extend in each package:
+
+```json
+{
+  "extends": "@repo/typescript-config/nextjs.json"
+}
+```
+
+## Turbo notes
+
+- `build` depends on `^build` so shared packages compile first.
+- `dev` is uncached and persistent.
+- Root `pnpm dev` only starts **web** and **api** (not the Hardhat node). Use `pnpm dev:all` to include every package with a `dev` script.

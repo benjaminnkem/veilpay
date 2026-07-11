@@ -1,0 +1,29 @@
+{
+  "name": "contracts",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "hardhat compile",
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "test:solidity": "hardhat test solidity",
+    "test:nodejs": "hardhat test nodejs",
+    "node": "hardhat node",
+    "deploy:local": "hardhat ignition deploy ignition/modules/Counter.ts",
+    "check-types": "hardhat compile --quiet",
+    "lint": "echo \"No lint configured for contracts\"",
+    "clean": "rm -rf artifacts cache dist coverage typechain-types ignition/deployments .turbo",
+    "dev": "hardhat node"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-ignition": "^3.1.8",
+    "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
+    "@repo/typescript-config": "workspace:*",
+    "@types/node": "^22.8.5",
+    "forge-std": "github:foundry-rs/forge-std#v1.9.4",
+    "hardhat": "^3.9.1",
+    "typescript": "~5.9.2",
+    "viem": "^2.47.6"
+  }
+}
