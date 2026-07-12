@@ -3,14 +3,17 @@
   "compilerOptions": {
     "plugins": [{ "name": "next" }],
     "paths": {
-      "@/*": ["./*"],
+      "@/*": ["./src/*"],
       "@repo/types": ["../../packages/types/src/index.ts"],
       "@repo/types/*": ["../../packages/types/src/*"]
     },
     "jsx": "react-jsx",
     "allowJs": true,
     "noEmit": true,
-    "incremental": true
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": true,
+    "strict": true
   },
   "include": [
     "next-env.d.ts",
