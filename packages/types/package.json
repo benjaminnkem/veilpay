@@ -24,7 +24,7 @@
   },
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsc --noEmit",
+    "build": "node init && tsc --noEmit",
     "check-types": "tsc --noEmit",
     "lint": "echo \"No lint configured for @repo/types\"",
     "clean": "rm -rf dist .turbo"
