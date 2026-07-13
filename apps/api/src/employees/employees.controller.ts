@@ -30,7 +30,7 @@ export class EmployeesController {
   @ApiEndpoint({
     summary: 'Invite an employee',
     description:
-      'Creates a seven-day single-use invitation, stores only its hash, and enqueues an email. Requires OWNER, ADMIN, or HR.',
+      'Creates a seven-day single-use invitation with AES-256-GCM encrypted salary and pay frequency, stores only the invitation token hash, and enqueues an email. Requires OWNER, ADMIN, or HR.',
     response: InvitationResponseDto,
     created: true,
     idempotent: true,
@@ -42,7 +42,7 @@ export class EmployeesController {
     @Param('companyId') c: string,
     @Body() d: CreateInvitationDto,
   ) {
-    return this.employees.invite(u.id, c, d.displayName, d.email);
+    return this.employees.invite(u.id, c, d);
   }
   @ApiEndpoint({
     summary: 'List employee invitations',
@@ -78,7 +78,7 @@ export class EmployeesController {
   @ApiEndpoint({
     summary: 'Accept an employee invitation',
     description:
-      'Consumes a valid token once, enforces invited-email equality, creates an EMPLOYEE membership, and creates the employee profile.',
+      'Consumes a valid token once, enforces invited-email equality, creates an EMPLOYEE membership, and creates the employee profile with salary re-encrypted for the profile and the invited pay frequency.',
     response: EmployeeResponseDto,
     created: true,
   })

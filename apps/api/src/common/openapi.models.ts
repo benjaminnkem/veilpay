@@ -171,6 +171,14 @@ export class InvitationResponseDto {
   @ApiProperty(uuid) companyId!: string;
   @ApiProperty({ example: 'grace@example.com' }) email!: string;
   @ApiProperty({ example: 'Grace Hopper' }) displayName!: string;
+  @ApiPropertyOptional({
+    example: '[ENCRYPTED]',
+    nullable: true,
+    description: 'Never contains salary plaintext.',
+  })
+  salaryCiphertext!: string | null;
+  @ApiProperty({ enum: ['WEEKLY', 'BIWEEKLY', 'MONTHLY'] })
+  payFrequency!: string;
   @ApiProperty({ enum: ['PENDING', 'ACCEPTED', 'EXPIRED', 'REVOKED'] })
   status!: string;
   @ApiProperty(dateTime) expiresAt!: string;

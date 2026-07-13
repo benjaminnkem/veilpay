@@ -160,6 +160,21 @@ export class CreateInvitationDto {
   @ApiProperty({ example: 'grace@example.com', format: 'email' })
   @IsEmail()
   email!: string;
+  @ApiProperty({
+    example: '4250.50',
+    description:
+      'Positive decimal string with at most six fractional digits. Encrypted before the invitation is stored.',
+    pattern: '^\\d+(\\.\\d{1,6})?$',
+  })
+  @IsString()
+  @IsNotEmpty()
+  salary!: string;
+  @ApiProperty({
+    enum: ['WEEKLY', 'BIWEEKLY', 'MONTHLY'],
+    example: 'MONTHLY',
+  })
+  @IsIn(['WEEKLY', 'BIWEEKLY', 'MONTHLY'])
+  payFrequency!: 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY';
 }
 export class AcceptInvitationDto {
   @ApiProperty({

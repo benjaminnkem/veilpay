@@ -312,22 +312,24 @@ model FundingIntent {
 }
 
 model EmployeeInvitation {
-  id              String           @id @default(uuid()) @db.Uuid
-  companyId       String           @db.Uuid
-  inviterUserId   String           @db.Uuid
-  email           String
-  emailNormalized String
-  displayName     String
-  tokenHash       String           @unique
-  role            MemberRole       @default(EMPLOYEE)
-  expiresAt       DateTime
-  acceptedAt      DateTime?
-  revokedAt       DateTime?
-  status          InvitationStatus @default(PENDING)
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  company         Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  inviter         User             @relation("InvitationCreator", fields: [inviterUserId], references: [id])
+  id               String           @id @default(uuid()) @db.Uuid
+  companyId        String           @db.Uuid
+  inviterUserId    String           @db.Uuid
+  email            String
+  emailNormalized  String
+  displayName      String
+  tokenHash        String           @unique
+  salaryCiphertext Bytes?
+  payFrequency     PayFrequency     @default(MONTHLY)
+  role             MemberRole       @default(EMPLOYEE)
+  expiresAt        DateTime
+  acceptedAt       DateTime?
+  revokedAt        DateTime?
+  status           InvitationStatus @default(PENDING)
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  company          Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  inviter          User             @relation("InvitationCreator", fields: [inviterUserId], references: [id])
 
   @@index([companyId, status, createdAt])
   @@index([emailNormalized, status])

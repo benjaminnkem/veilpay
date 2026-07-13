@@ -28,4 +28,21 @@ describe('FieldEncryptionService', () => {
       'authenticated',
     );
   });
+  it('separates invitation and employee salary contexts', () => {
+    const invitationSalary = service.encryptInvitationSalary(
+      '4250.50',
+      'company-a',
+      'invitation-a',
+    );
+    expect(
+      service.decryptInvitationSalary(
+        invitationSalary,
+        'company-a',
+        'invitation-a',
+      ),
+    ).toBe('4250.50');
+    expect(() =>
+      service.decrypt(invitationSalary, 'company-a', 'invitation-a'),
+    ).toThrow('authenticated');
+  });
 });

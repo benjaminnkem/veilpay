@@ -1,4 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { createHash, randomBytes, randomUUID } from 'node:crypto';
 import { HttpStatus, Injectable } from '@nestjs/common';
 import Decimal from 'decimal.js';
 import { ApiError } from '../common/api-error';
@@ -7,7 +7,7 @@ import { FieldEncryptionService } from '../crypto/field-encryption.service';
 import { PrismaService } from '../database/prisma.service';
 import { EmailService } from '../email/email.service';
 import { AuditService } from '../audit/audit.service';
-import type { UpdateEmployeeDto } from '../common/dto';
+import type { CreateInvitationDto, UpdateEmployeeDto } from '../common/dto';
 
 const hash = (v: string) => createHash('sha256').update(v).digest('hex');
 
@@ -36,6 +36,8 @@ export class EmployeesService {
     companyId: string;
     email: string;
     displayName: string;
+    salaryCiphertext: Uint8Array | null;
+    payFrequency: string;
     status: string;
     expiresAt: Date;
     acceptedAt: Date | null;
@@ -47,6 +49,8 @@ export class EmployeesService {
       companyId: invitation.companyId,
       email: invitation.email,
       displayName: invitation.displayName,
+      salaryCiphertext: invitation.salaryCiphertext ? '[ENCRYPTED]' : null,
+      payFrequency: invitation.payFrequency,
       status: invitation.status,
       expiresAt: invitation.expiresAt,
       acceptedAt: invitation.acceptedAt,
@@ -54,31 +58,36 @@ export class EmployeesService {
       createdAt: invitation.createdAt,
     };
   }
-  async invite(
-    userId: string,
-    companyId: string,
-    displayName: string,
-    email: string,
-  ) {
+  async invite(userId: string, companyId: string, dto: CreateInvitationDto) {
     await this.companies.assertRole(userId, companyId, [
       'OWNER',
       'ADMIN',
       'HR',
     ]);
-    const normalized = email.trim().toLowerCase();
+    const normalized = dto.email.trim().toLowerCase();
     const existingUser = await this.prisma.user.findUnique({
       where: { emailNormalized: normalized },
       select: { id: true },
     });
     const token = randomBytes(32).toString('base64url');
+    const invitationId = randomUUID();
+    const salary = this.normalizeSalary(dto.salary);
+    const salaryCiphertext = this.crypto.encryptInvitationSalary(
+      salary,
+      companyId,
+      invitationId,
+    );
     const invitation = await this.prisma.employeeInvitation.create({
       data: {
+        id: invitationId,
         companyId,
         inviterUserId: userId,
-        displayName,
+        displayName: dto.displayName,
         email: normalized,
         emailNormalized: normalized,
         tokenHash: hash(token),
+        salaryCiphertext: new Uint8Array(salaryCiphertext),
+        payFrequency: dto.payFrequency,
         expiresAt: new Date(Date.now() + 7 * 86400_000),
       },
     });
@@ -106,13 +115,15 @@ export class EmployeesService {
       'ADMIN',
       'HR',
     ]);
-    return this.prisma.employeeInvitation.findMany({
+    const invitations = await this.prisma.employeeInvitation.findMany({
       where: { companyId },
       select: {
         id: true,
         companyId: true,
         email: true,
         displayName: true,
+        salaryCiphertext: true,
+        payFrequency: true,
         status: true,
         expiresAt: true,
         acceptedAt: true,
@@ -120,6 +131,7 @@ export class EmployeesService {
         createdAt: true,
       },
     });
+    return invitations.map((invitation) => this.publicInvitation(invitation));
   }
   async revoke(userId: string, companyId: string, id: string) {
     await this.companies.assertRole(userId, companyId, [
@@ -161,6 +173,18 @@ export class EmployeesService {
         'Sign in with the invited email',
         HttpStatus.FORBIDDEN,
       );
+    const employeeId = randomUUID();
+    const salaryCiphertext = invitation.salaryCiphertext
+      ? this.crypto.encrypt(
+          this.crypto.decryptInvitationSalary(
+            invitation.salaryCiphertext,
+            invitation.companyId,
+            invitation.id,
+          ),
+          invitation.companyId,
+          employeeId,
+        )
+      : undefined;
     return this.prisma.$transaction(async (tx) => {
       const consumed = await tx.employeeInvitation.updateMany({
         where: { id: invitation.id, status: 'PENDING' },
@@ -180,12 +204,20 @@ export class EmployeesService {
       });
       const profile = await tx.employeeProfile.create({
         data: {
+          id: employeeId,
           companyId: invitation.companyId,
           userId,
           companyMemberId: member.id,
           displayName: invitation.displayName,
           email: invitation.email,
           walletId: user.wallets[0]?.id,
+          salaryCiphertext: salaryCiphertext
+            ? new Uint8Array(salaryCiphertext)
+            : undefined,
+          salaryTokenAddress: salaryCiphertext
+            ? process.env.CONFIDENTIAL_TOKEN_ADDRESS
+            : undefined,
+          payFrequency: invitation.payFrequency,
         },
       });
       return this.publicEmployee(profile);
@@ -241,19 +273,8 @@ export class EmployeesService {
     }
     let salaryCiphertext: Buffer | undefined;
     if (dto.salary !== undefined) {
-      let salary: Decimal;
-      try {
-        salary = new Decimal(dto.salary);
-      } catch {
-        throw new ApiError('SALARY_INVALID', 'Salary must be a decimal string');
-      }
-      if (!salary.isPositive() || salary.decimalPlaces() > 6)
-        throw new ApiError(
-          'SALARY_INVALID',
-          'Salary must be positive with at most 6 decimal places',
-        );
       salaryCiphertext = this.crypto.encrypt(
-        salary.toFixed(),
+        this.normalizeSalary(dto.salary),
         companyId,
         employee.id,
       );
@@ -278,6 +299,24 @@ export class EmployeesService {
       { salaryChanged: dto.salary !== undefined },
     );
     return this.publicEmployee(updated);
+  }
+  private normalizeSalary(value: string): string {
+    let salary: Decimal;
+    try {
+      salary = new Decimal(value);
+    } catch {
+      throw new ApiError('SALARY_INVALID', 'Salary must be a decimal string');
+    }
+    if (
+      !salary.isFinite() ||
+      !salary.isPositive() ||
+      salary.decimalPlaces() > 6
+    )
+      throw new ApiError(
+        'SALARY_INVALID',
+        'Salary must be positive with at most 6 decimal places',
+      );
+    return salary.toFixed();
   }
   async activate(userId: string, companyId: string, id: string) {
     await this.companies.assertRole(userId, companyId, [

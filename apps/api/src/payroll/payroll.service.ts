@@ -180,6 +180,14 @@ export class PayrollService {
             encryptedHandle: true,
             status: true,
             txHash: true,
+            employeeProfile: {
+              select: {
+                id: true,
+                displayName: true,
+                employmentStatus: true,
+                salaryCurrency: true,
+              },
+            },
           },
         },
       },
