@@ -112,7 +112,11 @@ export function ProductBentoSection() {
             initial={reduced ? false : { opacity: 0, y: 36 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
-            transition={{ duration: 0.7, delay: 0.08, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              duration: 0.7,
+              delay: 0.08,
+              ease: [0.22, 1, 0.36, 1],
+            }}
             className="border border-white/8 bg-white/[0.02] p-6 sm:p-7 lg:col-span-5"
           >
             <h3 className="text-lg font-medium tracking-tight">
@@ -148,7 +152,11 @@ export function ProductBentoSection() {
             initial={reduced ? false : { opacity: 0, y: 36 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true, margin: '-10%' }}
-            transition={{ duration: 0.7, delay: 0.14, ease: [0.22, 1, 0.36, 1] }}
+            transition={{
+              duration: 0.7,
+              delay: 0.14,
+              ease: [0.22, 1, 0.36, 1],
+            }}
             className="border border-white/8 bg-gradient-to-br from-primary/10 via-transparent to-transparent p-6 sm:p-7 lg:col-span-5"
           >
             <h3 className="text-lg font-medium tracking-tight">

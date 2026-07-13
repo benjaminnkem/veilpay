@@ -12,9 +12,9 @@ interface PasswordFieldProps<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
 > extends Omit<
-    React.ComponentProps<typeof Input>,
-    'name' | 'type' | 'defaultValue'
-  > {
+  React.ComponentProps<typeof Input>,
+  'name' | 'type' | 'defaultValue'
+> {
   control: Control<TFieldValues>;
   name: TName;
   label?: string;

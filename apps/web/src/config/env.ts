@@ -39,8 +39,7 @@ function getServerEnv() {
 }
 
 export const clientEnv = getClientEnv();
-export const serverEnv =
-  typeof window === 'undefined' ? getServerEnv() : null;
+export const serverEnv = typeof window === 'undefined' ? getServerEnv() : null;
 
 export const env = {
   apiUrl: clientEnv.NEXT_PUBLIC_API_URL,

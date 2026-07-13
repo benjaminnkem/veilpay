@@ -13,7 +13,7 @@ export function useApiMutation<
   TVariables = void,
   TContext = unknown,
 >(
-  options: UseMutationOptions<TData, ApiError, TVariables, TContext>
+  options: UseMutationOptions<TData, ApiError, TVariables, TContext>,
 ): UseMutationResult<TData, ApiError, TVariables, TContext> {
   const { mutationFn, ...rest } = options;
 
