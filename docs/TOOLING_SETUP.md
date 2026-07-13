@@ -70,15 +70,6 @@ You can also rely on its description to trigger automatically when working on No
 
 Place `AGENTS.md` in the Turborepo root. Codex should read it as repository-level guidance.
 
-Also place:
-
-```text
-CONFIDENTIAL_PAYROLL_PRD.md
-CODEX_ONE_SHOT_PROMPT.md
-```
-
-in the repository root.
-
 Start Codex from the repository root so it can see the root instructions and skill.
 
 ## Optional tools
@@ -121,8 +112,6 @@ codex mcp list
 codex
 ```
 
-Then paste the contents of `CODEX_ONE_SHOT_PROMPT.md`, or say:
-
 ```text
-Use $nox-safe-payroll. Read CONFIDENTIAL_PAYROLL_PRD.md and execute CODEX_ONE_SHOT_PROMPT.md completely. Do not modify apps/web.
+Use $nox-safe-payroll. Read ./docs/VEILPAY_PRD.md and implement it completely.
 ```

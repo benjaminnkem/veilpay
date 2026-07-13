@@ -2,7 +2,7 @@
 
 ## Required context
 
-Read `CONFIDENTIAL_PAYROLL_PRD.md` before implementing confidential payroll work.
+Read `./docs/VEILPAY_PRD.md` before implementing confidential payroll work.
 
 ## Architecture invariants
 
