@@ -25,7 +25,7 @@ export function SecuritySection() {
   const bigTypeOpacity = useTransform(
     scrollYProgress,
     [0, 0.25, 0.75, 1],
-    [0.15, 0.35, 0.35, 0.1]
+    [0.15, 0.35, 0.35, 0.1],
   );
 
   return (
@@ -37,9 +37,7 @@ export function SecuritySection() {
       <motion.p
         aria-hidden
         style={
-          reduced
-            ? { opacity: 0.12 }
-            : { y: bigTypeY, opacity: bigTypeOpacity }
+          reduced ? { opacity: 0.12 } : { y: bigTypeY, opacity: bigTypeOpacity }
         }
         className="pointer-events-none absolute top-1/2 left-1/2 w-[140%] -translate-x-1/2 -translate-y-1/2 text-center text-[18vw] leading-none font-semibold tracking-[-0.06em] text-white select-none"
       >

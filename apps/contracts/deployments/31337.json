@@ -1,0 +1,36 @@
+{
+  "chainId": 31337,
+  "generatedAt": "2026-07-13T14:53:13.252Z",
+  "addresses": {
+    "VeilPayPayrollModule#ConfidentialPayroll": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+    "VeilPayPayrollModule#MockUSDC": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+    "VeilPayPayrollModule#TestConfidentialUSDC": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+    "VeilPayPayrollModule#ConfidentialUSDC": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9"
+  },
+  "deployments": [
+    {
+      "id": "VeilPayPayrollModule#ConfidentialPayroll",
+      "address": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "transactionHash": "0x0abc4f5d0c182b6dd1938b67d6f25eae501f651a6eac0fe00d481fbfb82ac5e7",
+      "blockNumber": 1
+    },
+    {
+      "id": "VeilPayPayrollModule#MockUSDC",
+      "address": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "transactionHash": "0xc1b9bcf5aff851109d131aa96bc27b968be3b20e4639c8146b9d6f0555994d30",
+      "blockNumber": 2
+    },
+    {
+      "id": "VeilPayPayrollModule#TestConfidentialUSDC",
+      "address": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "transactionHash": "0x684c97ae35da8c9a62a2138f2626f99e6e9c1af9ed62e838fa1df381fc0a2eb0",
+      "blockNumber": 3
+    },
+    {
+      "id": "VeilPayPayrollModule#ConfidentialUSDC",
+      "address": "0xCf7Ed3AccA5a467e9e704C703E8D87F634fB0Fc9",
+      "transactionHash": "0xdd7b474a217bdef9dc102caf9d059f5d9c1efd4e1489fb10295300d858b26692",
+      "blockNumber": 4
+    }
+  ]
+}

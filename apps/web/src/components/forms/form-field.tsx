@@ -28,7 +28,7 @@ interface FormFieldProps<
   className?: string;
   children: (
     field: ControllerRenderProps<TFieldValues, TName>,
-    meta: { invalid: boolean; errorMessage?: string }
+    meta: { invalid: boolean; errorMessage?: string },
   ) => ReactNode;
 }
 

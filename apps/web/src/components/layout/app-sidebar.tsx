@@ -74,7 +74,7 @@ function NavLink({
         'flex items-center gap-2.5 px-2.5 py-2 text-sm transition-colors',
         active
           ? 'bg-sidebar-accent text-sidebar-accent-foreground'
-          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'
+          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground',
       )}
       aria-current={active ? 'page' : undefined}
     >
@@ -93,7 +93,7 @@ export function AppSidebar() {
       <div
         className={cn(
           'fixed inset-0 z-40 bg-black/50 transition-opacity lg:hidden',
-          sidebarOpen ? 'opacity-100' : 'pointer-events-none opacity-0'
+          sidebarOpen ? 'opacity-100' : 'pointer-events-none opacity-0',
         )}
         onClick={() => setSidebarOpen(false)}
         aria-hidden
@@ -103,7 +103,7 @@ export function AppSidebar() {
         className={cn(
           'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-sidebar-border bg-sidebar transition-transform lg:static lg:translate-x-0',
           sidebarOpen ? 'translate-x-0' : '-translate-x-full',
-          sidebarCollapsed && 'lg:w-16'
+          sidebarCollapsed && 'lg:w-16',
         )}
         aria-label="Main navigation"
       >

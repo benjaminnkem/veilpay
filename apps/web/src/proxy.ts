@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server';
 
-import {
-  isAuthRoute,
-  isProtectedRoute,
-  ROUTES,
-} from '@/constants/routes';
+import { isAuthRoute, isProtectedRoute, ROUTES } from '@/constants/routes';
 import { auth } from '@/lib/auth';
 
 export default auth((request) => {
@@ -19,7 +15,7 @@ export default auth((request) => {
 
   if (isAuthRoute(pathname) && isLoggedIn) {
     return NextResponse.redirect(
-      new URL(ROUTES.dashboard, request.nextUrl.origin)
+      new URL(ROUTES.dashboard, request.nextUrl.origin),
     );
   }
 

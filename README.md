@@ -37,10 +37,10 @@ Run web + API together:
 pnpm dev
 ```
 
-| App        | URL                     |
-| ---------- | ----------------------- |
-| Web        | http://localhost:3000   |
-| API        | http://localhost:3001   |
+| App | URL                   |
+| --- | --------------------- |
+| Web | http://localhost:3000 |
+| API | http://localhost:3001 |
 
 Filter a single package:
 
@@ -75,9 +75,11 @@ pnpm --filter contracts test
 # Local node
 pnpm --filter contracts node
 
-# Deploy sample Counter via Ignition (local)
+# Deploy the VeilPay payroll suite via Ignition (local)
 pnpm --filter contracts deploy:local
 ```
+
+The confidential-payroll backend and contract implementation is documented in [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md), [`docs/IMPLEMENTATION_SUMMARY.md`](docs/IMPLEMENTATION_SUMMARY.md), and the [`beginner test guide`](docs/WEB3_BEGINNER_TEST_GUIDE.md). The API uses PostgreSQL; copy `apps/api/.env.example`, then run `pnpm --filter api prisma:generate` and `pnpm --filter api prisma:migrate` before starting it. Real local Nox E2E requires Docker Desktop and runs with `pnpm --filter contracts test:nox`.
 
 Optional Sepolia vars (or use `hardhat keystore set …`):
 

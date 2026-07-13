@@ -11,7 +11,9 @@ export function LandingFooter() {
             <span className="flex size-7 items-center justify-center bg-primary text-xs font-bold text-primary-foreground">
               V
             </span>
-            <span className="text-sm font-semibold tracking-tight">VeilPay</span>
+            <span className="text-sm font-semibold tracking-tight">
+              VeilPay
+            </span>
           </div>
           <p className="max-w-xs text-sm leading-6 text-muted-foreground">
             Private payroll infrastructure for modern finance and people ops.
