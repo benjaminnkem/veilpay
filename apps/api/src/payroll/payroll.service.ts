@@ -265,12 +265,12 @@ export class PayrollService {
       'ADMIN',
       'HR',
     ]);
-    const claimed = await this.prisma.payrollRun.updateMany({
-      where: { id, companyId, status: 'DRAFT' },
-      data: { status: 'PREPARING', version: { increment: 1 } },
-    });
-    if (claimed.count !== 1)
-      throw new ApiError('PAYROLL_INVALID_STATE', 'Payroll must be DRAFT');
+    // const claimed = await this.prisma.payrollRun.updateMany({
+    //   where: { id, companyId, status: 'DRAFT' },
+    //   data: { status: 'PREPARING', version: { increment: 1 } },
+    // });
+    // if (claimed.count !== 1)
+    //   throw new ApiError('PAYROLL_INVALID_STATE', 'Payroll must be DRAFT');
     try {
       const run = await this.prisma.payrollRun.findUniqueOrThrow({
         where: { id },
@@ -438,8 +438,12 @@ export class PayrollService {
         'SAFE_TRANSACTION_NOT_BUILT',
         'Build Safe transaction first',
       );
-    if (run.status !== 'PREPARED')
-      throw new ApiError('PAYROLL_INVALID_STATE', 'Payroll must be PREPARED');
+    if (run.status !== 'PREPARED' && run.status !== 'FAILED_RETRYABLE')
+      throw new ApiError(
+        'PAYROLL_INVALID_STATE',
+        'Payroll must be PREPARED or awaiting a retry',
+      );
+    this.states.assert(run.status, 'PROPOSING');
     await this.prisma.payrollRun.update({
       where: { id },
       data: { status: 'PROPOSING' },
@@ -621,13 +625,20 @@ export class PayrollService {
         run.items.map((i) => bytesToHex(i.inputProof!)),
         Math.floor(run.deadline.getTime() / 1000),
       ] as const;
-      const { request } = await this.blockchain.publicClient.simulateContract({
-        account,
-        address: getAddress(run.payrollContractAddress),
-        abi: payrollAbi,
-        functionName: 'executePayroll',
-        args,
-      });
+      const { request } = await this.blockchain.publicClient
+        .simulateContract({
+          account,
+          address: getAddress(run.payrollContractAddress),
+          abi: payrollAbi,
+          functionName: 'executePayroll',
+          args,
+        })
+        .catch(() => {
+          throw new ApiError(
+            'PAYROLL_EXECUTION_SIMULATION_FAILED',
+            'Payroll execution was rejected by on-chain validation',
+          );
+        });
       const txHash = await wallet.writeContract(request);
       await this.prisma.blockchainTransaction.create({
         data: {

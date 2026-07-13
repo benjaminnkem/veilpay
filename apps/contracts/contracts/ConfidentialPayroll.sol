@@ -2,6 +2,7 @@
 pragma solidity ^0.8.35;
 
 import {
+  Nox,
   externalEuint256,
   euint256
 } from '@iexec-nox/nox-protocol-contracts/contracts/sdk/Nox.sol';
@@ -191,11 +192,15 @@ contract ConfidentialPayroll {
     approval.status = Status.EXECUTING;
     emit PayrollExecutionStarted(treasury, payrollId, actualManifest);
     for (uint256 i; i < count; ++i) {
+      euint256 amount = _fromExternal(
+        encryptedAmountHandles[i],
+        inputProofs[i]
+      );
+      Nox.allowTransient(amount, token);
       euint256 transferred = IERC7984(token).confidentialTransferFrom(
         treasury,
         recipients[i],
-        encryptedAmountHandles[i],
-        inputProofs[i]
+        amount
       );
       emit PayrollItemTransferred(
         treasury,
@@ -207,6 +212,16 @@ contract ConfidentialPayroll {
     }
     approval.status = Status.EXECUTED;
     emit PayrollExecuted(treasury, payrollId, actualManifest, count);
+  }
+
+  /// @dev The payroll contract is the Nox application bound into each input proof.
+  /// Validation grants this contract transient ACL access before the handle is
+  /// passed to the token's proofless operator-transfer overload.
+  function _fromExternal(
+    externalEuint256 encryptedAmount,
+    bytes calldata inputProof
+  ) internal virtual returns (euint256) {
+    return Nox.fromExternal(encryptedAmount, inputProof);
   }
 
   function getApproval(

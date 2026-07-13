@@ -70,7 +70,8 @@ export class NoxService implements OnModuleInit {
         applicationContract,
       );
       return { handle: result.handle, proof: result.handleProof };
-    } catch {
+    } catch (err) {
+      console.error('Nox input preparation failed', err);
       throw new ApiError(
         'NOX_ENCRYPTION_FAILED',
         'Nox input preparation failed',

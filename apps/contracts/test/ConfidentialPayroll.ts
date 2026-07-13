@@ -28,7 +28,7 @@ describe('ConfidentialPayroll', async () => {
   ] as Address[];
 
   beforeEach(async () => {
-    payroll = await viem.deployContract('ConfidentialPayroll', [20n]);
+    payroll = await viem.deployContract('MockConfidentialPayroll', [20n]);
     token = await viem.deployContract('MockERC7984');
   });
 

@@ -46,9 +46,24 @@ contract MockERC7984 {
     externalEuint256 encryptedAmount,
     bytes calldata
   ) external returns (euint256) {
+    return _transfer(from, to, externalEuint256.unwrap(encryptedAmount));
+  }
+
+  function confidentialTransferFrom(
+    address from,
+    address to,
+    euint256 amount
+  ) external returns (euint256) {
+    return _transfer(from, to, euint256.unwrap(amount));
+  }
+
+  function _transfer(
+    address from,
+    address to,
+    bytes32 handle
+  ) internal returns (euint256) {
     if (from != msg.sender && block.timestamp > operatorUntil[from][msg.sender])
       revert UnauthorizedOperator();
-    bytes32 handle = externalEuint256.unwrap(encryptedAmount);
     uint256 amount = clearAmountForTest[handle];
     if (amount == 0) revert UnknownHandle(handle);
     if (clearBalanceForTest[from] < amount) revert InsufficientBalance();

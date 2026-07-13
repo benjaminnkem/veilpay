@@ -4,6 +4,7 @@ import {
   HttpException,
   HttpStatus,
   type ExceptionFilter,
+  Logger,
 } from '@nestjs/common';
 import type { Response } from 'express';
 import type { AuthenticatedRequest } from './auth-context';
@@ -16,7 +17,10 @@ interface NestErrorBody {
 
 @Catch()
 export class ApiExceptionFilter implements ExceptionFilter {
+  private readonly logger = new Logger(ApiExceptionFilter.name);
+
   catch(exception: unknown, host: ArgumentsHost): void {
+    console.log(exception);
     const context = host.switchToHttp();
     const request = context.getRequest<AuthenticatedRequest>();
     const response = context.getResponse<Response>();
@@ -41,6 +45,11 @@ export class ApiExceptionFilter implements ExceptionFilter {
             : typeof body.error === 'string'
               ? body.error
               : 'Request failed';
+
+    if (status >= 500)
+      this.logger.error(
+        `Request failed requestId=${request.requestId ?? 'unknown'} status=${status}`,
+      );
 
     response.status(status).json({
       code:

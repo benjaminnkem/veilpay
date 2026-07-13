@@ -66,6 +66,10 @@ export class EmployeesService {
       'HR',
     ]);
     const normalized = email.trim().toLowerCase();
+    const existingUser = await this.prisma.user.findUnique({
+      where: { emailNormalized: normalized },
+      select: { id: true },
+    });
     const token = randomBytes(32).toString('base64url');
     const invitation = await this.prisma.employeeInvitation.create({
       data: {
@@ -78,7 +82,11 @@ export class EmployeesService {
         expiresAt: new Date(Date.now() + 7 * 86400_000),
       },
     });
-    await this.email.enqueue(normalized, 'invitation', { token, companyId });
+    await this.email.enqueue(normalized, 'invitation', {
+      token,
+      companyId,
+      entrypoint: existingUser ? 'sign-in' : 'sign-up',
+    });
     await this.audit.record(
       userId,
       companyId,
@@ -228,6 +236,9 @@ export class EmployeesService {
         'Employee not found',
         HttpStatus.NOT_FOUND,
       );
+    if (!dto.salaryTokenAddress) {
+      dto.salaryTokenAddress = process.env.CONFIDENTIAL_TOKEN_ADDRESS;
+    }
     let salaryCiphertext: Buffer | undefined;
     if (dto.salary !== undefined) {
       let salary: Decimal;

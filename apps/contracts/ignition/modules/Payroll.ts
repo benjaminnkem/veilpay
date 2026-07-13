@@ -4,7 +4,9 @@ export default buildModule('VeilPayPayrollModule', (m) => {
   const mockUsdc = m.contract('MockUSDC');
   const confidentialUsdc = m.contract('ConfidentialUSDC', [mockUsdc]);
   const testConfidentialUsdc = m.contract('TestConfidentialUSDC');
-  const payroll = m.contract('ConfidentialPayroll', [20n]);
+  const payroll = m.contract('ConfidentialPayroll', [20n], {
+    id: 'ConfidentialPayrollV3',
+  });
 
   return { mockUsdc, confidentialUsdc, testConfidentialUsdc, payroll };
 });
