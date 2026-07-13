@@ -6,8 +6,6 @@ node_modules
 .pnp.js
 
 # Local env files
-.env
-.env.*
 !.env.example
 
 # Testing
@@ -43,3 +41,4 @@ pnpm-debug.log*
 *.pem
 *.tsbuildinfo
 )
+config.bat

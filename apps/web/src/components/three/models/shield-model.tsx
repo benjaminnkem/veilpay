@@ -49,8 +49,10 @@ export function ShieldModel({
     const targetX = reducedMotion ? 0 : pointer.y * 0.25;
     const targetY = reducedMotion ? t * 0.15 : pointer.x * 0.45 + t * 0.2;
 
-    groupRef.current.rotation.x += (targetX - groupRef.current.rotation.x) * 0.06;
-    groupRef.current.rotation.y += (targetY - groupRef.current.rotation.y) * 0.06;
+    groupRef.current.rotation.x +=
+      (targetX - groupRef.current.rotation.x) * 0.06;
+    groupRef.current.rotation.y +=
+      (targetY - groupRef.current.rotation.y) * 0.06;
   });
 
   const content = (

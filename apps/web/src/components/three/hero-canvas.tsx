@@ -5,8 +5,7 @@ import dynamic from 'next/dynamic';
 import { cn } from '@/lib/utils';
 
 const HeroScene = dynamic(
-  () =>
-    import('@/components/three/hero-scene').then((mod) => mod.HeroScene),
+  () => import('@/components/three/hero-scene').then((mod) => mod.HeroScene),
   {
     ssr: false,
     loading: () => (
@@ -15,7 +14,7 @@ const HeroScene = dynamic(
         aria-hidden
       />
     ),
-  }
+  },
 );
 
 interface HeroCanvasProps {
