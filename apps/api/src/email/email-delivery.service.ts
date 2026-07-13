@@ -94,11 +94,9 @@ export class EmailDeliveryService {
       // Development jobs remain inspectable in PostgreSQL. Sensitive tokens are never logged.
       return;
     }
-    const port = this.config.getOrThrow<number>('SMTP_PORT');
     const transport = nodemailer.createTransport({
-      host: this.config.getOrThrow<string>('SMTP_HOST'),
-      port,
-      secure: port === 465,
+      service: 'gmail',
+      secure: false,
       auth: {
         user: this.config.getOrThrow<string>('SMTP_USER'),
         pass: this.config.getOrThrow<string>('SMTP_PASSWORD'),

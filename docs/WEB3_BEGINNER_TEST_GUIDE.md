@@ -33,3 +33,5 @@ Request `/wallets/challenge`, sign its exact message in MetaMask, and verify. Cr
 Invite two unique employee emails. Each employee signs up/verifies email, accepts their one-time token, verifies a different wallet, then HR sets salary decimal strings and activates them. Create a payroll, prepare it, build the Safe transaction, sign/propose/execute it with the Safe owner, submit the Safe execution hash, and call execute. Poll GET payroll until `EXECUTED`.
 
 Finally, each employee calls the balance-handle endpoint and decrypts locally with the official Nox handle client and their connected wallet. Common failures: wrong SIWE domain/chain, expired nonce, reused token, unfunded gas wallet, stopped Docker, missing operator expiry, or stale contract addresses. Reset local app state by dropping/recreating only the local database and deleting local Ignition deployment output before redeploying; never do this to shared/testnet state.
+
+For a step-by-step explanation of each funding and payroll stage, expected Safe Wallet visibility, and a separate read-only visual test dashboard, follow [Funding and confidential payroll test flow](FUNDING_AND_PAYROLL_TEST_FLOW.md).

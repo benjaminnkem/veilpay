@@ -4,5 +4,6 @@
   "VeilPayPayrollModule#TestConfidentialUSDC": "0x397971375A650ad640E1E76F0E9060197C0151D0",
   "VeilPayPayrollModule#ConfidentialUSDC": "0x48738C86caD39e399d0BaF7fFd14b3f9d0837315",
   "VeilPayPayrollModule#ConfidentialPayrollV2": "0xC5cD6ACa00aF950252CD56f4D3c47d949d9188C8",
-  "VeilPayPayrollModule#ConfidentialPayrollV3": "0xfcA2E4852b25d21e706a65DF3355674b10618dEe"
+  "VeilPayPayrollModule#ConfidentialPayrollV3": "0xfcA2E4852b25d21e706a65DF3355674b10618dEe",
+  "VeilPayPayrollModule#TestConfidentialUSDCV2": "0xC51a245B35775a52223465D9827D79780F7cB83F"
 }

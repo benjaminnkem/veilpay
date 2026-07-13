@@ -136,7 +136,9 @@ describe('EmployeesService invitation compensation', () => {
         persistedInvitation.id,
       ),
     ).toBe('4250.5');
-    await expect(service.invitations('inviter-id', 'company-id')).resolves.toEqual([
+    await expect(
+      service.invitations('inviter-id', 'company-id'),
+    ).resolves.toEqual([
       expect.objectContaining({ salaryCiphertext: '[ENCRYPTED]' }),
     ]);
 

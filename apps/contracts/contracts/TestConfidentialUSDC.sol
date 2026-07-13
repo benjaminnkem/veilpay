@@ -26,9 +26,9 @@ contract TestConfidentialUSDC is ERC7984 {
   function faucet(address to, uint256 amount) external {
     if (to == address(0) || amount == 0 || amount > MAX_FAUCET_AMOUNT)
       revert InvalidFaucetAmount();
-    uint48 availableAt = lastFaucetAt[to] + 1 days;
-    if (lastFaucetAt[to] != 0 && block.timestamp < availableAt)
-      revert FaucetCooldown(availableAt);
+    // uint48 availableAt = lastFaucetAt[to] + 1 days;
+    // if (lastFaucetAt[to] != 0 && block.timestamp < availableAt)
+    //   revert FaucetCooldown(availableAt);
     lastFaucetAt[to] = uint48(block.timestamp);
     _mint(to, Nox.toEuint256(amount));
   }

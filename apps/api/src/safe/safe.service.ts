@@ -245,6 +245,7 @@ export class SafeService {
       functionName: 'faucet',
       args: [getAddress(safe.address), BigInt(amount)],
     });
+
     const intent = await this.prisma.fundingIntent.create({
       data: {
         companyId,
