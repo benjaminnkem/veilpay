@@ -14,7 +14,7 @@ export class ApiError extends Error {
       status?: number;
       code?: string;
       fieldErrors?: Record<string, string[]>;
-    }
+    },
   ) {
     super(message);
     this.name = 'ApiError';
@@ -41,7 +41,7 @@ const STATUS_MESSAGES: Record<number, string> = {
 };
 
 function normalizeFieldErrors(
-  errors?: Record<string, string[] | string>
+  errors?: Record<string, string[] | string>,
 ): Record<string, string[]> | undefined {
   if (!errors) return undefined;
 
@@ -54,7 +54,10 @@ function normalizeFieldErrors(
   return normalized;
 }
 
-function extractMessage(body: ApiErrorBody | undefined, status: number): string {
+function extractMessage(
+  body: ApiErrorBody | undefined,
+  status: number,
+): string {
   if (body?.message && typeof body.message === 'string') {
     return body.message;
   }
@@ -75,7 +78,7 @@ export function parseApiError(error: unknown): ApiError {
     if (error.code === 'ERR_NETWORK') {
       return new ApiError(
         'Unable to reach the server. Check your connection and try again.',
-        { status: 0, code: 'NETWORK_ERROR' }
+        { status: 0, code: 'NETWORK_ERROR' },
       );
     }
 

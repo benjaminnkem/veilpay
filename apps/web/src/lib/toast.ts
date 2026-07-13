@@ -29,7 +29,7 @@ export const notify = {
       loading: string;
       success: string | ((data: T) => string);
       error?: string | ((error: unknown) => string);
-    }
+    },
   ) {
     return toast.promise(promise, {
       loading: messages.loading,
@@ -37,7 +37,7 @@ export const notify = {
       error: (error) =>
         typeof messages.error === 'function'
           ? messages.error(error)
-          : messages.error ?? getErrorMessage(error),
+          : (messages.error ?? getErrorMessage(error)),
     });
   },
 };

@@ -5,7 +5,7 @@ import type {
 } from '@/features/employees/types';
 
 export async function createEmployee(
-  payload: CreateEmployeePayload
+  payload: CreateEmployeePayload,
 ): Promise<Employee> {
   return apiPost<Employee, CreateEmployeePayload>('/employees', payload);
 }
