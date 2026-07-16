@@ -8,8 +8,9 @@ export async function updateEmployee(
   id: string,
   payload: UpdateEmployeePayload
 ): Promise<Employee> {
-  return apiPatch<Employee, UpdateEmployeePayload>(
-    `/employees/${id}`,
-    payload
-  );
+  const body = {
+    ...payload,
+    position: payload.position ?? payload.title,
+  };
+  return apiPatch<Employee, typeof body>(`/employees/${id}`, body);
 }

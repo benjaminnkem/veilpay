@@ -9,9 +9,9 @@ declare module 'next-auth' {
       id: string;
       email: string;
       name: string;
-      role: UserRole;
-      organizationId?: string;
-      organizationName?: string;
+      role: UserRole | string;
+      organizationId?: string | null;
+      organizationName?: string | null;
       avatarUrl?: string | null;
       accessToken?: string;
     } & DefaultSession['user'];
@@ -21,9 +21,9 @@ declare module 'next-auth' {
     id: string;
     email: string;
     name: string;
-    role: UserRole;
-    organizationId?: string;
-    organizationName?: string;
+    role: UserRole | string;
+    organizationId?: string | null;
+    organizationName?: string | null;
     avatarUrl?: string | null;
     accessToken?: string;
   }
@@ -34,9 +34,9 @@ declare module 'next-auth/jwt' {
     id?: string;
     email?: string;
     name?: string;
-    role?: UserRole;
-    organizationId?: string;
-    organizationName?: string;
+    role?: UserRole | string;
+    organizationId?: string | null;
+    organizationName?: string | null;
     avatarUrl?: string | null;
     accessToken?: string;
   }

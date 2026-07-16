@@ -8,6 +8,9 @@ export interface RegisterPayload {
   email: string;
   password: string;
   organizationName: string;
+  firstName?: string;
+  lastName?: string;
+  companyName?: string;
 }
 
 export interface ForgotPasswordPayload {

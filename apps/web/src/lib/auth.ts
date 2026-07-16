@@ -68,7 +68,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      const role = (token.role as UserRole | undefined) ?? 'viewer';
+      const role = (token.role as UserRole | undefined) ?? 'EMPLOYEE';
 
       session.user = {
         ...session.user,

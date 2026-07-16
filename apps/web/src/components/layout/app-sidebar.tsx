@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BellIcon,
   ClipboardCheckIcon,
   FileTextIcon,
   LayoutDashboardIcon,
@@ -44,6 +45,11 @@ const NAV_ITEMS = [
     label: 'Audit Logs',
     href: ROUTES.auditLogs,
     icon: ScrollTextIcon,
+  },
+  {
+    label: 'Notifications',
+    href: ROUTES.notifications,
+    icon: BellIcon,
   },
   {
     label: 'Settings',

@@ -6,26 +6,22 @@
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
     },
-    "./company": {
-      "types": "./src/company.ts",
-      "default": "./src/company.ts"
-    },
-    "./employee": {
-      "types": "./src/employee.ts",
-      "default": "./src/employee.ts"
-    },
-    "./payroll": {
-      "types": "./src/payroll.ts",
-      "default": "./src/payroll.ts"
+    "./enums": {
+      "types": "./dist/enums.d.ts",
+      "import": "./dist/enums.js",
+      "default": "./dist/enums.js"
     }
   },
-  "types": "./src/index.ts",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc --noEmit",
-    "check-types": "tsc --noEmit",
+    "build": "tsc -p tsconfig.json",
+    "check-types": "tsc -p tsconfig.json --noEmit",
+    "dev": "tsc -p tsconfig.json --watch",
     "lint": "echo \"No lint configured for @repo/types\"",
     "clean": "rm -rf dist .turbo"
   },

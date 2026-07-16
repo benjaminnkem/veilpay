@@ -1,119 +1,113 @@
 # VeilPay
 
-pnpm + Turborepo monorepo for VeilPay: Next.js web app, NestJS API, Hardhat smart contracts, and shared TypeScript packages.
+pnpm + Turborepo monorepo for **VeilPay** — an enterprise payroll platform for Web3 organizations.
+
+The foundation is a complete SaaS payroll stack (auth, employees, compensation, payroll engine, approvals, audit, notifications, invitations). **Blockchain payment execution** (Safe, Nox, confidential USDC) plugs in later via the `PaymentProvider` abstraction.
 
 ## Structure
 
 ```
 veilpay/
 ├── apps/
-│   ├── web/          # Next.js frontend (port 3000)
-│   ├── api/          # NestJS API (port 3001)
-│   └── contracts/    # Hardhat 3 smart contracts
+│   ├── web/          # Next.js App Router dashboard (port 3000)
+│   ├── api/          # NestJS REST API (port 3001)
+│   └── contracts/    # Hardhat 3 (future / sample)
 ├── packages/
 │   ├── types/        # Shared domain types (@repo/types)
-│   └── typescript-config/  # Shared TSConfigs (@repo/typescript-config)
-├── package.json
-├── pnpm-workspace.yaml
+│   └── typescript-config/
+├── docker-compose.yml  # PostgreSQL
 └── turbo.json
 ```
 
 ## Prerequisites
 
 - Node.js **>= 22**
-- [pnpm](https://pnpm.io/) **9** (`corepack enable` then `corepack prepare pnpm@9.0.0 --activate`)
+- [pnpm](https://pnpm.io/) **9**
+- Docker (for PostgreSQL) **or** a local Postgres 16 instance
 
 ## Setup
 
 ```sh
 pnpm install
+
+# Start Postgres
+docker compose up -d
+
+# API env (already has .env.example)
+cp apps/api/.env.example apps/api/.env   # if needed
 ```
 
-## Develop
+| Variable | Default | Notes |
+| -------- | ------- | ----- |
+| `DB_*` | `veilpay` / `localhost:5432` | TypeORM `DB_SYNC=true` in dev |
+| `JWT_*` | dev secrets | Change in production |
+| `NEXT_PUBLIC_API_URL` | `http://localhost:3001` | Web client |
+| `NEXTAUTH_SECRET` | dev fallback | Set for production |
 
-Run web + API together:
+## Develop
 
 ```sh
 pnpm dev
 ```
 
-| App        | URL                     |
-| ---------- | ----------------------- |
-| Web        | http://localhost:3000   |
-| API        | http://localhost:3001   |
+| App | URL |
+| --- | --- |
+| Web | http://localhost:3000 |
+| API | http://localhost:3001 |
+| Swagger | http://localhost:3001/docs |
 
-Filter a single package:
+Register an **OWNER** account at `/register` (creates organization + settings). Then manage employees, compensation, payroll drafts, HR → Finance → CEO approvals, audit logs, and notifications.
 
-```sh
-pnpm exec turbo dev --filter=web
-pnpm exec turbo dev --filter=api
-pnpm exec turbo dev --filter=contracts
+## Architecture highlights
+
+### Backend modules
+
+Auth · Users · Organizations · Employees · Compensation · Payroll · Approvals · Audit logs · Notifications · Invitations · Settings
+
+### Payroll vs payment rails
+
+```ts
+// apps/api/src/modules/payroll/providers/payment-provider.interface.ts
+interface PaymentProvider {
+  executePayroll(request): Promise<ExecutePayrollPaymentResult>;
+}
 ```
 
-## Build / lint / types / test
+- **MockPaymentProvider** — default (no funds moved)
+- **BlockchainPaymentProvider** — stub for Safe / Nox / USDC (throws `NotImplemented`)
+
+Payroll domain never depends on chain details. Fields like `safeAddress`, `walletAddress`, `transactionHash`, and `network` are nullable placeholders.
+
+### Roles
+
+`SUPER_ADMIN` · `OWNER` · `HR` · `FINANCE` · `CEO` · `AUDITOR` · `EMPLOYEE`
+
+### Frontend
+
+- Next.js App Router, Tailwind, shadcn/ui
+- React Hook Form + Zod, TanStack Query, Axios feature services
+- NextAuth credentials → JWT from Nest API
+- Prepared (not wired): `wagmi`, `viem`, `@rainbow-me/rainbowkit` — see `apps/web/src/lib/web3/config.ts`
+
+## Scripts
 
 ```sh
 pnpm build
 pnpm lint
 pnpm check-types
 pnpm test
+pnpm dev:all    # includes contracts if configured
 ```
 
-## Contracts (Hardhat 3)
-
-App lives at `apps/contracts` (same workspace pattern as `web` and `api`).
+## Contracts (later)
 
 ```sh
-# Compile
-pnpm exec turbo build --filter=contracts
-# or
 pnpm --filter contracts compile
-
-# Test (Solidity + TypeScript/viem)
 pnpm --filter contracts test
-
-# Local node
-pnpm --filter contracts node
-
-# Deploy sample Counter via Ignition (local)
-pnpm --filter contracts deploy:local
 ```
 
-Optional Sepolia vars (or use `hardhat keystore set …`):
-
-```sh
-cp apps/contracts/.env.example apps/contracts/.env
-```
-
-## Shared packages
-
-### `@repo/types`
-
-Domain types (`Company`, `Employee`, `PayrollRun`, …). Import as types:
+## Shared types
 
 ```ts
-import type { Company, PayrollRun } from '@repo/types';
+import type { Payroll, Employee, UserRole, PaymentProvider } from '@repo/types';
 ```
-
-### `@repo/typescript-config`
-
-Shared TSConfigs:
-
-- `base.json`
-- `nextjs.json`
-- `nestjs.json`
-- `hardhat.json`
-
-Extend in each package:
-
-```json
-{
-  "extends": "@repo/typescript-config/nextjs.json"
-}
-```
-
-## Turbo notes
-
-- `build` depends on `^build` so shared packages compile first.
-- `dev` is uncached and persistent.
-- Root `pnpm dev` only starts **web** and **api** (not the Hardhat node). Use `pnpm dev:all` to include every package with a `dev` script.

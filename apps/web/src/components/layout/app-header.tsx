@@ -57,6 +57,8 @@ export function AppHeader() {
           variant="ghost"
           size="icon-sm"
           aria-label="Notifications"
+          nativeButton={false}
+          render={<Link href={ROUTES.notifications} />}
         >
           <BellIcon />
         </Button>

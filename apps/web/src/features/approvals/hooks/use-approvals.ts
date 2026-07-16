@@ -8,6 +8,6 @@ export const approvalsQueryKey = ['approvals'] as const;
 export function useApprovals() {
   return useApiQuery({
     queryKey: approvalsQueryKey,
-    queryFn: getApprovals,
+    queryFn: () => getApprovals(),
   });
 }

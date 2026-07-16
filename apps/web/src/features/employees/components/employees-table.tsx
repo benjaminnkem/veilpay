@@ -2,13 +2,25 @@
 
 import type { ColumnDef } from '@tanstack/react-table';
 import { UsersIcon } from 'lucide-react';
+import Link from 'next/link';
 
 import { QueryState } from '@/components/shared';
 import { Badge } from '@/components/ui/badge';
 import { DataTable } from '@/components/ui/data-table';
+import { ROUTES } from '@/constants/routes';
 import { useEmployees } from '@/features/employees/hooks/use-employees';
 import type { Employee } from '@/features/employees/types';
 import { formatDate } from '@/lib/utils';
+
+function statusVariant(
+  status: string
+): 'default' | 'secondary' | 'outline' | 'destructive' {
+  const s = status.toUpperCase();
+  if (s === 'ACTIVE') return 'default';
+  if (s === 'ONBOARDING' || s === 'ON_LEAVE') return 'secondary';
+  if (s === 'TERMINATED') return 'destructive';
+  return 'outline';
+}
 
 const columns: ColumnDef<Employee>[] = [
   {
@@ -17,9 +29,12 @@ const columns: ColumnDef<Employee>[] = [
     accessorFn: (row) => `${row.firstName} ${row.lastName}`,
     cell: ({ row }) => (
       <div className="space-y-0.5">
-        <div className="font-medium">
+        <Link
+          href={`${ROUTES.employees}/${row.original.id}`}
+          className="font-medium hover:underline"
+        >
           {row.original.firstName} {row.original.lastName}
-        </div>
+        </Link>
         <div className="text-muted-foreground">{row.original.email}</div>
       </div>
     ),
@@ -27,26 +42,22 @@ const columns: ColumnDef<Employee>[] = [
   {
     accessorKey: 'department',
     header: 'Department',
+    cell: ({ row }) => row.original.department ?? '—',
   },
   {
     accessorKey: 'title',
     header: 'Title',
+    cell: ({ row }) =>
+      row.original.position ?? row.original.title ?? '—',
   },
   {
     accessorKey: 'status',
     header: 'Status',
     cell: ({ row }) => {
-      const status = row.original.status;
-      const variant =
-        status === 'active'
-          ? 'default'
-          : status === 'onboarding'
-            ? 'secondary'
-            : 'outline';
-
+      const status = String(row.original.status);
       return (
-        <Badge variant={variant} className="capitalize">
-          {status}
+        <Badge variant={statusVariant(status)} className="capitalize">
+          {status.replaceAll('_', ' ').toLowerCase()}
         </Badge>
       );
     },
@@ -54,7 +65,8 @@ const columns: ColumnDef<Employee>[] = [
   {
     accessorKey: 'hireDate',
     header: 'Hire date',
-    cell: ({ row }) => formatDate(row.original.hireDate),
+    cell: ({ row }) =>
+      row.original.hireDate ? formatDate(row.original.hireDate) : '—',
   },
 ];
 
@@ -78,7 +90,6 @@ export function EmployeesTable() {
         data={query.data?.data ?? []}
         filterColumn="name"
         filterPlaceholder="Filter employees…"
-        emptyMessage="No employees match your filters."
       />
     </QueryState>
   );

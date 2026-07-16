@@ -1,4 +1,4 @@
-export { getEmployees } from './getEmployees';
+export { getEmployees, getEmployee, getDepartments } from './getEmployees';
 export { createEmployee } from './createEmployee';
 export { updateEmployee } from './updateEmployee';
 export { deleteEmployee } from './deleteEmployee';
