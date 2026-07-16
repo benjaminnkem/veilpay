@@ -1,4 +1,4 @@
-import { apiPatch } from '@/lib/api';
+import { authPatch } from '@/lib/api';
 import type {
   Employee,
   UpdateEmployeePayload,
@@ -12,5 +12,5 @@ export async function updateEmployee(
     ...payload,
     position: payload.position ?? payload.title,
   };
-  return apiPatch<Employee, typeof body>(`/employees/${id}`, body);
+  return authPatch<Employee, typeof body>(`/employees/${id}`, body);
 }

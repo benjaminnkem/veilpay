@@ -5,6 +5,9 @@ import type { UserRole } from '@/types/auth';
 declare module 'next-auth' {
   interface Session {
     accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    error?: string;
     user: {
       id: string;
       email: string;
@@ -26,6 +29,8 @@ declare module 'next-auth' {
     organizationName?: string | null;
     avatarUrl?: string | null;
     accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
   }
 }
 
@@ -39,5 +44,8 @@ declare module 'next-auth/jwt' {
     organizationName?: string | null;
     avatarUrl?: string | null;
     accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    error?: string;
   }
 }

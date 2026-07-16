@@ -1,6 +1,6 @@
-import { apiGet } from '@/lib/api';
+import { authGet } from '@/lib/api';
 import type { User } from '@/types/auth';
 
 export async function getMe(): Promise<User> {
-  return apiGet<User>('/auth/me');
+  return authGet<User>('/auth/me');
 }

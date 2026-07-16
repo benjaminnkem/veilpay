@@ -1,21 +1,21 @@
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/shared';
-import { ProfileSettingsForm } from '@/features/settings/components/profile-settings-form';
+import { SettingsWorkspace } from '@/features/settings/components/settings-workspace';
 
 export const metadata: Metadata = {
   title: 'Settings',
-  description: 'Manage your VeilPay profile and organization preferences.',
+  description: 'Manage profile, organization, and payroll preferences.',
 };
 
 export default function SettingsPage() {
   return (
-    <div className="mx-auto max-w-2xl space-y-6">
+    <div className="space-y-6">
       <PageHeader
         title="Settings"
-        description="Update account details and workspace preferences."
+        description="Profile, organization identity, and payroll approval defaults."
       />
-      <ProfileSettingsForm />
+      <SettingsWorkspace />
     </div>
   );
 }

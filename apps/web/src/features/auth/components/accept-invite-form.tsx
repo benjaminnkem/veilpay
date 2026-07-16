@@ -17,10 +17,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ROUTES } from '@/constants/routes';
-import { clientEnv } from '@/config/env';
+import {
+  acceptInvitation,
+  getInvitationByToken,
+} from '@/features/auth/services/invitations';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { notify } from '@/lib/toast';
-import axios from 'axios';
 
 const acceptSchema = z
   .object({
@@ -41,19 +43,7 @@ export function AcceptInviteForm({ token }: { token: string }) {
 
   const preview = useQuery({
     queryKey: ['invitation', token],
-    queryFn: async () => {
-      const { data } = await axios.get(
-        `${clientEnv.NEXT_PUBLIC_API_URL}/invitations/token/${token}`
-      );
-      return data as {
-        email: string;
-        role: string;
-        organizationName: string;
-        firstName: string | null;
-        lastName: string | null;
-        status: string;
-      };
-    },
+    queryFn: () => getInvitationByToken(token),
   });
 
   const form = useForm<AcceptFormValues>({
@@ -67,18 +57,13 @@ export function AcceptInviteForm({ token }: { token: string }) {
   });
 
   const mutation = useApiMutation({
-    mutationFn: async (values: AcceptFormValues) => {
-      const { data } = await axios.post(
-        `${clientEnv.NEXT_PUBLIC_API_URL}/invitations/accept`,
-        {
-          token,
-          password: values.password,
-          firstName: values.firstName,
-          lastName: values.lastName,
-        }
-      );
-      return data;
-    },
+    mutationFn: (values: AcceptFormValues) =>
+      acceptInvitation({
+        token,
+        password: values.password,
+        firstName: values.firstName,
+        lastName: values.lastName,
+      }),
     onSuccess: () => {
       notify.success('Welcome to VeilPay', 'You can now sign in.');
       router.push(ROUTES.login);
@@ -106,7 +91,8 @@ export function AcceptInviteForm({ token }: { token: string }) {
         <form onSubmit={onSubmit} noValidate>
           <CardContent className="space-y-4">
             <p className="text-sm text-muted-foreground">
-              Email: <span className="text-foreground">{preview.data.email}</span>
+              Email:{' '}
+              <span className="text-foreground">{preview.data.email}</span>
             </p>
             <div className="grid gap-4 sm:grid-cols-2">
               <InputField

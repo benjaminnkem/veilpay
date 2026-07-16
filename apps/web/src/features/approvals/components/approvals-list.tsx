@@ -1,25 +1,24 @@
 'use client';
 
+import type { ColumnDef } from '@tanstack/react-table';
 import { useQueryClient } from '@tanstack/react-query';
 import { ClipboardCheckIcon } from 'lucide-react';
 import Link from 'next/link';
 
-import { QueryState } from '@/components/shared';
-import { Badge } from '@/components/ui/badge';
+import { QueryState, StatusBadge } from '@/components/shared';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { DataTable } from '@/components/ui/data-table';
+import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import { ROUTES } from '@/constants/routes';
-import { approvalsQueryKey, useApprovals } from '@/features/approvals/hooks/use-approvals';
+import {
+  approvalsQueryKey,
+  useApprovals,
+} from '@/features/approvals/hooks/use-approvals';
 import {
   approveStep,
   rejectStep,
 } from '@/features/approvals/services/getApprovals';
+import type { ApprovalRequest } from '@/features/approvals/types';
 import { useApiMutation } from '@/hooks/useApiMutation';
 import { formatDate } from '@/lib/utils';
 import { notify } from '@/lib/toast';
@@ -46,6 +45,93 @@ export function ApprovalsList() {
     onError: (e) => notify.error(e),
   });
 
+  const columns: ColumnDef<ApprovalRequest>[] = [
+    {
+      accessorKey: 'title',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Request" />
+      ),
+      cell: ({ row }) => (
+        <div className="min-w-[180px] space-y-0.5">
+          <p className="font-medium">{row.original.title}</p>
+          <p className="text-xs text-muted-foreground">{row.original.summary}</p>
+        </div>
+      ),
+    },
+    {
+      accessorKey: 'level',
+      header: 'Level',
+      cell: ({ row }) => (
+        <span className="text-sm font-medium">{row.original.level ?? '—'}</span>
+      ),
+    },
+    {
+      accessorKey: 'type',
+      header: 'Type',
+      cell: ({ row }) => (
+        <span className="capitalize text-sm">{row.original.type}</span>
+      ),
+    },
+    {
+      accessorKey: 'status',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Status" />
+      ),
+      cell: ({ row }) => <StatusBadge status={String(row.original.status)} />,
+    },
+    {
+      accessorKey: 'createdAt',
+      header: ({ column }) => (
+        <DataTableColumnHeader column={column} title="Created" />
+      ),
+      cell: ({ row }) => formatDate(row.original.createdAt),
+    },
+    {
+      id: 'actions',
+      cell: ({ row }) => {
+        const status = String(row.original.status).toLowerCase();
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {row.original.payrollId ? (
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                nativeButton={false}
+                render={
+                  <Link href={`${ROUTES.payroll}/${row.original.payrollId}`} />
+                }
+              >
+                View
+              </Button>
+            ) : null}
+            {status === 'pending' ? (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  disabled={reject.isPending}
+                  onClick={() => reject.mutate(row.original.id)}
+                >
+                  Reject
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  disabled={approve.isPending}
+                  onClick={() => approve.mutate(row.original.id)}
+                >
+                  Approve
+                </Button>
+              </>
+            ) : null}
+          </div>
+        );
+      },
+    },
+  ];
+
   return (
     <QueryState
       isLoading={query.isLoading}
@@ -56,84 +142,16 @@ export function ApprovalsList() {
       emptyIcon={ClipboardCheckIcon}
       emptyTitle="No approvals"
       emptyDescription="Approval requests will appear here when teammates submit them."
-      loadingVariant="cards"
+      loadingVariant="table"
     >
-      <div className="space-y-3">
-        {query.data?.map((item) => {
-          const status = String(item.status).toLowerCase();
-          return (
-            <Card key={item.id} className="border-border/60">
-              <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
-                <div className="space-y-1">
-                  <CardTitle className="text-base">{item.title}</CardTitle>
-                  <CardDescription>
-                    {item.requester !== '—'
-                      ? `Requested by ${item.requester} · `
-                      : ''}
-                    {formatDate(item.createdAt)}
-                  </CardDescription>
-                </div>
-                <div className="flex gap-2">
-                  <Badge variant="outline" className="capitalize">
-                    {item.type}
-                  </Badge>
-                  <Badge
-                    variant={
-                      status === 'approved'
-                        ? 'default'
-                        : status === 'rejected'
-                          ? 'destructive'
-                          : 'secondary'
-                    }
-                    className="capitalize"
-                  >
-                    {status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-                <p>{item.summary}</p>
-                <div className="flex gap-2">
-                  {item.payrollId ? (
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      nativeButton={false}
-                      render={
-                        <Link href={`${ROUTES.payroll}/${item.payrollId}`} />
-                      }
-                    >
-                      View payroll
-                    </Button>
-                  ) : null}
-                  {status === 'pending' ? (
-                    <>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="outline"
-                        disabled={reject.isPending}
-                        onClick={() => reject.mutate(item.id)}
-                      >
-                        Reject
-                      </Button>
-                      <Button
-                        type="button"
-                        size="sm"
-                        disabled={approve.isPending}
-                        onClick={() => approve.mutate(item.id)}
-                      >
-                        Approve
-                      </Button>
-                    </>
-                  ) : null}
-                </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+      <DataTable
+        columns={columns}
+        data={query.data ?? []}
+        filterColumn="title"
+        filterPlaceholder="Search approvals…"
+        getRowId={(row) => row.id}
+        pageSize={10}
+      />
     </QueryState>
   );
 }

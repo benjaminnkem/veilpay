@@ -15,7 +15,9 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { ChevronLeftIcon, ChevronRightIcon } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   Table,
@@ -34,20 +36,14 @@ interface DataTableProps<TData, TValue> {
   className?: string;
   tableClassName?: string;
   emptyMessage?: string;
-  /** Column id used for the toolbar text filter. */
   filterColumn?: string;
   filterPlaceholder?: string;
-  /** Show the column visibility menu. Defaults to true. */
   showViewOptions?: boolean;
-  /** Enable TanStack client-side pagination. Defaults to false. */
   enableClientPagination?: boolean;
-  /** Stable row id accessor (recommended when using selection). */
+  pageSize?: number;
   getRowId?: (originalRow: TData, index: number) => string;
-  /** Called when the set of selected original rows changes. */
   onSelectedRowsChange?: (rows: TData[]) => void;
-  /** Optional render slot for extra toolbar actions (right side). */
   toolbarActions?: React.ReactNode;
-  /** Access the table instance (e.g. for external controls). */
   tableRef?: React.MutableRefObject<TanstackTable<TData> | null>;
 }
 
@@ -60,7 +56,8 @@ export function DataTable<TData, TValue>({
   filterColumn,
   filterPlaceholder = 'Filter…',
   showViewOptions = true,
-  enableClientPagination = false,
+  enableClientPagination = true,
+  pageSize = 10,
   getRowId,
   onSelectedRowsChange,
   toolbarActions,
@@ -68,7 +65,7 @@ export function DataTable<TData, TValue>({
 }: DataTableProps<TData, TValue>) {
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
-    [],
+    []
   );
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -89,6 +86,9 @@ export function DataTable<TData, TValue>({
     onColumnVisibilityChange: setColumnVisibility,
     onRowSelectionChange: setRowSelection,
     enableRowSelection: true,
+    initialState: {
+      pagination: { pageSize },
+    },
     state: {
       sorting,
       columnFilters,
@@ -112,14 +112,20 @@ export function DataTable<TData, TValue>({
   }, [rowSelection]);
 
   const showToolbar = !!filterColumn || showViewOptions || !!toolbarActions;
-
   const selectedCount = table.getFilteredSelectedRowModel().rows.length;
   const filteredCount = table.getFilteredRowModel().rows.length;
+  const pageIndex = table.getState().pagination.pageIndex;
+  const pageCount = table.getPageCount();
 
   return (
-    <div className={cn('w-full', className)}>
-      {showToolbar && (
-        <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center">
+    <div
+      className={cn(
+        'overflow-hidden rounded-xl border border-border/70 bg-card shadow-sm',
+        className
+      )}
+    >
+      {showToolbar ? (
+        <div className="flex flex-col gap-2 border-b border-border/70 bg-muted/20 px-4 py-3 sm:flex-row sm:items-center">
           {filterColumn ? (
             <Input
               placeholder={filterPlaceholder}
@@ -132,7 +138,7 @@ export function DataTable<TData, TValue>({
                   .getColumn(filterColumn)
                   ?.setFilterValue(event.target.value)
               }
-              className="h-8 max-w-sm"
+              className="h-9 max-w-sm bg-background"
             />
           ) : (
             <div className="flex-1" />
@@ -140,23 +146,30 @@ export function DataTable<TData, TValue>({
 
           <div className="flex items-center gap-2 sm:ml-auto">
             {toolbarActions}
-            {showViewOptions && <DataTableViewOptions table={table} />}
+            {showViewOptions ? <DataTableViewOptions table={table} /> : null}
           </div>
         </div>
-      )}
+      ) : null}
 
-      <div className={cn('overflow-x-auto rounded-md border', tableClassName)}>
+      <div className={cn('overflow-x-auto', tableClassName)}>
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id} className="hover:bg-transparent">
+              <TableRow
+                key={headerGroup.id}
+                className="border-border/70 bg-muted/30 hover:bg-muted/30"
+              >
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id} colSpan={header.colSpan}>
+                  <TableHead
+                    key={header.id}
+                    colSpan={header.colSpan}
+                    className="h-11 text-xs font-semibold tracking-wide text-muted-foreground uppercase"
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
                   </TableHead>
                 ))}
@@ -169,12 +182,13 @@ export function DataTable<TData, TValue>({
                 <TableRow
                   key={row.id}
                   data-state={row.getIsSelected() && 'selected'}
+                  className="border-border/60"
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell key={cell.id} className="py-3">
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}
@@ -184,7 +198,7 @@ export function DataTable<TData, TValue>({
               <TableRow className="hover:bg-transparent">
                 <TableCell
                   colSpan={columns.length}
-                  className="h-24 text-center text-muted-foreground"
+                  className="h-28 text-center text-muted-foreground"
                 >
                   {emptyMessage}
                 </TableCell>
@@ -194,11 +208,40 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
 
-      {selectedCount > 0 && (
-        <p className="px-4 pb-1 text-xs text-muted-foreground">
-          {selectedCount} of {filteredCount} row(s) selected.
+      <div className="flex flex-col gap-2 border-t border-border/70 bg-muted/10 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-xs text-muted-foreground">
+          {selectedCount > 0
+            ? `${selectedCount} of ${filteredCount} row(s) selected`
+            : `${filteredCount} row(s)`}
         </p>
-      )}
+        {enableClientPagination && pageCount > 1 ? (
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-muted-foreground">
+              Page {pageIndex + 1} of {pageCount}
+            </span>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => table.previousPage()}
+              disabled={!table.getCanPreviousPage()}
+              aria-label="Previous page"
+            >
+              <ChevronLeftIcon />
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              onClick={() => table.nextPage()}
+              disabled={!table.getCanNextPage()}
+              aria-label="Next page"
+            >
+              <ChevronRightIcon />
+            </Button>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

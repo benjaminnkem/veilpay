@@ -42,7 +42,6 @@ export class UserEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 512, nullable: true })
   avatarUrl!: string | null;
 
-  /** Placeholder for future wallet auth / payouts */
   @Column({ type: 'varchar', length: 128, nullable: true })
   walletAddress!: string | null;
 
@@ -51,6 +50,12 @@ export class UserEntity extends BaseEntity {
 
   @Column({ type: 'timestamptz', nullable: true })
   lastLoginAt!: Date | null;
+
+  @Column({ type: 'varchar', length: 128, nullable: true })
+  passwordResetTokenHash!: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  passwordResetExpiresAt!: Date | null;
 
   @OneToMany(() => RefreshTokenEntity, (token) => token.user)
   refreshTokens!: RefreshTokenEntity[];

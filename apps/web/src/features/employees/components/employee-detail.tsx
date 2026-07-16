@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/card';
 import { ROUTES } from '@/constants/routes';
 import { getEmployee } from '@/features/employees/services/getEmployees';
-import { apiGet } from '@/lib/api';
+import { authGet } from '@/lib/api';
 import { formatDate } from '@/lib/utils';
 
 interface CompensationRow {
@@ -40,7 +40,7 @@ export function EmployeeDetail({ employeeId }: { employeeId: string }) {
   const compensationQuery = useQuery({
     queryKey: ['compensation', employeeId],
     queryFn: () =>
-      apiGet<CompensationRow[]>(`/compensation/employee/${employeeId}`),
+      authGet<CompensationRow[]>(`/compensation/employee/${employeeId}`),
   });
 
   const employee = employeeQuery.data;

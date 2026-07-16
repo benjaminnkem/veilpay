@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-import { clientEnv } from '@/config/env';
+import { publicPost } from '@/lib/api';
 import type { LoginPayload } from '@/features/auth/types';
 import type { LoginResponse, User } from '@/types/auth';
 
@@ -45,19 +43,15 @@ function mapUser(user: ApiAuthUser): User {
 }
 
 export async function login(payload: LoginPayload): Promise<LoginResponse> {
-  const response = await axios.post<ApiLoginResponse>(
-    `${clientEnv.NEXT_PUBLIC_API_URL}/auth/login`,
-    payload,
-    {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 15_000,
-    }
+  const data = await publicPost<ApiLoginResponse, LoginPayload>(
+    '/auth/login',
+    payload
   );
 
   return {
-    user: mapUser(response.data.user),
-    accessToken: response.data.accessToken,
-    refreshToken: response.data.refreshToken,
-    expiresIn: response.data.expiresIn,
+    user: mapUser(data.user),
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    expiresIn: data.expiresIn,
   };
 }

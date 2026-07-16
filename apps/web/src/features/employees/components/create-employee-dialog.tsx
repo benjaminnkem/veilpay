@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { InputField } from '@/components/forms';
+import { ComboboxField, InputField } from '@/components/forms';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -16,6 +16,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  DEPARTMENT_OPTIONS,
+  ROLE_OPTIONS,
+} from '@/features/employees/constants/options';
 import {
   createEmployeeSchema,
   type CreateEmployeeFormValues,
@@ -46,7 +50,14 @@ export function CreateEmployeeDialog() {
     onSuccess: async () => {
       notify.success('Employee created');
       await qc.invalidateQueries({ queryKey: employeesQueryKey });
-      form.reset();
+      form.reset({
+        firstName: '',
+        lastName: '',
+        email: '',
+        department: '',
+        title: '',
+        hireDate: new Date(),
+      });
       setOpen(false);
     },
     onError: (error) => notify.error(error),
@@ -96,12 +107,24 @@ export function CreateEmployeeDialog() {
             type="email"
           />
           <div className="grid gap-4 sm:grid-cols-2">
-            <InputField
+            <ComboboxField
               control={form.control}
               name="department"
               label="Department"
+              placeholder="Select department"
+              searchPlaceholder="Search departments…"
+              emptyMessage="No department found."
+              options={DEPARTMENT_OPTIONS}
             />
-            <InputField control={form.control} name="title" label="Position" />
+            <ComboboxField
+              control={form.control}
+              name="title"
+              label="Role"
+              placeholder="Select role"
+              searchPlaceholder="Search roles…"
+              emptyMessage="No role found."
+              options={ROLE_OPTIONS}
+            />
           </div>
           <DialogFooter>
             <Button

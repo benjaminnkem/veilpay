@@ -1,6 +1,4 @@
-import axios from 'axios';
-
-import { clientEnv } from '@/config/env';
+import { publicPost } from '@/lib/api';
 import type { RegisterPayload } from '@/features/auth/types';
 import type { LoginResponse, User } from '@/types/auth';
 
@@ -55,19 +53,15 @@ export async function register(
       payload.organizationName ?? payload.companyName ?? 'My Organization',
   };
 
-  const response = await axios.post<ApiAuthResponse>(
-    `${clientEnv.NEXT_PUBLIC_API_URL}/auth/register`,
-    body,
-    {
-      headers: { 'Content-Type': 'application/json' },
-      timeout: 15_000,
-    }
+  const data = await publicPost<ApiAuthResponse, typeof body>(
+    '/auth/register',
+    body
   );
 
   return {
-    user: mapUser(response.data.user),
-    accessToken: response.data.accessToken,
-    refreshToken: response.data.refreshToken,
-    expiresIn: response.data.expiresIn,
+    user: mapUser(data.user),
+    accessToken: data.accessToken,
+    refreshToken: data.refreshToken,
+    expiresIn: data.expiresIn,
   };
 }

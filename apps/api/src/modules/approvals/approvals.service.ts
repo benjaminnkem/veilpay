@@ -7,7 +7,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import {
   ApprovalLevel,
   ApprovalStatus,
@@ -24,6 +24,7 @@ import {
 import { buildMeta, PaginationDto } from '../../common/dto/pagination.dto';
 import type { JwtPayloadUser } from '../../common/decorators/current-user.decorator';
 import { requireOrganizationId } from '../../common/utils/org.util';
+import { MailService } from '../../mail/mail.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { PayrollService } from '../payroll/payroll.service';
@@ -52,6 +53,7 @@ export class ApprovalsService {
     private readonly usersRepo: Repository<UserEntity>,
     private readonly auditLogs: AuditLogsService,
     private readonly notifications: NotificationsService,
+    private readonly mail: MailService,
     @Inject(forwardRef(() => PayrollService))
     private readonly payrollService: PayrollService,
   ) {}
@@ -72,15 +74,13 @@ export class ApprovalsService {
         organizationId: payroll.organizationId,
         level: level as ApprovalLevel,
         sequence: index + 1,
-        status:
-          index === 0 ? ApprovalStatus.PENDING : ApprovalStatus.PENDING,
+        status: ApprovalStatus.PENDING,
         approverId: null,
         comments: null,
         actedAt: null,
       }),
     );
 
-    // Only first step is "active"; others wait. All start PENDING for timeline.
     await this.approvalRepo.save(steps);
 
     await this.auditLogs.log({
@@ -90,6 +90,9 @@ export class ApprovalsService {
       entityId: payroll.id,
       metadata: { sequence },
     });
+
+    const firstLevel = (sequence[0] ?? ApprovalLevel.HR) as ApprovalLevel;
+    await this.notifyApproversForLevel(payroll, firstLevel);
   }
 
   async findPending(actor: JwtPayloadUser, query: PaginationDto) {
@@ -283,15 +286,22 @@ export class ApprovalsService {
           body: `${payroll.name} was rejected at ${step.level}.`,
           link: `/payroll/${payroll.id}`,
         });
+
+        const creator = await this.usersRepo.findOne({
+          where: { id: payroll.createdById },
+        });
+        if (creator) {
+          await this.mail.sendPayrollRejected({
+            to: creator.email,
+            firstName: creator.firstName,
+            payrollName: payroll.name,
+            payrollId: payroll.id,
+            level: step.level,
+            comments: dto.comments,
+          });
+        }
       }
     } else {
-      const remaining = prior.filter(
-        (s) =>
-          s.id !== step.id &&
-          s.status === ApprovalStatus.PENDING &&
-          s.sequence > step.sequence,
-      );
-      // re-fetch statuses
       const fresh = await this.approvalRepo.find({
         where: { payrollId: step.payrollId },
       });
@@ -318,18 +328,34 @@ export class ApprovalsService {
             body: `${payroll.name} is ready for execution.`,
             link: `/payroll/${payroll.id}`,
           });
-        }
-      } else if (remaining.length || !allApproved) {
-        // notify next level users
-        if (payroll) {
-          await this.notifications.create({
-            userId: payroll.createdById,
-            organizationId: orgId,
-            type: NotificationType.APPROVAL,
-            title: `Approved at ${step.level}`,
-            body: `${payroll.name} advanced in the approval chain.`,
-            link: `/payroll/${payroll.id}`,
+
+          const creator = await this.usersRepo.findOne({
+            where: { id: payroll.createdById },
           });
+          if (creator) {
+            await this.mail.sendPayrollApproved({
+              to: creator.email,
+              firstName: creator.firstName,
+              payrollName: payroll.name,
+              payrollId: payroll.id,
+            });
+          }
+        }
+      } else if (payroll) {
+        await this.notifications.create({
+          userId: payroll.createdById,
+          organizationId: orgId,
+          type: NotificationType.APPROVAL,
+          title: `Approved at ${step.level}`,
+          body: `${payroll.name} advanced in the approval chain.`,
+          link: `/payroll/${payroll.id}`,
+        });
+
+        const nextStep = fresh
+          .filter((s) => s.status === ApprovalStatus.PENDING)
+          .sort((a, b) => a.sequence - b.sequence)[0];
+        if (nextStep) {
+          await this.notifyApproversForLevel(payroll, nextStep.level);
         }
       }
     }
@@ -344,6 +370,34 @@ export class ApprovalsService {
   private roleCanAct(role: UserRole, level: ApprovalLevel): boolean {
     if (role === UserRole.SUPER_ADMIN || role === UserRole.OWNER) return true;
     return LEVEL_ROLE_MAP[level]?.includes(role) ?? false;
+  }
+
+  private async notifyApproversForLevel(
+    payroll: PayrollEntity,
+    level: ApprovalLevel,
+  ): Promise<void> {
+    const roles = LEVEL_ROLE_MAP[level] ?? [];
+    if (!roles.length) return;
+
+    const users = await this.usersRepo.find({
+      where: {
+        organizationId: payroll.organizationId,
+        isActive: true,
+        role: In(roles),
+      },
+    });
+
+    await Promise.all(
+      users.map((user) =>
+        this.mail.sendApprovalRequired({
+          to: user.email,
+          firstName: user.firstName,
+          payrollName: payroll.name,
+          payrollId: payroll.id,
+          level,
+        }),
+      ),
+    );
   }
 
   private serializeStep(s: ApprovalEntity) {

@@ -1,8 +1,8 @@
 import type {
+  CompensationFrequency,
   InvitationStatus,
   InvitationType,
   UserRole,
-  EmploymentStatus,
 } from './enums.js';
 import type { Timestamps } from './common.js';
 
@@ -20,7 +20,9 @@ export interface Invitation extends Timestamps {
   lastName: string | null;
   department: string | null;
   position: string | null;
-  /** Opaque token is only returned on create for the inviter flow */
+  startingSalaryCents: number | null;
+  salaryCurrency: string | null;
+  salaryFrequency: CompensationFrequency | string | null;
   token?: string;
 }
 
@@ -32,6 +34,10 @@ export interface CreateInvitationInput {
   lastName?: string;
   department?: string;
   position?: string;
+  startingSalary?: number;
+  startingSalaryCents?: number;
+  salaryCurrency?: string;
+  salaryFrequency?: CompensationFrequency | string;
   expiresInDays?: number;
 }
 
@@ -48,6 +54,11 @@ export interface InvitationPublicInfo {
   organizationName: string;
   firstName: string | null;
   lastName: string | null;
+  department?: string | null;
+  position?: string | null;
+  startingSalaryCents?: number | null;
+  salaryCurrency?: string | null;
+  salaryFrequency?: CompensationFrequency | string | null;
   expiresAt: string;
   status: InvitationStatus;
 }

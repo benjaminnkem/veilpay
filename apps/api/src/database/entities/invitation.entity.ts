@@ -1,5 +1,6 @@
 import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm';
 import {
+  CompensationFrequency,
   InvitationStatus,
   InvitationType,
   UserRole,
@@ -65,4 +66,17 @@ export class InvitationEntity extends BaseEntity {
 
   @Column({ type: 'varchar', length: 128, nullable: true })
   position!: string | null;
+
+  @Column({ type: 'bigint', nullable: true })
+  startingSalaryCents!: string | null;
+
+  @Column({ type: 'varchar', length: 8, nullable: true, default: 'USD' })
+  salaryCurrency!: string | null;
+
+  @Column({
+    type: 'enum',
+    enum: CompensationFrequency,
+    nullable: true,
+  })
+  salaryFrequency!: CompensationFrequency | null;
 }

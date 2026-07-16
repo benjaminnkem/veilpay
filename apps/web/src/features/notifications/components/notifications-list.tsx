@@ -3,8 +3,7 @@
 import { BellIcon } from 'lucide-react';
 import Link from 'next/link';
 
-import { QueryState } from '@/components/shared';
-import { Badge } from '@/components/ui/badge';
+import { QueryState, StatusBadge } from '@/components/shared';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -24,17 +23,20 @@ export function NotificationsList() {
   const query = useNotifications();
   const markRead = useMarkNotificationRead();
   const markAll = useMarkAllNotificationsRead();
-
   const items = query.data?.data ?? [];
+  const unread = items.filter((n) => !n.isRead).length;
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-sm text-muted-foreground">
+          {unread > 0 ? `${unread} unread` : 'All caught up'}
+        </p>
         <Button
           type="button"
           variant="outline"
           size="sm"
-          disabled={markAll.isPending || items.every((n) => n.isRead)}
+          disabled={markAll.isPending || unread === 0}
           onClick={() => markAll.mutate()}
         >
           Mark all read
@@ -58,21 +60,24 @@ export function NotificationsList() {
               key={n.id}
               className={
                 n.isRead
-                  ? 'border-border/60 opacity-80'
-                  : 'border-border/60 border-l-2 border-l-primary'
+                  ? 'border-border/70 shadow-sm'
+                  : 'border-border/70 border-l-2 border-l-primary shadow-sm'
               }
             >
               <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
                 <div className="space-y-1">
                   <CardTitle className="text-base">{n.title}</CardTitle>
                   <CardDescription>
-                    {formatDate(n.createdAt)} · {n.type}
+                    {formatDate(n.createdAt, {
+                      month: 'short',
+                      day: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
                   </CardDescription>
                 </div>
                 <div className="flex items-center gap-2">
-                  {!n.isRead ? (
-                    <Badge variant="secondary">Unread</Badge>
-                  ) : null}
+                  <StatusBadge status={n.type} />
                   {!n.isRead ? (
                     <Button
                       type="button"

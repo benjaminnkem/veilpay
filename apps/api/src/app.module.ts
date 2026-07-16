@@ -20,6 +20,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { HealthModule } from './modules/health/health.module';
+import { MailModule } from './mail/mail.module';
 
 @Module({
   imports: [
@@ -43,6 +44,7 @@ import { HealthModule } from './modules/health/health.module';
         logging: config.get<boolean>('database.logging'),
       }),
     }),
+    MailModule,
     HealthModule,
     AuthModule,
     UsersModule,

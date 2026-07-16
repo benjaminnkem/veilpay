@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import {
+  CompensationEntity,
   EmployeeEntity,
   InvitationEntity,
   OrganizationEntity,
@@ -17,6 +18,7 @@ import { InvitationsService } from './invitations.service';
       UserEntity,
       EmployeeEntity,
       OrganizationEntity,
+      CompensationEntity,
     ]),
     AuthModule,
   ],

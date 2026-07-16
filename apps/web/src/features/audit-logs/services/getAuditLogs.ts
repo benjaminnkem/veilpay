@@ -1,4 +1,4 @@
-import { apiGet } from '@/lib/api';
+import { authGet } from '@/lib/api';
 import type { AuditLog } from '@/features/audit-logs/types';
 import type { PaginatedResponse, PaginationParams } from '@/types/api';
 
@@ -8,5 +8,5 @@ export async function getAuditLogs(
     entityType?: string;
   }
 ): Promise<PaginatedResponse<AuditLog> | AuditLog[]> {
-  return apiGet<PaginatedResponse<AuditLog>>('/audit-logs', { params });
+  return authGet<PaginatedResponse<AuditLog>>('/audit-logs', { params });
 }

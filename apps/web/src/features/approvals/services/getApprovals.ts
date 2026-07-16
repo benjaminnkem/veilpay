@@ -1,4 +1,4 @@
-import { apiGet, apiPost } from '@/lib/api';
+import { authGet, authPost } from '@/lib/api';
 import type {
   ApprovalRequest,
   ApprovalTimeline,
@@ -8,7 +8,7 @@ import type { PaginatedResponse, PaginationParams } from '@/types/api';
 export async function getApprovals(
   params?: PaginationParams
 ): Promise<ApprovalRequest[]> {
-  const result = await apiGet<PaginatedResponse<ApprovalRequest>>(
+  const result = await authGet<PaginatedResponse<ApprovalRequest>>(
     '/approvals',
     { params }
   );
@@ -18,19 +18,19 @@ export async function getApprovals(
 export async function getApprovalTimeline(
   payrollId: string
 ): Promise<ApprovalTimeline> {
-  return apiGet<ApprovalTimeline>(`/approvals/payroll/${payrollId}`);
+  return authGet<ApprovalTimeline>(`/approvals/payroll/${payrollId}`);
 }
 
 export async function approveStep(
   id: string,
   comments?: string
 ): Promise<unknown> {
-  return apiPost(`/approvals/${id}/approve`, { comments });
+  return authPost(`/approvals/${id}/approve`, { comments });
 }
 
 export async function rejectStep(
   id: string,
   comments?: string
 ): Promise<unknown> {
-  return apiPost(`/approvals/${id}/reject`, { comments });
+  return authPost(`/approvals/${id}/reject`, { comments });
 }

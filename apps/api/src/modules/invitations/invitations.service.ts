@@ -9,12 +9,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import {
   AuditAction,
+  CompensationFrequency,
+  CompensationType,
   EmploymentStatus,
   InvitationStatus,
   InvitationType,
   NotificationType,
 } from '@repo/types';
 import {
+  CompensationEntity,
   EmployeeEntity,
   InvitationEntity,
   OrganizationEntity,
@@ -23,8 +26,13 @@ import {
 import { buildMeta, PaginationDto } from '../../common/dto/pagination.dto';
 import type { JwtPayloadUser } from '../../common/decorators/current-user.decorator';
 import { requireOrganizationId } from '../../common/utils/org.util';
+import {
+  centsToNumber,
+  numberToCentsString,
+} from '../../common/utils/money.util';
 import { hashPassword } from '../../common/utils/password.util';
 import { generateSecureToken, hashToken } from '../../common/utils/token.util';
+import { MailService } from '../../mail/mail.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { AuthService } from '../auth/auth.service';
@@ -42,15 +50,26 @@ export class InvitationsService {
     private readonly employeesRepo: Repository<EmployeeEntity>,
     @InjectRepository(OrganizationEntity)
     private readonly orgRepo: Repository<OrganizationEntity>,
+    @InjectRepository(CompensationEntity)
+    private readonly compensationRepo: Repository<CompensationEntity>,
     private readonly config: ConfigService,
     private readonly auditLogs: AuditLogsService,
     private readonly notifications: NotificationsService,
     private readonly authService: AuthService,
+    private readonly mail: MailService,
   ) {}
 
   async create(actor: JwtPayloadUser, dto: CreateInvitationDto) {
     const orgId = requireOrganizationId(actor);
     const email = dto.email.toLowerCase();
+    const type = dto.type ?? InvitationType.USER;
+    const startingSalaryCents = resolveStartingSalaryCents(dto);
+
+    if (type === InvitationType.EMPLOYEE && startingSalaryCents == null) {
+      throw new BadRequestException(
+        'Starting salary is required when inviting an employee',
+      );
+    }
 
     const existingUser = await this.usersRepo.findOne({ where: { email } });
     if (existingUser) {
@@ -68,6 +87,7 @@ export class InvitationsService {
       throw new ConflictException('A pending invitation already exists');
     }
 
+    const org = await this.orgRepo.findOne({ where: { id: orgId } });
     const rawToken = generateSecureToken(32);
     const expiryDays =
       dto.expiresInDays ??
@@ -80,7 +100,7 @@ export class InvitationsService {
       organizationId: orgId,
       email,
       role: dto.role,
-      type: dto.type ?? InvitationType.USER,
+      type,
       status: InvitationStatus.PENDING,
       tokenHash: hashToken(rawToken),
       invitedById: actor.id,
@@ -89,6 +109,17 @@ export class InvitationsService {
       lastName: dto.lastName ?? null,
       department: dto.department ?? null,
       position: dto.position ?? null,
+      startingSalaryCents:
+        startingSalaryCents != null
+          ? numberToCentsString(startingSalaryCents)
+          : null,
+      salaryCurrency:
+        dto.salaryCurrency ?? org?.currency ?? 'USD',
+      salaryFrequency:
+        dto.salaryFrequency ??
+        (startingSalaryCents != null
+          ? CompensationFrequency.ANNUALLY
+          : null),
     });
 
     await this.invitationRepo.save(invitation);
@@ -100,7 +131,11 @@ export class InvitationsService {
       action: AuditAction.INVITATION_SENT,
       entityType: 'Invitation',
       entityId: invitation.id,
-      metadata: { email, role: dto.role },
+      metadata: {
+        email,
+        role: dto.role,
+        startingSalaryCents,
+      },
     });
 
     await this.notifications.create({
@@ -109,6 +144,20 @@ export class InvitationsService {
       type: NotificationType.INVITATION,
       title: 'Invitation sent',
       body: `Invited ${email} as ${dto.role}`,
+    });
+
+    const inviterName = `${actor.firstName} ${actor.lastName}`.trim();
+    const inviteeName =
+      [dto.firstName, dto.lastName].filter(Boolean).join(' ') || null;
+
+    await this.mail.sendInvitation({
+      to: email,
+      inviteeName,
+      inviterName: inviterName || actor.email,
+      organizationName: org?.name ?? 'your organization',
+      role: dto.role,
+      token: rawToken,
+      expiresAt,
     });
 
     return {
@@ -152,6 +201,13 @@ export class InvitationsService {
       organizationName: org?.name ?? 'Organization',
       firstName: invitation.firstName,
       lastName: invitation.lastName,
+      department: invitation.department,
+      position: invitation.position,
+      startingSalaryCents: invitation.startingSalaryCents
+        ? centsToNumber(invitation.startingSalaryCents)
+        : null,
+      salaryCurrency: invitation.salaryCurrency,
+      salaryFrequency: invitation.salaryFrequency,
       expiresAt: invitation.expiresAt.toISOString(),
       status: invitation.status,
     };
@@ -186,12 +242,17 @@ export class InvitationsService {
     });
     await this.usersRepo.save(user);
 
-    if (invitation.type === InvitationType.EMPLOYEE) {
-      const empExisting = await this.employeesRepo.findOne({
+    const shouldCreateEmployee =
+      invitation.type === InvitationType.EMPLOYEE ||
+      invitation.startingSalaryCents != null;
+
+    if (shouldCreateEmployee) {
+      let employee = await this.employeesRepo.findOne({
         where: { organizationId: invitation.organizationId, email },
       });
-      if (!empExisting) {
-        const emp = this.employeesRepo.create({
+
+      if (!employee) {
+        employee = this.employeesRepo.create({
           organizationId: invitation.organizationId,
           userId: user.id,
           firstName: user.firstName,
@@ -202,10 +263,43 @@ export class InvitationsService {
           status: EmploymentStatus.ONBOARDING,
           hireDate: new Date().toISOString().slice(0, 10),
         });
-        await this.employeesRepo.save(emp);
+        await this.employeesRepo.save(employee);
       } else {
-        empExisting.userId = user.id;
-        await this.employeesRepo.save(empExisting);
+        employee.userId = user.id;
+        employee.department = invitation.department ?? employee.department;
+        employee.position = invitation.position ?? employee.position;
+        await this.employeesRepo.save(employee);
+      }
+
+      if (invitation.startingSalaryCents) {
+        const compensation = this.compensationRepo.create({
+          employeeId: employee.id,
+          organizationId: invitation.organizationId,
+          type: CompensationType.SALARY,
+          amountCents: invitation.startingSalaryCents,
+          currency: invitation.salaryCurrency ?? 'USD',
+          frequency:
+            invitation.salaryFrequency ?? CompensationFrequency.ANNUALLY,
+          effectiveDate: new Date().toISOString().slice(0, 10),
+          endDate: null,
+          isCurrent: true,
+          description: 'Starting salary from invitation',
+        });
+        await this.compensationRepo.save(compensation);
+
+        await this.auditLogs.log({
+          organizationId: invitation.organizationId,
+          actorId: user.id,
+          actorEmail: user.email,
+          action: AuditAction.COMPENSATION_CREATED,
+          entityType: 'Compensation',
+          entityId: compensation.id,
+          metadata: {
+            employeeId: employee.id,
+            source: 'invitation',
+            invitationId: invitation.id,
+          },
+        });
       }
     }
 
@@ -222,7 +316,24 @@ export class InvitationsService {
       entityId: invitation.id,
     });
 
-    // Issue tokens via login path
+    const org = await this.orgRepo.findOne({
+      where: { id: invitation.organizationId },
+    });
+    const inviter = await this.usersRepo.findOne({
+      where: { id: invitation.invitedById },
+    });
+
+    if (inviter) {
+      await this.mail.sendInvitationAccepted({
+        to: inviter.email,
+        inviterFirstName: inviter.firstName,
+        inviteeName: `${user.firstName} ${user.lastName}`.trim(),
+        inviteeEmail: user.email,
+        organizationName: org?.name ?? 'your organization',
+        role: invitation.role,
+      });
+    }
+
     return this.authService.login({
       email: user.email,
       password: dto.password,
@@ -264,7 +375,21 @@ export class InvitationsService {
   }
 }
 
+function resolveStartingSalaryCents(dto: CreateInvitationDto): number | null {
+  if (dto.startingSalaryCents != null) {
+    return Math.round(dto.startingSalaryCents);
+  }
+  if (dto.startingSalary != null) {
+    return Math.round(dto.startingSalary * 100);
+  }
+  return null;
+}
+
 function serializeInvitation(i: InvitationEntity) {
+  const startingSalaryCents = i.startingSalaryCents
+    ? centsToNumber(i.startingSalaryCents)
+    : null;
+
   return {
     id: i.id,
     organizationId: i.organizationId,
@@ -279,6 +404,9 @@ function serializeInvitation(i: InvitationEntity) {
     lastName: i.lastName,
     department: i.department,
     position: i.position,
+    startingSalaryCents,
+    salaryCurrency: i.salaryCurrency,
+    salaryFrequency: i.salaryFrequency,
     createdAt: i.createdAt.toISOString(),
     updatedAt: i.updatedAt.toISOString(),
   };

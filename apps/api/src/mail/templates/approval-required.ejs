@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Approval required</title>
+  <style><%- include('partials/styles') %></style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <div class="brand"><%= appName %></div>
+      </div>
+      <div class="content">
+        <h1>Your approval is needed</h1>
+        <p>Hi <%= firstName %>,</p>
+        <p>
+          <strong><%= payrollName %></strong> is waiting for
+          <strong><%= level %></strong> approval.
+        </p>
+        <p>
+          <a class="btn" href="<%= approvalsUrl %>">Review approvals</a>
+        </p>
+        <p class="muted">
+          Or open the payroll: <a href="<%= payrollUrl %>"><%= payrollUrl %></a>
+        </p>
+      </div>
+      <div class="footer">
+        © <%= year %> <%= appName %>.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

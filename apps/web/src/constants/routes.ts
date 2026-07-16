@@ -7,11 +7,7 @@ export const PUBLIC_ROUTES = [
   '/invite',
 ] as const;
 
-export const AUTH_ROUTES = [
-  '/login',
-  '/register',
-  '/forgot-password',
-] as const;
+export const AUTH_ROUTES = ['/login', '/register', '/forgot-password'] as const;
 
 export const PROTECTED_ROUTE_PREFIXES = [
   '/dashboard',
@@ -21,6 +17,7 @@ export const PROTECTED_ROUTE_PREFIXES = [
   '/audit-logs',
   '/settings',
   '/notifications',
+  '/invitations',
   '/profile',
 ] as const;
 
@@ -37,6 +34,7 @@ export const ROUTES = {
   auditLogs: '/audit-logs',
   settings: '/settings',
   notifications: '/notifications',
+  invitations: '/invitations',
   profile: '/profile',
   invite: '/invite',
 } as const;

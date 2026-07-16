@@ -26,6 +26,7 @@ import {
   centsToNumber,
   numberToCentsString,
 } from '../../common/utils/money.util';
+import { MailService } from '../../mail/mail.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CompensationService } from '../compensation/compensation.service';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -55,6 +56,7 @@ export class PayrollService {
     private readonly approvalsService: ApprovalsService,
     private readonly auditLogs: AuditLogsService,
     private readonly notifications: NotificationsService,
+    private readonly mail: MailService,
     @Inject(PAYMENT_PROVIDER)
     private readonly paymentProvider: PaymentProvider,
   ) {}
@@ -269,13 +271,17 @@ export class PayrollService {
       link: `/payroll/${payroll.id}`,
     });
 
+    await this.mail.sendPayrollSubmitted({
+      to: actor.email,
+      firstName: actor.firstName,
+      payrollName: payroll.name,
+      payrollId: payroll.id,
+      employeeCount: payroll.employeeCount,
+    });
+
     return this.findOne(actor, id);
   }
 
-  /**
-   * Execute via PaymentProvider after full approval.
-   * Blockchain provider will plug in without changing this flow.
-   */
   async execute(actor: JwtPayloadUser, id: string) {
     const orgId = requireOrganizationId(actor);
     const payroll = await this.payrollRepo.findOne({

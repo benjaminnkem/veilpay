@@ -1,0 +1,75 @@
+export const EMPLOYEE_DEPARTMENTS = [
+  'Engineering',
+  'Product',
+  'Design',
+  'People / HR',
+  'Finance',
+  'Accounting',
+  'Legal',
+  'Operations',
+  'Sales',
+  'Marketing',
+  'Customer Success',
+  'Support',
+  'Security',
+  'IT / Infrastructure',
+  'Data / Analytics',
+  'Research',
+  'Executive',
+  'Administration',
+] as const;
+
+export const EMPLOYEE_ROLES = [
+  'Software Engineer',
+  'Senior Software Engineer',
+  'Staff Engineer',
+  'Principal Engineer',
+  'Engineering Manager',
+  'Director of Engineering',
+  'VP of Engineering',
+  'Product Manager',
+  'Senior Product Manager',
+  'Product Designer',
+  'UX Designer',
+  'UI Designer',
+  'Design Lead',
+  'HR Business Partner',
+  'People Operations Manager',
+  'Recruiter',
+  'Controller',
+  'Accountant',
+  'Financial Analyst',
+  'CFO',
+  'General Counsel',
+  'Operations Manager',
+  'Account Executive',
+  'Sales Development Representative',
+  'Sales Manager',
+  'Marketing Manager',
+  'Content Marketing Manager',
+  'Customer Success Manager',
+  'Support Specialist',
+  'Security Engineer',
+  'DevOps Engineer',
+  'Data Analyst',
+  'Data Scientist',
+  'Chief Executive Officer',
+  'Chief Operating Officer',
+  'Chief Technology Officer',
+  'Chief People Officer',
+  'Executive Assistant',
+  'Office Manager',
+] as const;
+
+export type EmployeeDepartment = (typeof EMPLOYEE_DEPARTMENTS)[number];
+export type EmployeeRole = (typeof EMPLOYEE_ROLES)[number];
+
+export const DEPARTMENT_OPTIONS = EMPLOYEE_DEPARTMENTS.map((value) => ({
+  label: value,
+  value,
+}));
+
+export const ROLE_OPTIONS = EMPLOYEE_ROLES.map((value) => ({
+  label: value,
+  value,
+}));

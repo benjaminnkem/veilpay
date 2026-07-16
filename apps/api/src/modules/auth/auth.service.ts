@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   UnauthorizedException,
@@ -16,10 +17,13 @@ import {
 } from '../../database/entities';
 import { hashPassword, verifyPassword } from '../../common/utils/password.util';
 import { generateSecureToken, hashToken } from '../../common/utils/token.util';
+import { MailService } from '../../mail/mail.service';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { LoginDto } from './dto/login.dto';
 import { RegisterDto } from './dto/register.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
+import { ForgotPasswordDto } from './dto/forgot-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
 
 @Injectable()
 export class AuthService {
@@ -35,6 +39,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly config: ConfigService,
     private readonly auditLogs: AuditLogsService,
+    private readonly mail: MailService,
   ) {}
 
   async register(dto: RegisterDto) {
@@ -92,6 +97,12 @@ export class AuthService {
       action: AuditAction.ORGANIZATION_CREATED,
       entityType: 'Organization',
       entityId: org.id,
+    });
+
+    await this.mail.sendWelcome({
+      to: user.email,
+      firstName: user.firstName,
+      organizationName: org.name,
     });
 
     return this.issueAuthResponse(user, org.name);
@@ -205,6 +216,8 @@ export class AuthService {
     }
 
     user.passwordHash = await hashPassword(dto.newPassword);
+    user.passwordResetTokenHash = null;
+    user.passwordResetExpiresAt = null;
     await this.usersRepo.save(user);
 
     await this.refreshRepo
@@ -214,7 +227,70 @@ export class AuthService {
       .where('userId = :userId AND revokedAt IS NULL', { userId })
       .execute();
 
+    await this.mail.sendPasswordChanged({
+      to: user.email,
+      firstName: user.firstName,
+    });
+
     return { message: 'Password changed successfully' };
+  }
+
+  async forgotPassword(dto: ForgotPasswordDto) {
+    const user = await this.usersRepo.findOne({
+      where: { email: dto.email.toLowerCase() },
+    });
+
+    if (user?.isActive) {
+      const rawToken = generateSecureToken(32);
+      user.passwordResetTokenHash = hashToken(rawToken);
+      user.passwordResetExpiresAt = new Date(Date.now() + 60 * 60 * 1000);
+      await this.usersRepo.save(user);
+
+      await this.mail.sendForgotPassword({
+        to: user.email,
+        firstName: user.firstName,
+        resetToken: rawToken,
+      });
+    }
+
+    return {
+      message:
+        'If an account exists for that email, a reset link has been sent.',
+    };
+  }
+
+  async resetPassword(dto: ResetPasswordDto) {
+    const tokenHash = hashToken(dto.token);
+    const user = await this.usersRepo.findOne({
+      where: { passwordResetTokenHash: tokenHash },
+    });
+
+    if (
+      !user ||
+      !user.passwordResetExpiresAt ||
+      user.passwordResetExpiresAt < new Date()
+    ) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    user.passwordHash = await hashPassword(dto.newPassword);
+    user.passwordResetTokenHash = null;
+    user.passwordResetExpiresAt = null;
+    await this.usersRepo.save(user);
+
+    await this.refreshRepo
+      .createQueryBuilder()
+      .update()
+      .set({ revokedAt: new Date() })
+      .where('userId = :userId AND revokedAt IS NULL', { userId: user.id })
+      .execute();
+
+    await this.mail.sendPasswordChanged({
+      to: user.email,
+      firstName: user.firstName,
+    });
+
+    return { message: 'Password reset successfully' };
   }
 
   private async issueAuthResponse(

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Invitation accepted</title>
+  <style><%- include('partials/styles') %></style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <div class="brand"><%= appName %></div>
+      </div>
+      <div class="content">
+        <h1>Invitation accepted</h1>
+        <p>Hi <%= inviterFirstName %>,</p>
+        <p>
+          <strong><%= inviteeName %></strong> (<%= inviteeEmail %>) accepted your invitation
+          to <strong><%= organizationName %></strong>.
+        </p>
+        <div class="meta">
+          <div><strong>Role:</strong> <%= role %></div>
+        </div>
+        <p>
+          <a class="btn" href="<%= employeesUrl %>">View team</a>
+        </p>
+      </div>
+      <div class="footer">
+        © <%= year %> <%= appName %>.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

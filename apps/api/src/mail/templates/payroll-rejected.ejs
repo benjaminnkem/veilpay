@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payroll rejected</title>
+  <style><%- include('partials/styles') %></style>
+</head>
+<body>
+  <div class="wrapper">
+    <div class="card">
+      <div class="header">
+        <div class="brand"><%= appName %></div>
+      </div>
+      <div class="content">
+        <h1>Payroll rejected</h1>
+        <p>Hi <%= firstName %>,</p>
+        <p>
+          <strong><%= payrollName %></strong> was rejected at the
+          <strong><%= level %></strong> approval step and returned to draft.
+        </p>
+        <% if (comments) { %>
+          <div class="meta">
+            <strong>Comments:</strong><br />
+            <%= comments %>
+          </div>
+        <% } %>
+        <p>
+          <a class="btn" href="<%= payrollUrl %>">Review payroll</a>
+        </p>
+      </div>
+      <div class="footer">
+        © <%= year %> <%= appName %>.
+      </div>
+    </div>
+  </div>
+</body>
+</html>

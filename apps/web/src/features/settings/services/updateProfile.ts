@@ -1,4 +1,4 @@
-import { apiPatch } from '@/lib/api';
+import { authGet, authPatch } from '@/lib/api';
 
 export interface UpdateProfilePayload {
   firstName?: string;
@@ -8,16 +8,11 @@ export interface UpdateProfilePayload {
 }
 
 export async function updateProfile(payload: UpdateProfilePayload) {
-  return apiPatch('/users/me', payload);
+  return authPatch('/users/me', payload);
 }
 
 export async function getOrganization() {
-  return apiGetOrganization();
-}
-
-async function apiGetOrganization() {
-  const { apiGet } = await import('@/lib/api');
-  return apiGet<{
+  return authGet<{
     id: string;
     name: string;
     legalName: string | null;
@@ -36,6 +31,5 @@ export async function updateOrganization(payload: {
   currency?: string;
   timezone?: string;
 }) {
-  const { apiPatch } = await import('@/lib/api');
-  return apiPatch('/organizations/me', payload);
+  return authPatch('/organizations/me', payload);
 }

@@ -23,7 +23,6 @@ export class OrganizationEntity extends BaseEntity {
   })
   status!: OrganizationStatus;
 
-  /** Placeholder for future Safe treasury */
   @Column({ type: 'varchar', length: 128, nullable: true })
   safeAddress!: string | null;
 

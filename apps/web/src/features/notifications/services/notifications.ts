@@ -1,25 +1,25 @@
-import { apiGet, apiPatch, apiPost } from '@/lib/api';
+import { authGet, authPatch, authPost } from '@/lib/api';
 import type { AppNotification } from '@/features/notifications/types';
 import type { PaginatedResponse, PaginationParams } from '@/types/api';
 
 export async function getNotifications(
   params?: PaginationParams & { isRead?: boolean }
 ): Promise<PaginatedResponse<AppNotification>> {
-  return apiGet('/notifications', { params });
+  return authGet('/notifications', { params });
 }
 
 export async function getUnreadCount(): Promise<{ count: number }> {
-  return apiGet('/notifications/unread-count');
+  return authGet('/notifications/unread-count');
 }
 
 export async function markNotificationRead(
   id: string
 ): Promise<AppNotification> {
-  return apiPatch(`/notifications/${id}/read`);
+  return authPatch(`/notifications/${id}/read`);
 }
 
 export async function markAllNotificationsRead(): Promise<{
   updated: number;
 }> {
-  return apiPost('/notifications/read-all');
+  return authPost('/notifications/read-all');
 }

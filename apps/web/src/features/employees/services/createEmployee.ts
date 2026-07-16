@@ -1,4 +1,4 @@
-import { apiPost } from '@/lib/api';
+import { authPost } from '@/lib/api';
 import type {
   CreateEmployeePayload,
   Employee,
@@ -22,5 +22,5 @@ export async function createEmployee(
     status: payload.status,
   };
 
-  return apiPost<Employee, typeof body>('/employees', body);
+  return authPost<Employee, typeof body>('/employees', body);
 }

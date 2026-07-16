@@ -24,9 +24,18 @@ export default () => ({
   },
   app: {
     name: process.env.APP_NAME ?? 'VeilPay',
+    webUrl: process.env.WEB_URL ?? 'http://localhost:3000',
     invitationExpiryDays: parseInt(
       process.env.INVITATION_EXPIRY_DAYS ?? '7',
       10,
     ),
+  },
+  mail: {
+    host: process.env.MAIL_HOST ?? 'smtp.gmail.com',
+    port: parseInt(process.env.MAIL_PORT ?? '587', 10),
+    secure: (process.env.MAIL_SECURE ?? 'false') === 'true',
+    user: process.env.MAIL_USER ?? '',
+    pass: process.env.MAIL_PASS ?? '',
+    from: process.env.MAIL_FROM ?? process.env.MAIL_USER ?? 'noreply@veilpay.app',
   },
 });

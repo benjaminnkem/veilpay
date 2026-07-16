@@ -2,6 +2,11 @@ import NextAuth from 'next-auth';
 import Credentials from 'next-auth/providers/credentials';
 
 import { login } from '@/features/auth/services/login';
+import {
+  isAccessTokenFresh,
+  refreshAccessToken,
+} from '@/lib/auth/refresh-access-token';
+import { setStoredTokens, tokensFromAuthResponse } from '@/lib/auth/token-store';
 import type { UserRole } from '@/types/auth';
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
@@ -37,6 +42,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             organizationName: result.user.organizationName,
             avatarUrl: result.user.avatarUrl,
             accessToken: result.accessToken,
+            refreshToken: result.refreshToken,
+            expiresIn: result.expiresIn,
           };
         } catch {
           return null;
@@ -53,8 +60,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     error: '/login',
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
+        const expiresIn = user.expiresIn ?? 900;
         token.id = user.id;
         token.email = user.email;
         token.name = user.name;
@@ -63,9 +71,60 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.organizationName = user.organizationName;
         token.avatarUrl = user.avatarUrl;
         token.accessToken = user.accessToken;
+        token.refreshToken = user.refreshToken;
+        token.accessTokenExpires = Date.now() + expiresIn * 1000;
+        token.error = undefined;
+
+        const stored = tokensFromAuthResponse({
+          accessToken: user.accessToken ?? '',
+          refreshToken: user.refreshToken,
+          expiresIn,
+        });
+        if (stored) {
+          setStoredTokens(stored);
+        }
+
+        return token;
       }
 
-      return token;
+      if (trigger === 'update' && session) {
+        const updatePayload = session as {
+          accessToken?: string;
+          refreshToken?: string;
+          accessTokenExpires?: number;
+        };
+
+        if (typeof updatePayload.accessToken === 'string') {
+          token.accessToken = updatePayload.accessToken;
+        }
+        if (typeof updatePayload.refreshToken === 'string') {
+          token.refreshToken = updatePayload.refreshToken;
+        }
+        if (typeof updatePayload.accessTokenExpires === 'number') {
+          token.accessTokenExpires = updatePayload.accessTokenExpires;
+        }
+        token.error = undefined;
+
+        if (
+          typeof token.accessToken === 'string' &&
+          typeof token.refreshToken === 'string' &&
+          typeof token.accessTokenExpires === 'number'
+        ) {
+          setStoredTokens({
+            accessToken: token.accessToken,
+            refreshToken: token.refreshToken,
+            accessTokenExpires: token.accessTokenExpires,
+          });
+        }
+
+        return token;
+      }
+
+      if (isAccessTokenFresh(token.accessTokenExpires as number | undefined)) {
+        return token;
+      }
+
+      return refreshAccessToken(token);
     },
     async session({ session, token }) {
       const role = (token.role as UserRole | undefined) ?? 'EMPLOYEE';
@@ -82,6 +141,11 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         accessToken: token.accessToken as string | undefined,
       };
       session.accessToken = token.accessToken as string | undefined;
+      session.refreshToken = token.refreshToken as string | undefined;
+      session.accessTokenExpires = token.accessTokenExpires as
+        | number
+        | undefined;
+      session.error = token.error as string | undefined;
 
       return session;
     },
