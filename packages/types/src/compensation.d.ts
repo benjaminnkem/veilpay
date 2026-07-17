@@ -13,6 +13,11 @@ export interface Compensation extends Timestamps {
     isCurrent: boolean;
     description: string | null;
 }
+/**
+ * Create a new compensation line. History is append-only:
+ * creating a new current line of the same type ends the previous one.
+ * There is no update-in-place API for amounts or terms.
+ */
 export interface CreateCompensationInput {
     employeeId: string;
     type: CompensationType;
@@ -22,15 +27,6 @@ export interface CreateCompensationInput {
     effectiveDate: string;
     endDate?: string;
     description?: string;
-}
-export interface UpdateCompensationInput {
-    type?: CompensationType;
-    amountCents?: number;
-    currency?: string;
-    frequency?: CompensationFrequency;
-    effectiveDate?: string;
-    endDate?: string | null;
-    description?: string | null;
 }
 export interface EndCompensationInput {
     endDate: string;

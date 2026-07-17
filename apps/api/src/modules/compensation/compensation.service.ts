@@ -19,10 +19,7 @@ import { requireOrganizationId } from '../../common/utils/org.util';
 import { centsToNumber, numberToCentsString } from '../../common/utils/money.util';
 import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateCompensationDto } from './dto/create-compensation.dto';
-import {
-  EndCompensationDto,
-  UpdateCompensationDto,
-} from './dto/update-compensation.dto';
+import { EndCompensationDto } from './dto/update-compensation.dto';
 
 @Injectable()
 export class CompensationService {
@@ -41,18 +38,49 @@ export class CompensationService {
     });
     if (!employee) throw new NotFoundException('Employee not found');
 
-    // End current record of same type when adding a new current one
-    await this.compensationRepo.update(
-      {
+    if (dto.endDate && dto.endDate < dto.effectiveDate) {
+      throw new BadRequestException(
+        'endDate must be on or after effectiveDate',
+      );
+    }
+
+    const current = await this.compensationRepo.findOne({
+      where: {
         employeeId: employee.id,
+        organizationId: orgId,
         type: dto.type,
         isCurrent: true,
       },
-      {
-        isCurrent: false,
-        endDate: dto.effectiveDate,
-      },
-    );
+    });
+
+    if (current) {
+      if (dto.effectiveDate <= current.effectiveDate) {
+        throw new BadRequestException(
+          'New compensation effectiveDate must be after the current record’s effectiveDate. Do not overwrite history.',
+        );
+      }
+
+      const previousEnd = dayBefore(dto.effectiveDate);
+      current.isCurrent = false;
+      current.endDate =
+        previousEnd >= current.effectiveDate
+          ? previousEnd
+          : current.effectiveDate;
+      await this.compensationRepo.save(current);
+
+      await this.auditLogs.log({
+        organizationId: orgId,
+        actorId: actor.id,
+        actorEmail: actor.email,
+        action: AuditAction.COMPENSATION_ENDED,
+        entityType: 'Compensation',
+        entityId: current.id,
+        metadata: {
+          endDate: current.endDate,
+          supersededByEffectiveDate: dto.effectiveDate,
+        },
+      });
+    }
 
     const record = this.compensationRepo.create({
       employeeId: employee.id,
@@ -76,7 +104,11 @@ export class CompensationService {
       action: AuditAction.COMPENSATION_CREATED,
       entityType: 'Compensation',
       entityId: record.id,
-      metadata: { employeeId: employee.id, type: dto.type },
+      metadata: {
+        employeeId: employee.id,
+        type: dto.type,
+        supersededId: current?.id ?? null,
+      },
     });
 
     return serializeCompensation(record);
@@ -106,42 +138,6 @@ export class CompensationService {
     return records.map(serializeCompensation);
   }
 
-  async update(actor: JwtPayloadUser, id: string, dto: UpdateCompensationDto) {
-    const orgId = requireOrganizationId(actor);
-    const record = await this.compensationRepo.findOne({
-      where: { id, organizationId: orgId },
-    });
-    if (!record) throw new NotFoundException('Compensation not found');
-
-    Object.assign(record, {
-      type: dto.type ?? record.type,
-      amountCents:
-        dto.amountCents !== undefined
-          ? numberToCentsString(dto.amountCents)
-          : record.amountCents,
-      currency: dto.currency ?? record.currency,
-      frequency: dto.frequency ?? record.frequency,
-      effectiveDate: dto.effectiveDate ?? record.effectiveDate,
-      endDate: dto.endDate !== undefined ? dto.endDate : record.endDate,
-      description:
-        dto.description !== undefined ? dto.description : record.description,
-      isCurrent: dto.endDate ? false : record.isCurrent,
-    });
-
-    await this.compensationRepo.save(record);
-
-    await this.auditLogs.log({
-      organizationId: orgId,
-      actorId: actor.id,
-      actorEmail: actor.email,
-      action: AuditAction.COMPENSATION_UPDATED,
-      entityType: 'Compensation',
-      entityId: record.id,
-    });
-
-    return serializeCompensation(record);
-  }
-
   async end(actor: JwtPayloadUser, id: string, dto: EndCompensationDto) {
     const orgId = requireOrganizationId(actor);
     const record = await this.compensationRepo.findOne({
@@ -150,6 +146,11 @@ export class CompensationService {
     if (!record) throw new NotFoundException('Compensation not found');
     if (!record.isCurrent) {
       throw new BadRequestException('Compensation is already ended');
+    }
+    if (dto.endDate < record.effectiveDate) {
+      throw new BadRequestException(
+        'endDate must be on or after effectiveDate',
+      );
     }
 
     record.endDate = dto.endDate;
@@ -169,7 +170,6 @@ export class CompensationService {
     return serializeCompensation(record);
   }
 
-  /** Used by payroll engine — current salary/bonus/allowance for active employees */
   async getCurrentCompMap(
     organizationId: string,
     employeeIds?: string[],
@@ -218,6 +218,12 @@ export class CompensationService {
 
     return map;
   }
+}
+
+function dayBefore(isoDate: string): string {
+  const d = new Date(`${isoDate}T00:00:00.000Z`);
+  d.setUTCDate(d.getUTCDate() - 1);
+  return d.toISOString().slice(0, 10);
 }
 
 function serializeCompensation(c: CompensationEntity) {

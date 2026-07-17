@@ -26,16 +26,6 @@ export interface CreateCompensationInput {
   description?: string;
 }
 
-export interface UpdateCompensationInput {
-  type?: CompensationType;
-  amountCents?: number;
-  currency?: string;
-  frequency?: CompensationFrequency;
-  effectiveDate?: string;
-  endDate?: string | null;
-  description?: string | null;
-}
-
 export interface EndCompensationInput {
   endDate: string;
 }

@@ -4,7 +4,6 @@ import {
   Get,
   Param,
   ParseUUIDPipe,
-  Patch,
   Post,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
@@ -16,10 +15,22 @@ import {
 import { Roles } from '../../common/decorators/roles.decorator';
 import { CompensationService } from './compensation.service';
 import { CreateCompensationDto } from './dto/create-compensation.dto';
-import {
-  EndCompensationDto,
-  UpdateCompensationDto,
-} from './dto/update-compensation.dto';
+import { EndCompensationDto } from './dto/update-compensation.dto';
+
+const COMPENSATION_WRITE_ROLES = [
+  UserRole.OWNER,
+  UserRole.HR,
+  UserRole.SUPER_ADMIN,
+] as const;
+
+const COMPENSATION_READ_ROLES = [
+  UserRole.OWNER,
+  UserRole.HR,
+  UserRole.FINANCE,
+  UserRole.CEO,
+  UserRole.AUDITOR,
+  UserRole.SUPER_ADMIN,
+] as const;
 
 @ApiTags('compensation')
 @ApiBearerAuth()
@@ -28,7 +39,7 @@ export class CompensationController {
   constructor(private readonly compensationService: CompensationService) {}
 
   @Post()
-  @Roles(UserRole.OWNER, UserRole.HR, UserRole.FINANCE, UserRole.SUPER_ADMIN)
+  @Roles(...COMPENSATION_WRITE_ROLES)
   @ApiOperation({ summary: 'Create compensation record' })
   create(
     @CurrentUser() user: JwtPayloadUser,
@@ -38,14 +49,7 @@ export class CompensationController {
   }
 
   @Get('employee/:employeeId')
-  @Roles(
-    UserRole.OWNER,
-    UserRole.HR,
-    UserRole.FINANCE,
-    UserRole.CEO,
-    UserRole.AUDITOR,
-    UserRole.SUPER_ADMIN,
-  )
+  @Roles(...COMPENSATION_READ_ROLES)
   @ApiOperation({ summary: 'List compensation history for employee' })
   findByEmployee(
     @CurrentUser() user: JwtPayloadUser,
@@ -55,14 +59,7 @@ export class CompensationController {
   }
 
   @Get('employee/:employeeId/current')
-  @Roles(
-    UserRole.OWNER,
-    UserRole.HR,
-    UserRole.FINANCE,
-    UserRole.CEO,
-    UserRole.AUDITOR,
-    UserRole.SUPER_ADMIN,
-  )
+  @Roles(...COMPENSATION_READ_ROLES)
   @ApiOperation({ summary: 'Current compensation for employee' })
   getCurrent(
     @CurrentUser() user: JwtPayloadUser,
@@ -71,20 +68,9 @@ export class CompensationController {
     return this.compensationService.getCurrent(user, employeeId);
   }
 
-  @Patch(':id')
-  @Roles(UserRole.OWNER, UserRole.HR, UserRole.FINANCE, UserRole.SUPER_ADMIN)
-  @ApiOperation({ summary: 'Update compensation record' })
-  update(
-    @CurrentUser() user: JwtPayloadUser,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpdateCompensationDto,
-  ) {
-    return this.compensationService.update(user, id, dto);
-  }
-
   @Post(':id/end')
-  @Roles(UserRole.OWNER, UserRole.HR, UserRole.FINANCE, UserRole.SUPER_ADMIN)
-  @ApiOperation({ summary: 'End a current compensation (no hard delete)' })
+  @Roles(...COMPENSATION_WRITE_ROLES)
+  @ApiOperation({ summary: 'End a current compensation' })
   end(
     @CurrentUser() user: JwtPayloadUser,
     @Param('id', ParseUUIDPipe) id: string,
