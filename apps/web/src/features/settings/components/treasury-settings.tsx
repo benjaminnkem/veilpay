@@ -91,15 +91,15 @@ export function TreasurySettings() {
     }
   }, [orgQuery.data?.network, orgQuery.data?.safeAddress]);
 
+  const walletOnCorrectChain = chainId === activeNetwork.id;
+
   const safesQuery = useQuery({
     queryKey: ['safe-owners', address, activeNetwork.key],
     queryFn: () => fetchSafesForOwner(address!, activeNetwork),
-    enabled: Boolean(isConnected && address),
+    enabled: Boolean(isConnected && address && walletOnCorrectChain),
     staleTime: 30_000,
     retry: 1,
   });
-
-  const walletOnCorrectChain = chainId === activeNetwork.id;
   const projectIdConfigured = Boolean(getWalletConnectProjectId());
 
   const candidateSafe = selectedSafe || manualSafe.trim();

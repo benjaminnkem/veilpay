@@ -80,8 +80,8 @@ export class OrganizationsService {
           ? 'configured'
           : 'not_configured',
       message: ready
-        ? 'Treasury placeholders configured. Blockchain execution pending Safe + Nox integration.'
-        : 'Add Safe wallet address and network in organization settings.',
+        ? 'Safe treasury linked. Blockchain execution can use this Safe for USDC payroll.'
+        : 'Connect a Safe treasury in organization settings to enable on-chain payroll.',
     };
   }
 }

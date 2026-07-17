@@ -26,13 +26,17 @@ export class UpdateOrganizationDto {
   @IsEnum(OrganizationStatus)
   status?: OrganizationStatus;
 
-  @ApiPropertyOptional({ description: 'Safe treasury address placeholder' })
+  @ApiPropertyOptional({
+    description: 'Safe smart account address used as organization treasury',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(128)
   safeAddress?: string | null;
 
-  @ApiPropertyOptional()
+  @ApiPropertyOptional({
+    description: 'Network key, e.g. sepolia | base-sepolia | base | ethereum',
+  })
   @IsOptional()
   @IsString()
   @MaxLength(64)
@@ -42,7 +46,7 @@ export class UpdateOrganizationDto {
   @IsOptional()
   @IsString()
   @MaxLength(32)
-  executionProvider?: string;
+  executionProvider?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

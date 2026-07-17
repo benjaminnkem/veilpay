@@ -29,7 +29,7 @@ export async function updateOrganization(payload: {
   legalName?: string | null;
   safeAddress?: string | null;
   network?: string | null;
-  executionProvider?: string;
+  executionProvider?: string | null;
   currency?: string;
   timezone?: string;
 }) {

@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { InputField, PasswordField, SelectField } from '@/components/forms';
+import { InputField, PasswordField } from '@/components/forms';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProfileSettingsForm } from '@/features/settings/components/profile-settings-form';
+import { TreasurySettings } from '@/features/settings/components/treasury-settings';
 import {
   getOrganization,
   updateOrganization,
@@ -30,9 +31,6 @@ const orgSchema = z.object({
   legalName: z.string().optional(),
   currency: z.string().min(1),
   timezone: z.string().min(1),
-  safeAddress: z.string().optional(),
-  network: z.string().optional(),
-  executionProvider: z.enum(['mock', 'blockchain']),
 });
 
 const securitySchema = z
@@ -86,10 +84,6 @@ export function SettingsWorkspace() {
       legalName: orgQuery.data?.legalName ?? '',
       currency: orgQuery.data?.currency ?? 'USD',
       timezone: orgQuery.data?.timezone ?? 'UTC',
-      safeAddress: orgQuery.data?.safeAddress ?? '',
-      network: orgQuery.data?.network ?? '',
-      executionProvider:
-        (orgQuery.data?.executionProvider as 'mock' | 'blockchain') ?? 'mock',
     },
   });
 
@@ -122,9 +116,6 @@ export function SettingsWorkspace() {
         legalName: values.legalName || null,
         currency: values.currency,
         timezone: values.timezone,
-        safeAddress: values.safeAddress || null,
-        network: values.network || null,
-        executionProvider: values.executionProvider,
       });
       notify.success('Organization updated');
       await orgQuery.refetch();
@@ -189,7 +180,7 @@ export function SettingsWorkspace() {
           <CardHeader>
             <CardTitle className="text-base">Organization</CardTitle>
             <CardDescription>
-              Legal identity, branding, and treasury placeholders for Safe + Nox.
+              Legal identity, branding, and payroll currency for this workspace.
             </CardDescription>
           </CardHeader>
           <form onSubmit={onOrgSubmit}>
@@ -210,30 +201,6 @@ export function SettingsWorkspace() {
                 name="timezone"
                 label="Timezone"
               />
-              <InputField
-                control={orgForm.control}
-                name="safeAddress"
-                label="Safe treasury address"
-                description="Placeholder until Safe SDK integration"
-              />
-              <InputField
-                control={orgForm.control}
-                name="network"
-                label="Blockchain network"
-                description="e.g. base-sepolia, ethereum"
-              />
-              <SelectField
-                control={orgForm.control}
-                name="executionProvider"
-                label="Execution provider"
-                options={[
-                  { label: 'Mock (development)', value: 'mock' },
-                  {
-                    label: 'Blockchain (Safe + Nox pending)',
-                    value: 'blockchain',
-                  },
-                ]}
-              />
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={orgForm.formState.isSubmitting}>
@@ -244,6 +211,8 @@ export function SettingsWorkspace() {
             </CardFooter>
           </form>
         </Card>
+
+        <TreasurySettings />
       </TabsContent>
 
       <TabsContent value="payroll">
