@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/card';
 import { ROUTES } from '@/constants/routes';
 import { useDashboardStats } from '@/features/dashboard/hooks/use-dashboard';
+import { TreasuryBalancesPanel } from '@/features/settings/components/treasury-balances-panel';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { formatCurrency, formatDate } from '@/lib/utils';
 
@@ -156,7 +157,7 @@ export function DashboardOverview() {
                 <CardHeader>
                   <CardTitle className="text-base">Treasury</CardTitle>
                   <CardDescription>
-                    Safe + network placeholders
+                    Linked Safe and live on-chain balances
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3 text-sm">
@@ -172,11 +173,18 @@ export function DashboardOverview() {
                         {stats.treasury.executionProvider}
                       </span>
                     </div>
-                    <div className="truncate">
+                    <div className="truncate font-mono">
                       Safe: {stats.treasury.safeAddress || 'Not set'}
                     </div>
                     <div>Network: {stats.treasury.network || 'Not set'}</div>
                   </div>
+                  {stats.treasury.safeAddress && stats.treasury.network ? (
+                    <TreasuryBalancesPanel
+                      safeAddress={stats.treasury.safeAddress}
+                      network={stats.treasury.network}
+                      compact
+                    />
+                  ) : null}
                   <Button
                     size="sm"
                     variant="outline"

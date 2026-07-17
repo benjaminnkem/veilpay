@@ -23,7 +23,7 @@ export const NETWORK_OPTIONS = [
     chain: baseSepolia,
     safeTxService: 'https://safe-transaction-base-sepolia.safe.global',
     explorer: 'https://sepolia.basescan.org',
-    usdc: null as string | null,
+    usdc: '0x036CbD53842c5426634e7929541eC2318f3dCF7e',
   },
   {
     id: base.id,

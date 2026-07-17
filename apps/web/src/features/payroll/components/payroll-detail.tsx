@@ -30,6 +30,8 @@ import {
 } from '@/components/ui/table';
 import { ROUTES } from '@/constants/routes';
 import { getApprovalTimeline } from '@/features/approvals/services/getApprovals';
+import { TreasuryBalancesPanel } from '@/features/settings/components/treasury-balances-panel';
+import { getOrganization } from '@/features/settings/services/updateProfile';
 import {
   cancelPayroll,
   executePayroll,
@@ -52,6 +54,11 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
   const timelineQuery = useQuery({
     queryKey: ['approvals', 'timeline', payrollId],
     queryFn: () => getApprovalTimeline(payrollId),
+  });
+
+  const orgQuery = useQuery({
+    queryKey: ['organization', 'me'],
+    queryFn: getOrganization,
   });
 
   const invalidate = async () => {
@@ -238,6 +245,22 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  {orgQuery.data?.safeAddress && orgQuery.data?.network ? (
+                    <TreasuryBalancesPanel
+                      safeAddress={orgQuery.data.safeAddress}
+                      network={orgQuery.data.network}
+                      requiredUsdc={
+                        (payroll.totalAmount ??
+                          (payroll.totalNetPayCents ?? 0) / 100) ||
+                        undefined
+                      }
+                    />
+                  ) : (
+                    <p className="text-sm text-amber-700 dark:text-amber-300">
+                      No Safe treasury linked yet. Connect one in Organization
+                      settings before on-chain execution.
+                    </p>
+                  )}
                   {status === 'APPROVED' ? (
                     <>
                       <p className="text-sm text-muted-foreground">

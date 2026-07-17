@@ -33,6 +33,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { TreasuryBalancesPanel } from '@/features/settings/components/treasury-balances-panel';
+import { treasuryBalancesQueryKey } from '@/features/settings/hooks/use-treasury-balances';
 import {
   getOrganization,
   updateOrganization,
@@ -119,6 +121,9 @@ export function TreasurySettings() {
       });
       await qc.invalidateQueries({ queryKey: ['organization', 'me'] });
       await qc.invalidateQueries({ queryKey: ['dashboard'] });
+      await qc.invalidateQueries({
+        queryKey: treasuryBalancesQueryKey(safeAddress, network.key),
+      });
       setSelectedSafe(safeAddress);
       setManualSafe(safeAddress);
       notify.success(
@@ -142,6 +147,7 @@ export function TreasurySettings() {
       });
       await qc.invalidateQueries({ queryKey: ['organization', 'me'] });
       await qc.invalidateQueries({ queryKey: ['dashboard'] });
+      await qc.invalidateQueries({ queryKey: ['treasury-balances'] });
       setSelectedSafe('');
       setManualSafe('');
       notify.success('Treasury disconnected');
@@ -236,6 +242,12 @@ export function TreasurySettings() {
                   Disconnect
                 </Button>
               </div>
+            </div>
+            <div className="mt-4">
+              <TreasuryBalancesPanel
+                safeAddress={linkedSafe}
+                network={orgQuery.data?.network}
+              />
             </div>
           </div>
         ) : null}
