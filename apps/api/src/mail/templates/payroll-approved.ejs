@@ -1,31 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payroll approved</title>
-  <style><%- include('partials/styles') %></style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><%= appName %></div>
-      </div>
-      <div class="content">
-        <h1>Payroll fully approved</h1>
-        <p>Hi <%= firstName %>,</p>
-        <p>
-          <strong><%= payrollName %></strong> completed the approval chain and is ready for execution.
-        </p>
-        <p>
-          <a class="btn" href="<%= payrollUrl %>">Open payroll</a>
-        </p>
-      </div>
-      <div class="footer">
-        © <%= year %> <%= appName %>.
-      </div>
-    </div>
+<%- include('partials/layout-start', { title: 'Payroll approved' }) %>
+
+<span class="eyebrow">Payroll</span>
+<h1>Payroll fully approved</h1>
+<p class="lead">Hi <%= firstName %>,</p>
+<p>
+  <strong><%= payrollName %></strong> completed every approval step and is ready
+  for execution.
+</p>
+
+<div class="note note-success">
+  Ready for execution. Open the run to launch payment processing when your treasury flow is prepared.
+</div>
+
+<div class="meta">
+  <div class="meta-row">
+    <span class="meta-label">Payroll run</span>
+    <span class="meta-value"><%= payrollName %></span>
   </div>
-</body>
-</html>
+  <div class="meta-row">
+    <span class="meta-label">Status</span>
+    <span class="meta-value">Approved</span>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <a class="btn" href="<%= payrollUrl %>">Open payroll</a>
+</div>
+
+<%- include('partials/layout-end') %>

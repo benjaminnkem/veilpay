@@ -1,6 +1,6 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ArrowLeftIcon, UserIcon } from 'lucide-react';
 import Link from 'next/link';
 
@@ -16,9 +16,17 @@ import {
 } from '@/components/ui/card';
 import { ROUTES } from '@/constants/routes';
 import { EditCompensationDialog } from '@/features/employees/components/edit-compensation-dialog';
+import { EditEmployeeDialog } from '@/features/employees/components/edit-employee-dialog';
+import { employeesQueryKey } from '@/features/employees/hooks/use-employees';
+import {
+  reactivateEmployee,
+  suspendEmployee,
+} from '@/features/employees/services/employeeActions';
+import { deleteEmployee } from '@/features/employees/services/deleteEmployee';
 import { getEmployee } from '@/features/employees/services/getEmployees';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { authGet } from '@/lib/api';
+import { notify } from '@/lib/toast';
 import { formatDate } from '@/lib/utils';
 
 interface CompensationRow {
@@ -41,9 +49,9 @@ const COMPENSATION_WRITE_ROLES = new Set([
 
 export function EmployeeDetail({ employeeId }: { employeeId: string }) {
   const { user } = useCurrentUser();
-  const canEditCompensation = COMPENSATION_WRITE_ROLES.has(
-    String(user?.role ?? '')
-  );
+  const qc = useQueryClient();
+  const canManage = COMPENSATION_WRITE_ROLES.has(String(user?.role ?? ''));
+  const canEditCompensation = canManage;
 
   const employeeQuery = useQuery({
     queryKey: ['employees', employeeId],
@@ -56,7 +64,41 @@ export function EmployeeDetail({ employeeId }: { employeeId: string }) {
       authGet<CompensationRow[]>(`/compensation/employee/${employeeId}`),
   });
 
+  const invalidate = async () => {
+    await qc.invalidateQueries({ queryKey: ['employees', employeeId] });
+    await qc.invalidateQueries({ queryKey: employeesQueryKey });
+    await qc.invalidateQueries({ queryKey: ['dashboard'] });
+  };
+
+  const suspend = useMutation({
+    mutationFn: () => suspendEmployee(employeeId),
+    onSuccess: async () => {
+      notify.success('Employee suspended');
+      await invalidate();
+    },
+    onError: (e) => notify.error(e),
+  });
+
+  const reactivate = useMutation({
+    mutationFn: () => reactivateEmployee(employeeId),
+    onSuccess: async () => {
+      notify.success('Employee reactivated');
+      await invalidate();
+    },
+    onError: (e) => notify.error(e),
+  });
+
+  const terminate = useMutation({
+    mutationFn: () => deleteEmployee(employeeId),
+    onSuccess: async () => {
+      notify.success('Employee terminated');
+      await invalidate();
+    },
+    onError: (e) => notify.error(e),
+  });
+
   const employee = employeeQuery.data;
+  const status = String(employee?.status ?? '').toUpperCase();
   const currentSalary = compensationQuery.data?.find(
     (c) => c.isCurrent && c.type === 'SALARY'
   );
@@ -98,9 +140,68 @@ export function EmployeeDetail({ employeeId }: { employeeId: string }) {
                   </CardTitle>
                   <CardDescription>{employee.email}</CardDescription>
                 </div>
-                <Badge className="capitalize">
-                  {String(employee.status).replaceAll('_', ' ').toLowerCase()}
-                </Badge>
+                <div className="flex flex-wrap items-center gap-2">
+                  <Badge className="capitalize">
+                    {String(employee.status)
+                      .replaceAll('_', ' ')
+                      .toLowerCase()}
+                  </Badge>
+                  {canManage ? (
+                    <>
+                      <EditEmployeeDialog employee={employee} />
+                      {status === 'ACTIVE' ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => suspend.mutate()}
+                          disabled={suspend.isPending}
+                        >
+                          Suspend
+                        </Button>
+                      ) : null}
+                      {status === 'INACTIVE' || status === 'ONBOARDING' ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => reactivate.mutate()}
+                          disabled={reactivate.isPending}
+                        >
+                          Reactivate
+                        </Button>
+                      ) : null}
+                      {status !== 'TERMINATED' ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => {
+                            if (
+                              window.confirm(
+                                `Terminate ${employee.firstName} ${employee.lastName}?`
+                              )
+                            ) {
+                              terminate.mutate();
+                            }
+                          }}
+                          disabled={terminate.isPending}
+                        >
+                          Terminate
+                        </Button>
+                      ) : null}
+                      <Button
+                        size="sm"
+                        variant="secondary"
+                        nativeButton={false}
+                        render={
+                          <Link
+                            href={`${ROUTES.invitations}?email=${encodeURIComponent(employee.email)}`}
+                          />
+                        }
+                      >
+                        Invite
+                      </Button>
+                    </>
+                  ) : null}
+                </div>
               </CardHeader>
               <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 text-sm">
                 <Field label="Department" value={employee.department} />
@@ -130,7 +231,7 @@ export function EmployeeDetail({ employeeId }: { employeeId: string }) {
                 <div>
                   <CardTitle className="text-base">Compensation</CardTitle>
                   <CardDescription>
-                    HR sets pay. History is immutable — raises create a new
+                    HR sets pay. History is immutable - raises create a new
                     record; payroll reads the current line.
                   </CardDescription>
                 </div>
@@ -275,7 +376,7 @@ function Field({
     <div>
       <div className="text-muted-foreground">{label}</div>
       <div className={mono ? 'font-mono text-xs break-all' : 'font-medium'}>
-        {value || '—'}
+        {value || '-'}
       </div>
     </div>
   );

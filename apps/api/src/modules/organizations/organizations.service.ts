@@ -36,6 +36,10 @@ export class OrganizationsService {
       safeAddress:
         dto.safeAddress !== undefined ? dto.safeAddress : org.safeAddress,
       network: dto.network !== undefined ? dto.network : org.network,
+      executionProvider:
+        dto.executionProvider !== undefined
+          ? dto.executionProvider
+          : org.executionProvider,
       currency: dto.currency ?? org.currency,
       timezone: dto.timezone ?? org.timezone,
       logoUrl: dto.logoUrl !== undefined ? dto.logoUrl : org.logoUrl,
@@ -55,6 +59,31 @@ export class OrganizationsService {
 
     return serializeOrg(org);
   }
+
+  async getTreasury(actor: JwtPayloadUser) {
+    const orgId = requireOrganizationId(actor);
+    const org = await this.orgRepo.findOne({ where: { id: orgId } });
+    if (!org) throw new NotFoundException('Organization not found');
+
+    const configured = Boolean(org.safeAddress && org.network);
+    const ready = configured;
+
+    return {
+      safeAddress: org.safeAddress,
+      network: org.network,
+      executionProvider: org.executionProvider ?? 'mock',
+      configured,
+      ready,
+      status: ready
+        ? 'ready'
+        : configured
+          ? 'configured'
+          : 'not_configured',
+      message: ready
+        ? 'Treasury placeholders configured. Blockchain execution pending Safe + Nox integration.'
+        : 'Add Safe wallet address and network in organization settings.',
+    };
+  }
 }
 
 function serializeOrg(org: OrganizationEntity) {
@@ -66,6 +95,7 @@ function serializeOrg(org: OrganizationEntity) {
     status: org.status,
     safeAddress: org.safeAddress,
     network: org.network,
+    executionProvider: org.executionProvider ?? 'mock',
     currency: org.currency,
     timezone: org.timezone,
     logoUrl: org.logoUrl,

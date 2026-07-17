@@ -50,4 +50,13 @@ export class NotificationsController {
   markAllRead(@CurrentUser() user: JwtPayloadUser) {
     return this.notificationsService.markAllRead(user.id);
   }
+
+  @Patch(':id/archive')
+  @ApiOperation({ summary: 'Archive a notification' })
+  archive(
+    @CurrentUser() user: JwtPayloadUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.notificationsService.archive(user.id, id);
+  }
 }

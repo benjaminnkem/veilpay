@@ -31,7 +31,7 @@ export function InvitationsTable() {
           <p className="text-xs text-muted-foreground">
             {[row.original.firstName, row.original.lastName]
               .filter(Boolean)
-              .join(' ') || '—'}
+              .join(' ') || '-'}
           </p>
         </div>
       ),
@@ -60,7 +60,7 @@ export function InvitationsTable() {
       cell: ({ row }) => {
         const cents = row.original.startingSalaryCents;
         if (cents == null) {
-          return <span className="text-xs text-muted-foreground">—</span>;
+          return <span className="text-xs text-muted-foreground">-</span>;
         }
         return (
           <div className="space-y-0.5">

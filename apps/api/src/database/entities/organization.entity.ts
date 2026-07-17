@@ -29,6 +29,9 @@ export class OrganizationEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 64, nullable: true })
   network!: string | null;
 
+  @Column({ type: 'varchar', length: 32, default: 'mock' })
+  executionProvider!: string;
+
   @Column({ type: 'varchar', length: 8, default: 'USD' })
   currency!: string;
 

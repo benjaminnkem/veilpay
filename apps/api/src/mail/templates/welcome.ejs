@@ -1,34 +1,31 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Welcome to <%= appName %></title>
-  <style><%- include('partials/styles') %></style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><%= appName %></div>
-      </div>
-      <div class="content">
-        <h1>Welcome, <%= firstName %></h1>
-        <p>
-          Your organization <strong><%= organizationName %></strong> is ready on <%= appName %>.
-          Manage employees, compensation, payroll cycles, and approvals from one confidential workspace.
-        </p>
-        <p>
-          <a class="btn" href="<%= dashboardUrl %>">Open dashboard</a>
-        </p>
-        <p class="muted">
-          Or sign in anytime at <a href="<%= loginUrl %>"><%= loginUrl %></a>
-        </p>
-      </div>
-      <div class="footer">
-        © <%= year %> <%= appName %>. Confidential payroll infrastructure.
-      </div>
-    </div>
+<%- include('partials/layout-start', { title: 'Welcome to ' + appName }) %>
+
+<span class="eyebrow">Welcome</span>
+<h1>Your workspace is ready, <%= firstName %></h1>
+<p class="lead">
+  <strong><%= organizationName %></strong> is set up on <%= appName %>.
+  Hire people, define compensation, run payroll, and move approvals from one
+  confidential control plane.
+</p>
+
+<div class="meta">
+  <div class="meta-row">
+    <span class="meta-label">Organization</span>
+    <span class="meta-value"><%= organizationName %></span>
   </div>
-</body>
-</html>
+  <div class="meta-row">
+    <span class="meta-label">Next step</span>
+    <span class="meta-value">Open the dashboard and invite your team</span>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <a class="btn" href="<%= dashboardUrl %>">Open dashboard</a>
+</div>
+
+<p class="muted">
+  Prefer the sign-in page?
+  <a href="<%= loginUrl %>"><%= loginUrl %></a>
+</p>
+
+<%- include('partials/layout-end') %>

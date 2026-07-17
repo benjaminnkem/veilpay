@@ -1,6 +1,6 @@
 # VeilPay
 
-pnpm + Turborepo monorepo for **VeilPay** — an enterprise payroll platform for Web3 organizations.
+pnpm + Turborepo monorepo for **VeilPay** - an enterprise payroll platform for Web3 organizations.
 
 The foundation is a complete SaaS payroll stack (auth, employees, compensation, payroll engine, approvals, audit, notifications, invitations). **Blockchain payment execution** (Safe, Nox, confidential USDC) plugs in later via the `PaymentProvider` abstraction.
 
@@ -73,8 +73,8 @@ interface PaymentProvider {
 }
 ```
 
-- **MockPaymentProvider** — default (no funds moved)
-- **BlockchainPaymentProvider** — stub for Safe / Nox / USDC (throws `NotImplemented`)
+- **MockPaymentProvider** - default (no funds moved)
+- **BlockchainPaymentProvider** - stub for Safe / Nox / USDC (throws `NotImplemented`)
 
 Payroll domain never depends on chain details. Fields like `safeAddress`, `walletAddress`, `transactionHash`, and `network` are nullable placeholders.
 
@@ -87,7 +87,7 @@ Payroll domain never depends on chain details. Fields like `safeAddress`, `walle
 - Next.js App Router, Tailwind, shadcn/ui
 - React Hook Form + Zod, TanStack Query, Axios feature services
 - NextAuth credentials → JWT from Nest API
-- Prepared (not wired): `wagmi`, `viem`, `@rainbow-me/rainbowkit` — see `apps/web/src/lib/web3/config.ts`
+- Prepared (not wired): `wagmi`, `viem`, `@rainbow-me/rainbowkit` - see `apps/web/src/lib/web3/config.ts`
 
 ## Scripts
 

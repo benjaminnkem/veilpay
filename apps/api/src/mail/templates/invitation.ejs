@@ -1,43 +1,39 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>You're invited</title>
-  <style><%- include('partials/styles') %></style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><%= appName %></div>
-      </div>
-      <div class="content">
-        <h1>You're invited</h1>
-        <p>Hi <%= inviteeName %>,</p>
-        <p>
-          <strong><%= inviterName %></strong> invited you to join
-          <strong><%= organizationName %></strong> on <%= appName %>.
-        </p>
-        <div class="meta">
-          <div><strong>Role:</strong> <%= role %></div>
-          <div><strong>Expires:</strong> <%= expiresAt %></div>
-        </div>
-        <p>
-          <a class="btn" href="<%= inviteUrl %>">Accept invitation</a>
-        </p>
-        <p class="muted">
-          Or paste this link into your browser:<br />
-          <a href="<%= inviteUrl %>"><%= inviteUrl %></a>
-        </p>
-        <p class="muted">
-          This link is unique to you. Do not forward it.
-        </p>
-      </div>
-      <div class="footer">
-        © <%= year %> <%= appName %>.
-      </div>
-    </div>
+<%- include('partials/layout-start', { title: "You're invited to " + organizationName }) %>
+
+<span class="eyebrow">Invitation</span>
+<h1>Join <%= organizationName %> on <%= appName %></h1>
+<p class="lead">Hi <%= inviteeName %>,</p>
+<p>
+  <strong><%= inviterName %></strong> invited you to collaborate on confidential
+  payroll and workforce operations.
+</p>
+
+<div class="meta">
+  <div class="meta-row">
+    <span class="meta-label">Organization</span>
+    <span class="meta-value"><%= organizationName %></span>
   </div>
-</body>
-</html>
+  <div class="meta-row">
+    <span class="meta-label">Access role</span>
+    <span class="meta-value"><%= role %></span>
+  </div>
+  <div class="meta-row">
+    <span class="meta-label">Expires</span>
+    <span class="meta-value"><%= expiresAt %></span>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <a class="btn" href="<%= inviteUrl %>">Accept invitation</a>
+</div>
+
+<div class="note note-info">
+  This link is unique to you. Do not forward it to anyone else.
+</div>
+
+<p class="muted">
+  Or paste this link into your browser:<br />
+  <a href="<%= inviteUrl %>"><%= inviteUrl %></a>
+</p>
+
+<%- include('partials/layout-end') %>

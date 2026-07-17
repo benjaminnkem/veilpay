@@ -4,6 +4,7 @@ export const COMPENSATION_TYPE_OPTIONS = [
   { label: 'Salary', value: 'SALARY' },
   { label: 'Bonus', value: 'BONUS' },
   { label: 'Allowance', value: 'ALLOWANCE' },
+  { label: 'Deduction', value: 'DEDUCTION' },
 ] as const;
 
 export const COMPENSATION_FREQUENCY_OPTIONS = [
@@ -26,7 +27,7 @@ export const COMPENSATION_CURRENCY_OPTIONS = [
 ] as const;
 
 export const createCompensationSchema = z.object({
-  type: z.enum(['SALARY', 'BONUS', 'ALLOWANCE']),
+  type: z.enum(['SALARY', 'BONUS', 'ALLOWANCE', 'DEDUCTION']),
   amount: z
     .number({ error: 'Amount is required' })
     .positive('Amount must be greater than zero'),

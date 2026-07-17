@@ -5,7 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
-import { ComboboxField, InputField } from '@/components/forms';
+import { ComboboxField, DatePickerField, InputField } from '@/components/forms';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -126,6 +126,11 @@ export function CreateEmployeeDialog() {
               options={ROLE_OPTIONS}
             />
           </div>
+          <DatePickerField
+            control={form.control}
+            name="hireDate"
+            label="Hire date"
+          />
           <DialogFooter>
             <Button
               type="button"

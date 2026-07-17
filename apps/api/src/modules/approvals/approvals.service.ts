@@ -424,7 +424,7 @@ export class ApprovalsService {
     return {
       id: s.id,
       title: payroll?.name ?? 'Payroll approval',
-      requester: '—',
+      requester: '-',
       type: 'payroll' as const,
       status: s.status.toLowerCase() as 'pending' | 'approved' | 'rejected',
       createdAt: s.createdAt.toISOString(),

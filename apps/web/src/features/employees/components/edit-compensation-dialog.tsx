@@ -130,7 +130,7 @@ export function EditCompensationDialog({
           </DialogTitle>
           <DialogDescription>
             This creates a new compensation record. Past amounts are never
-            overwritten — the previous current line is ended automatically.
+            overwritten - the previous current line is ended automatically.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={onSubmit} className="space-y-4">

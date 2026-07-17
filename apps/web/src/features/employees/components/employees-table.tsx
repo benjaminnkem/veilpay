@@ -44,7 +44,7 @@ const columns: ColumnDef<Employee>[] = [
       <DataTableColumnHeader column={column} title="Department" />
     ),
     cell: ({ row }) => (
-      <span className="text-sm">{row.original.department ?? '—'}</span>
+      <span className="text-sm">{row.original.department ?? '-'}</span>
     ),
   },
   {
@@ -55,7 +55,7 @@ const columns: ColumnDef<Employee>[] = [
     ),
     cell: ({ row }) => (
       <span className="text-sm">
-        {row.original.position ?? row.original.title ?? '—'}
+        {row.original.position ?? row.original.title ?? '-'}
       </span>
     ),
   },
@@ -72,7 +72,7 @@ const columns: ColumnDef<Employee>[] = [
       <DataTableColumnHeader column={column} title="Hire date" />
     ),
     cell: ({ row }) =>
-      row.original.hireDate ? formatDate(row.original.hireDate) : '—',
+      row.original.hireDate ? formatDate(row.original.hireDate) : '-',
   },
   {
     accessorKey: 'walletAddress',
@@ -84,7 +84,7 @@ const columns: ColumnDef<Employee>[] = [
           {row.original.walletAddress.slice(-4)}
         </span>
       ) : (
-        <span className="text-xs text-muted-foreground">—</span>
+        <span className="text-xs text-muted-foreground">-</span>
       ),
   },
   {

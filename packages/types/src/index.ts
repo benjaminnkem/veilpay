@@ -9,6 +9,7 @@ export * from './audit.js';
 export * from './notification.js';
 export * from './invitation.js';
 export * from './payment.js';
+export * from './dashboard.js';
 
 /** @deprecated Prefer Organization */
 export type { Organization as Company } from './organization.js';

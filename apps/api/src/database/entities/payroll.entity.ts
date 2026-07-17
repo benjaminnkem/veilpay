@@ -81,6 +81,12 @@ export class PayrollEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 64, nullable: true })
   network!: string | null;
 
+  @Column({ type: 'varchar', length: 32, nullable: true })
+  executionProvider!: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  executionMessage!: string | null;
+
   @Column({ type: 'uuid' })
   createdById!: string;
 

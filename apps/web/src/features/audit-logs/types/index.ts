@@ -3,12 +3,12 @@ export interface AuditLog {
   organizationId?: string | null;
   actorId?: string | null;
   actorEmail?: string | null;
-  /** @deprecated UI alias — prefer actorEmail */
+  /** @deprecated UI alias - prefer actorEmail */
   actor?: string;
   action: string;
   entityType?: string;
   entityId?: string | null;
-  /** @deprecated UI alias — prefer entityType */
+  /** @deprecated UI alias - prefer entityType */
   resource?: string;
   ipAddress?: string | null;
   userAgent?: string | null;

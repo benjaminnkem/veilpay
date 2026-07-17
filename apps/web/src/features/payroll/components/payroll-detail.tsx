@@ -1,10 +1,16 @@
 'use client';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { ArrowLeftIcon, WalletIcon } from 'lucide-react';
+import {
+  ArrowLeftIcon,
+  BlocksIcon,
+  ShieldAlertIcon,
+  WalletIcon,
+} from 'lucide-react';
 import Link from 'next/link';
 
 import { QueryState } from '@/components/shared';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -25,6 +31,7 @@ import {
 import { ROUTES } from '@/constants/routes';
 import { getApprovalTimeline } from '@/features/approvals/services/getApprovals';
 import {
+  cancelPayroll,
   executePayroll,
   getPayroll,
   regeneratePayroll,
@@ -53,12 +60,13 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
     await qc.invalidateQueries({
       queryKey: ['approvals', 'timeline', payrollId],
     });
+    await qc.invalidateQueries({ queryKey: ['dashboard'] });
   };
 
   const submit = useMutation({
     mutationFn: () => submitPayroll(payrollId),
     onSuccess: async () => {
-      notify.success('Submitted', 'Payroll is pending approval.');
+      notify.success('Submitted', 'Payroll is pending HR → Finance → CEO.');
       await invalidate();
     },
     onError: (e) => notify.error(e),
@@ -66,8 +74,17 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
 
   const execute = useMutation({
     mutationFn: () => executePayroll(payrollId),
-    onSuccess: async () => {
-      notify.success('Executed', 'Payroll processed via payment provider.');
+    onSuccess: async (run) => {
+      const status = String(run.status).toUpperCase();
+      if (status === 'BLOCKCHAIN_PENDING') {
+        notify.info(
+          'Blockchain integration pending',
+          run.executionMessage ??
+            'Safe SDK and Nox Protocol execution will complete this step.'
+        );
+      } else {
+        notify.success('Executed', 'Payroll processed via payment provider.');
+      }
       await invalidate();
     },
     onError: (e) => notify.error(e),
@@ -82,8 +99,21 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
     onError: (e) => notify.error(e),
   });
 
+  const cancel = useMutation({
+    mutationFn: () => cancelPayroll(payrollId),
+    onSuccess: async () => {
+      notify.success('Cancelled', 'Payroll run was cancelled.');
+      await invalidate();
+    },
+    onError: (e) => notify.error(e),
+  });
+
   const payroll = query.data;
   const status = String(payroll?.status ?? '').toUpperCase();
+  const canModify = status === 'DRAFT' || status === 'REJECTED';
+  const canCancel = !['COMPLETED', 'PROCESSING', 'BLOCKCHAIN_PENDING'].includes(
+    status
+  );
 
   return (
     <div className="space-y-6">
@@ -125,7 +155,7 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                   <Badge variant="secondary" className="capitalize">
                     {String(payroll.status).replaceAll('_', ' ').toLowerCase()}
                   </Badge>
-                  {status === 'DRAFT' ? (
+                  {canModify ? (
                     <>
                       <Button
                         size="sm"
@@ -150,7 +180,17 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                       onClick={() => execute.mutate()}
                       disabled={execute.isPending}
                     >
-                      Execute payment
+                      Execute payroll
+                    </Button>
+                  ) : null}
+                  {canCancel && status !== 'CANCELLED' ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => cancel.mutate()}
+                      disabled={cancel.isPending}
+                    >
+                      Cancel
                     </Button>
                   ) : null}
                 </div>
@@ -176,16 +216,67 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                   )}
                 />
                 <Stat
-                  label="Bonus + allowance"
+                  label="Deductions"
                   value={formatCurrency(
-                    ((payroll.totalBonusCents ?? 0) +
-                      (payroll.totalAllowanceCents ?? 0)) /
-                      100,
+                    (payroll.totalDeductionsCents ?? 0) / 100,
                     payroll.currency
                   )}
                 />
               </CardContent>
             </Card>
+
+            {status === 'APPROVED' || status === 'BLOCKCHAIN_PENDING' ? (
+              <Card className="border-primary/25 bg-primary/5">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-base">
+                    <BlocksIcon className="size-4 text-primary" />
+                    Execution
+                  </CardTitle>
+                  <CardDescription>
+                    Payment rails use the PaymentExecutionService abstraction.
+                    Controllers never talk to blockchain SDKs directly.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {status === 'APPROVED' ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Fully approved and ready for execution. Clicking Execute
+                        payroll hands the run to the payment provider.
+                      </p>
+                      <Button
+                        onClick={() => execute.mutate()}
+                        disabled={execute.isPending}
+                      >
+                        {execute.isPending
+                          ? 'Executing…'
+                          : 'Execute payroll'}
+                      </Button>
+                    </>
+                  ) : (
+                    <Alert>
+                      <ShieldAlertIcon />
+                      <AlertTitle>Blockchain integration pending</AlertTitle>
+                      <AlertDescription>
+                        {payroll.executionMessage ??
+                          'Blockchain integration will be completed using Safe SDK and Nox Protocol.'}
+                        {payroll.executionProvider ? (
+                          <span className="mt-2 block text-xs">
+                            Provider: {payroll.executionProvider}
+                            {payroll.network
+                              ? ` · Network: ${payroll.network}`
+                              : ''}
+                            {payroll.transactionHash
+                              ? ` · Tx: ${payroll.transactionHash}`
+                              : ''}
+                          </span>
+                        ) : null}
+                      </AlertDescription>
+                    </Alert>
+                  )}
+                </CardContent>
+              </Card>
+            ) : null}
 
             <Card className="border-border/60">
               <CardHeader>
@@ -214,7 +305,7 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                         {step.approverName ? (
                           <div className="text-muted-foreground">
                             {step.approverName}
-                            {step.comments ? ` — ${step.comments}` : ''}
+                            {step.comments ? ` - ${step.comments}` : ''}
                           </div>
                         ) : null}
                       </div>
@@ -230,6 +321,9 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
             <Card className="border-border/60">
               <CardHeader>
                 <CardTitle className="text-base">Line items</CardTitle>
+                <CardDescription>
+                  Compensation snapshot at generation time
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {!payroll.items?.length ? (
@@ -251,7 +345,14 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                     <TableBody>
                       {payroll.items.map((item) => (
                         <TableRow key={item.id}>
-                          <TableCell>{item.employeeName}</TableCell>
+                          <TableCell>
+                            <div>{item.employeeName}</div>
+                            {item.walletAddress ? (
+                              <div className="font-mono text-[11px] text-muted-foreground">
+                                {item.walletAddress}
+                              </div>
+                            ) : null}
+                          </TableCell>
                           <TableCell className="text-right">
                             {formatCurrency(
                               item.baseSalaryCents / 100,

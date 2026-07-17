@@ -5,10 +5,6 @@ import type {
 } from '@repo/types';
 import type { PaymentProvider } from './payment-provider.interface';
 
-/**
- * Development / pre-blockchain payment provider.
- * Marks payroll as "executed" without moving funds.
- */
 @Injectable()
 export class MockPaymentProvider implements PaymentProvider {
   readonly kind = 'mock' as const;
@@ -18,15 +14,17 @@ export class MockPaymentProvider implements PaymentProvider {
     request: ExecutePayrollPaymentRequest,
   ): Promise<ExecutePayrollPaymentResult> {
     this.logger.log(
-      `Mock payment for payroll ${request.payrollId} (${request.items.length} items)`,
+      `Mock payment rail for payroll ${request.payrollId} (${request.items.length} items)`,
     );
 
-    // Intentionally empty implementation — real execution comes later
     return {
       success: true,
+      status: 'BLOCKCHAIN_PENDING',
+      message:
+        'Blockchain integration will be completed using Safe SDK and Nox Protocol.',
       provider: this.kind,
       transactionHash: null,
-      externalReference: `mock_${request.payrollId}_${Date.now()}`,
+      externalReference: `pending_${request.payrollId}_${Date.now()}`,
       processedAt: new Date().toISOString(),
       failures: [],
     };

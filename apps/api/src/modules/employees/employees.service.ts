@@ -210,6 +210,120 @@ export class EmployeesService {
       employeeCount: Number(r.employeeCount),
     }));
   }
+
+  async suspend(actor: JwtPayloadUser, id: string) {
+    const orgId = requireOrganizationId(actor);
+    const employee = await this.employeesRepo.findOne({
+      where: { id, organizationId: orgId },
+    });
+    if (!employee) throw new NotFoundException('Employee not found');
+
+    employee.status = EmploymentStatus.INACTIVE;
+    await this.employeesRepo.save(employee);
+
+    await this.auditLogs.log({
+      organizationId: orgId,
+      actorId: actor.id,
+      actorEmail: actor.email,
+      action: AuditAction.EMPLOYEE_UPDATED,
+      entityType: 'Employee',
+      entityId: employee.id,
+      metadata: { action: 'suspend' },
+    });
+
+    return serializeEmployee(employee);
+  }
+
+  async reactivate(actor: JwtPayloadUser, id: string) {
+    const orgId = requireOrganizationId(actor);
+    const employee = await this.employeesRepo.findOne({
+      where: { id, organizationId: orgId },
+    });
+    if (!employee) throw new NotFoundException('Employee not found');
+
+    employee.status = EmploymentStatus.ACTIVE;
+    employee.terminationDate = null;
+    await this.employeesRepo.save(employee);
+
+    await this.auditLogs.log({
+      organizationId: orgId,
+      actorId: actor.id,
+      actorEmail: actor.email,
+      action: AuditAction.EMPLOYEE_UPDATED,
+      entityType: 'Employee',
+      entityId: employee.id,
+      metadata: { action: 'reactivate' },
+    });
+
+    return serializeEmployee(employee);
+  }
+
+  async bulkImport(
+    actor: JwtPayloadUser,
+    rows: Array<{
+      firstName: string;
+      lastName: string;
+      email: string;
+      department?: string;
+      position?: string;
+      walletAddress?: string;
+    }>,
+  ) {
+    const orgId = requireOrganizationId(actor);
+    const created: string[] = [];
+    const skipped: Array<{ email: string; reason: string }> = [];
+
+    for (const row of rows) {
+      const email = row.email?.toLowerCase?.() ?? '';
+      if (!email || !row.firstName || !row.lastName) {
+        skipped.push({
+          email: email || '(missing)',
+          reason: 'firstName, lastName, and email are required',
+        });
+        continue;
+      }
+
+      const existing = await this.employeesRepo.findOne({
+        where: { organizationId: orgId, email },
+      });
+      if (existing) {
+        skipped.push({ email, reason: 'already exists' });
+        continue;
+      }
+
+      const employee = this.employeesRepo.create({
+        organizationId: orgId,
+        firstName: row.firstName,
+        lastName: row.lastName,
+        email,
+        department: row.department ?? null,
+        position: row.position ?? null,
+        status: EmploymentStatus.ONBOARDING,
+        walletAddress: row.walletAddress ?? null,
+      });
+      await this.employeesRepo.save(employee);
+      created.push(employee.id);
+
+      await this.auditLogs.log({
+        organizationId: orgId,
+        actorId: actor.id,
+        actorEmail: actor.email,
+        action: AuditAction.EMPLOYEE_CREATED,
+        entityType: 'Employee',
+        entityId: employee.id,
+        metadata: { email, source: 'bulk_import' },
+      });
+    }
+
+    return {
+      created: created.length,
+      skipped: skipped.length,
+      createdIds: created,
+      errors: skipped,
+      message:
+        'CSV bulk import processed. Full file upload pipeline can replace this JSON endpoint later.',
+    };
+  }
 }
 
 export function serializeEmployee(e: EmployeeEntity) {

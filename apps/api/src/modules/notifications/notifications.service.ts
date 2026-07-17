@@ -33,13 +33,19 @@ export class NotificationsService {
       metadata: input.metadata ?? null,
       isRead: false,
       readAt: null,
+      isArchived: false,
+      archivedAt: null,
     });
     return this.notificationRepo.save(n);
   }
 
   async findAll(
     userId: string,
-    query: PaginationDto & { isRead?: boolean; type?: NotificationType },
+    query: PaginationDto & {
+      isRead?: boolean;
+      type?: NotificationType;
+      archived?: boolean;
+    },
   ) {
     const page = query.page ?? 1;
     const pageSize = query.pageSize ?? 20;
@@ -50,6 +56,12 @@ export class NotificationsService {
       .orderBy('n.createdAt', 'DESC')
       .skip((page - 1) * pageSize)
       .take(pageSize);
+
+    if (query.archived === true) {
+      qb.andWhere('n.isArchived = true');
+    } else {
+      qb.andWhere('n.isArchived = false');
+    }
 
     if (typeof query.isRead === 'boolean') {
       qb.andWhere('n.isRead = :isRead', { isRead: query.isRead });
@@ -67,7 +79,7 @@ export class NotificationsService {
 
   async unreadCount(userId: string): Promise<{ count: number }> {
     const count = await this.notificationRepo.count({
-      where: { userId, isRead: false },
+      where: { userId, isRead: false, isArchived: false },
     });
     return { count };
   }
@@ -83,10 +95,21 @@ export class NotificationsService {
 
   async markAllRead(userId: string): Promise<{ updated: number }> {
     const result = await this.notificationRepo.update(
-      { userId, isRead: false },
+      { userId, isRead: false, isArchived: false },
       { isRead: true, readAt: new Date() },
     );
     return { updated: result.affected ?? 0 };
+  }
+
+  async archive(userId: string, id: string) {
+    const n = await this.notificationRepo.findOne({ where: { id, userId } });
+    if (!n) throw new NotFoundException('Notification not found');
+    n.isArchived = true;
+    n.archivedAt = new Date();
+    n.isRead = true;
+    n.readAt = n.readAt ?? new Date();
+    await this.notificationRepo.save(n);
+    return serializeNotification(n);
   }
 }
 
@@ -101,6 +124,8 @@ function serializeNotification(n: NotificationEntity) {
     link: n.link,
     isRead: n.isRead,
     readAt: n.readAt?.toISOString() ?? null,
+    isArchived: n.isArchived,
+    archivedAt: n.archivedAt?.toISOString() ?? null,
     metadata: n.metadata,
     createdAt: n.createdAt.toISOString(),
     updatedAt: n.updatedAt.toISOString(),

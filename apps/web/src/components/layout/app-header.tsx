@@ -3,13 +3,12 @@
 import {
   BellIcon,
   LogOutIcon,
-  MenuIcon,
-  PanelLeftIcon,
   SettingsIcon,
   UserIcon,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
@@ -22,11 +21,11 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ROUTES } from '@/constants/routes';
 import { logout } from '@/features/auth/services/logout';
 import { useUnreadCount } from '@/features/notifications/hooks/use-notifications';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useUiStore } from '@/stores/ui-store';
 
 function getInitials(name?: string | null) {
   if (!name) return 'VP';
@@ -60,33 +59,13 @@ export function AppHeader() {
   const pathname = usePathname();
   const { user } = useCurrentUser();
   const unread = useUnreadCount();
-  const { setSidebarOpen, toggleSidebarCollapsed } = useUiStore();
   const unreadCount = unread.data?.count ?? 0;
   const title = resolveTitle(pathname);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-md sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-md sm:px-6">
       <div className="flex min-w-0 items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="lg:hidden"
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Open sidebar"
-        >
-          <MenuIcon />
-        </Button>
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="hidden lg:inline-flex"
-          onClick={toggleSidebarCollapsed}
-          aria-label="Toggle sidebar"
-        >
-          <PanelLeftIcon />
-        </Button>
+        <SidebarTrigger className="-ml-1" />
         <Separator orientation="vertical" className="hidden h-5 sm:block" />
         <div className="min-w-0">
           <p className="truncate text-sm font-medium tracking-tight">{title}</p>
@@ -156,7 +135,7 @@ export function AppHeader() {
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
-                render={<Link href={ROUTES.settings} />}
+                render={<Link href={ROUTES.profile} />}
                 nativeButton={false}
               >
                 <UserIcon />

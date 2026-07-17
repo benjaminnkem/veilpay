@@ -20,6 +20,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { InvitationsModule } from './modules/invitations/invitations.module';
 import { SettingsModule } from './modules/settings/settings.module';
 import { HealthModule } from './modules/health/health.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { MailModule } from './mail/mail.module';
 
 @Module({
@@ -57,6 +58,7 @@ import { MailModule } from './mail/mail.module';
     NotificationsModule,
     InvitationsModule,
     SettingsModule,
+    DashboardModule,
   ],
   providers: [
     { provide: APP_FILTER, useClass: GlobalExceptionFilter },

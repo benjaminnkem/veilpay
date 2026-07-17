@@ -1,8 +1,8 @@
 import {
   BadRequestException,
-  Inject,
   Injectable,
   NotFoundException,
+  Inject,
   forwardRef,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -31,10 +31,7 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CompensationService } from '../compensation/compensation.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { ApprovalsService } from '../approvals/approvals.service';
-import {
-  PAYMENT_PROVIDER,
-  type PaymentProvider,
-} from './providers/payment-provider.interface';
+import { PaymentExecutionService } from './providers/payment-execution.service';
 import { CreatePayrollDto } from './dto/create-payroll.dto';
 import { UpdatePayrollDto } from './dto/update-payroll.dto';
 import { UpdatePayrollItemDto } from './dto/update-payroll-item.dto';
@@ -57,8 +54,7 @@ export class PayrollService {
     private readonly auditLogs: AuditLogsService,
     private readonly notifications: NotificationsService,
     private readonly mail: MailService,
-    @Inject(PAYMENT_PROVIDER)
-    private readonly paymentProvider: PaymentProvider,
+    private readonly paymentExecution: PaymentExecutionService,
   ) {}
 
   async create(actor: JwtPayloadUser, dto: CreatePayrollDto) {
@@ -302,30 +298,52 @@ export class PayrollService {
     await this.payrollRepo.save(payroll);
 
     try {
-      const result = await this.paymentProvider.executePayroll({
-        payrollId: payroll.id,
-        organizationId: orgId,
-        currency: payroll.currency,
-        safeAddress: org?.safeAddress,
-        network: org?.network,
-        items: (payroll.items ?? []).map((item) => ({
-          employeeId: item.employeeId,
-          amountCents: centsToNumber(item.netPayCents),
-          currency: item.currency,
-          walletAddress: item.walletAddress,
-        })),
-      });
+      const result = await this.paymentExecution.executePayroll(
+        {
+          payrollId: payroll.id,
+          organizationId: orgId,
+          currency: payroll.currency,
+          safeAddress: org?.safeAddress,
+          network: org?.network,
+          items: (payroll.items ?? []).map((item) => ({
+            employeeId: item.employeeId,
+            amountCents: centsToNumber(item.netPayCents),
+            currency: item.currency,
+            walletAddress: item.walletAddress,
+          })),
+        },
+        org?.executionProvider ?? 'mock',
+      );
 
-      if (!result.success) {
+      if (!result.success || result.status === 'FAILED') {
         payroll.status = PayrollStatus.FAILED;
+        payroll.executionProvider = result.provider;
+        payroll.executionMessage =
+          result.message ?? 'Payment provider reported failure';
         await this.payrollRepo.save(payroll);
-        throw new BadRequestException('Payment provider reported failure');
+        throw new BadRequestException(
+          result.message ?? 'Payment provider reported failure',
+        );
       }
 
-      payroll.status = PayrollStatus.COMPLETED;
-      payroll.executedAt = new Date();
-      payroll.transactionHash = result.transactionHash;
-      payroll.network = org?.network ?? null;
+      if (result.status === 'BLOCKCHAIN_PENDING') {
+        payroll.status = PayrollStatus.BLOCKCHAIN_PENDING;
+        payroll.executedAt = new Date();
+        payroll.transactionHash = result.transactionHash;
+        payroll.network = org?.network ?? null;
+        payroll.executionProvider = result.provider;
+        payroll.executionMessage =
+          result.message ??
+          'Blockchain integration will be completed using Safe SDK and Nox Protocol.';
+      } else {
+        payroll.status = PayrollStatus.COMPLETED;
+        payroll.executedAt = new Date();
+        payroll.transactionHash = result.transactionHash;
+        payroll.network = org?.network ?? null;
+        payroll.executionProvider = result.provider;
+        payroll.executionMessage = result.message;
+      }
+
       await this.payrollRepo.save(payroll);
 
       await this.auditLogs.log({
@@ -337,8 +355,24 @@ export class PayrollService {
         entityId: payroll.id,
         metadata: {
           provider: result.provider,
+          status: result.status,
           externalReference: result.externalReference,
+          message: result.message,
         },
+      });
+
+      await this.notifications.create({
+        userId: actor.id,
+        organizationId: orgId,
+        type: NotificationType.PAYROLL,
+        title:
+          result.status === 'BLOCKCHAIN_PENDING'
+            ? 'Payroll ready for blockchain'
+            : 'Payroll executed',
+        body:
+          result.message ??
+          `${payroll.name} execution finished with status ${result.status}.`,
+        link: `/payroll/${payroll.id}`,
       });
 
       return this.findOne(actor, id);
@@ -359,9 +393,11 @@ export class PayrollService {
     if (!payroll) throw new NotFoundException('Payroll not found');
 
     if (
-      [PayrollStatus.COMPLETED, PayrollStatus.PROCESSING].includes(
-        payroll.status,
-      )
+      [
+        PayrollStatus.COMPLETED,
+        PayrollStatus.PROCESSING,
+        PayrollStatus.BLOCKCHAIN_PENDING,
+      ].includes(payroll.status)
     ) {
       throw new BadRequestException('Cannot cancel payroll in current status');
     }
@@ -392,7 +428,10 @@ export class PayrollService {
   async markRejected(payrollId: string): Promise<void> {
     await this.payrollRepo.update(
       { id: payrollId },
-      { status: PayrollStatus.DRAFT, submittedAt: null },
+      {
+        status: PayrollStatus.REJECTED,
+        submittedAt: null,
+      },
     );
   }
 
@@ -429,12 +468,13 @@ export class PayrollService {
         salary: 0,
         bonus: 0,
         allowance: 0,
+        deduction: 0,
         currency: payroll.currency,
       };
       const base = comp.salary;
       const bonus = comp.bonus;
       const allowance = comp.allowance;
-      const deductions = 0;
+      const deductions = comp.deduction;
       const net = base + bonus + allowance - deductions;
 
       return this.itemsRepo.create({
@@ -489,10 +529,16 @@ export class PayrollService {
   }
 
   private assertDraft(payroll: PayrollEntity): void {
-    if (payroll.status !== PayrollStatus.DRAFT) {
+    if (
+      payroll.status !== PayrollStatus.DRAFT &&
+      payroll.status !== PayrollStatus.REJECTED
+    ) {
       throw new BadRequestException(
-        'Only draft payrolls can be modified',
+        'Only draft or rejected payrolls can be modified',
       );
+    }
+    if (payroll.status === PayrollStatus.REJECTED) {
+      payroll.status = PayrollStatus.DRAFT;
     }
   }
 }
@@ -544,6 +590,8 @@ function serializePayroll(p: PayrollEntity, withItems = false) {
     executedAt: p.executedAt?.toISOString() ?? null,
     transactionHash: p.transactionHash,
     network: p.network,
+    executionProvider: p.executionProvider,
+    executionMessage: p.executionMessage,
     createdById: p.createdById,
     items: withItems && p.items ? p.items.map(serializeItem) : undefined,
     createdAt: p.createdAt.toISOString(),

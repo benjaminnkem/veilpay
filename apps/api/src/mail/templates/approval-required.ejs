@@ -1,35 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Approval required</title>
-  <style><%- include('partials/styles') %></style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><%= appName %></div>
-      </div>
-      <div class="content">
-        <h1>Your approval is needed</h1>
-        <p>Hi <%= firstName %>,</p>
-        <p>
-          <strong><%= payrollName %></strong> is waiting for
-          <strong><%= level %></strong> approval.
-        </p>
-        <p>
-          <a class="btn" href="<%= approvalsUrl %>">Review approvals</a>
-        </p>
-        <p class="muted">
-          Or open the payroll: <a href="<%= payrollUrl %>"><%= payrollUrl %></a>
-        </p>
-      </div>
-      <div class="footer">
-        © <%= year %> <%= appName %>.
-      </div>
-    </div>
+<%- include('partials/layout-start', { title: 'Approval required' }) %>
+
+<span class="eyebrow">Action required</span>
+<h1>Your approval is needed</h1>
+<p class="lead">Hi <%= firstName %>,</p>
+<p>
+  <strong><%= payrollName %></strong> is waiting for
+  <strong><%= level %></strong> review before it can continue.
+</p>
+
+<div class="meta">
+  <div class="meta-row">
+    <span class="meta-label">Payroll run</span>
+    <span class="meta-value"><%= payrollName %></span>
   </div>
-</body>
-</html>
+  <div class="meta-row">
+    <span class="meta-label">Approval level</span>
+    <span class="meta-value"><%= level %></span>
+  </div>
+  <div class="meta-row">
+    <span class="meta-label">Queue</span>
+    <span class="meta-value">Approvals</span>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <a class="btn" href="<%= approvalsUrl %>">Review approvals</a>
+  &nbsp;&nbsp;
+  <a class="btn-secondary" href="<%= payrollUrl %>">Open payroll</a>
+</div>
+
+<p class="muted">
+  Approve or reject from the Approvals board. Comments are optional but recommended on rejections.
+</p>
+
+<%- include('partials/layout-end') %>

@@ -40,6 +40,8 @@ export interface PayrollRun {
   notes?: string | null;
   transactionHash?: string | null;
   network?: string | null;
+  executionProvider?: string | null;
+  executionMessage?: string | null;
   items?: PayrollItem[];
   createdAt?: string;
   updatedAt?: string;

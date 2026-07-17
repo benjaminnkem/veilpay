@@ -1,5 +1,10 @@
 export type PaymentProviderKind = 'mock' | 'blockchain' | 'bank' | 'stripe';
 
+export type PaymentExecutionStatus =
+  | 'COMPLETED'
+  | 'BLOCKCHAIN_PENDING'
+  | 'FAILED';
+
 export interface PayrollPaymentItem {
   employeeId: string;
   amountCents: number;
@@ -13,8 +18,6 @@ export interface ExecutePayrollPaymentRequest {
   organizationId: string;
   items: PayrollPaymentItem[];
   currency: string;
-
-  // Optional treasury / Safe address for future blockchain provider
   safeAddress?: string | null;
   network?: string | null;
   metadata?: Record<string, unknown>;
@@ -22,9 +25,9 @@ export interface ExecutePayrollPaymentRequest {
 
 export interface ExecutePayrollPaymentResult {
   success: boolean;
+  status: PaymentExecutionStatus;
+  message: string | null;
   provider: PaymentProviderKind;
-
-  // On-chain or external payment reference
   transactionHash: string | null;
   externalReference: string | null;
   processedAt: string;

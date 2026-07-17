@@ -14,8 +14,8 @@ function normalize(
   return rows.map((row) => ({
     ...row,
     actor: row.actorEmail ?? row.actor ?? 'System',
-    resource: row.entityType ?? row.resource ?? '—',
-    ipAddress: row.ipAddress ?? '—',
+    resource: row.entityType ?? row.resource ?? '-',
+    ipAddress: row.ipAddress ?? '-',
     metadata:
       typeof row.metadata === 'object' && row.metadata !== null
         ? JSON.stringify(row.metadata)

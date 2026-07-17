@@ -180,6 +180,7 @@ export class CompensationService {
         salary: number;
         bonus: number;
         allowance: number;
+        deduction: number;
         currency: string;
       }
     >
@@ -198,7 +199,13 @@ export class CompensationService {
     const rows = await qb.getMany();
     const map = new Map<
       string,
-      { salary: number; bonus: number; allowance: number; currency: string }
+      {
+        salary: number;
+        bonus: number;
+        allowance: number;
+        deduction: number;
+        currency: string;
+      }
     >();
 
     for (const row of rows) {
@@ -206,12 +213,14 @@ export class CompensationService {
         salary: 0,
         bonus: 0,
         allowance: 0,
+        deduction: 0,
         currency: row.currency,
       };
       const amount = centsToNumber(row.amountCents);
       if (row.type === CompensationType.SALARY) current.salary += amount;
       if (row.type === CompensationType.BONUS) current.bonus += amount;
       if (row.type === CompensationType.ALLOWANCE) current.allowance += amount;
+      if (row.type === CompensationType.DEDUCTION) current.deduction += amount;
       current.currency = row.currency;
       map.set(row.employeeId, current);
     }

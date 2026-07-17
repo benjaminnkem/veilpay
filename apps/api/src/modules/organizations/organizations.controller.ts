@@ -21,6 +21,19 @@ export class OrganizationsController {
     return this.organizationsService.getMine(user);
   }
 
+  @Get('me/treasury')
+  @Roles(
+    UserRole.OWNER,
+    UserRole.FINANCE,
+    UserRole.CEO,
+    UserRole.AUDITOR,
+    UserRole.SUPER_ADMIN,
+  )
+  @ApiOperation({ summary: 'Treasury / Safe status (placeholder)' })
+  getTreasury(@CurrentUser() user: JwtPayloadUser) {
+    return this.organizationsService.getTreasury(user);
+  }
+
   @Patch('me')
   @Roles(UserRole.OWNER, UserRole.CEO, UserRole.SUPER_ADMIN)
   @ApiOperation({ summary: 'Update current organization' })

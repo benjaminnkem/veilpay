@@ -38,10 +38,10 @@ export interface Payroll extends Timestamps {
   submittedAt: string | null;
   approvedAt: string | null;
   executedAt: string | null;
-
-  // Placeholder for future batch payment tx
   transactionHash: string | null;
   network: string | null;
+  executionProvider: string | null;
+  executionMessage: string | null;
   createdById: string;
   items?: PayrollItem[];
 }

@@ -1,35 +1,30 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Invitation accepted</title>
-  <style><%- include('partials/styles') %></style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><%= appName %></div>
-      </div>
-      <div class="content">
-        <h1>Invitation accepted</h1>
-        <p>Hi <%= inviterFirstName %>,</p>
-        <p>
-          <strong><%= inviteeName %></strong> (<%= inviteeEmail %>) accepted your invitation
-          to <strong><%= organizationName %></strong>.
-        </p>
-        <div class="meta">
-          <div><strong>Role:</strong> <%= role %></div>
-        </div>
-        <p>
-          <a class="btn" href="<%= employeesUrl %>">View team</a>
-        </p>
-      </div>
-      <div class="footer">
-        © <%= year %> <%= appName %>.
-      </div>
-    </div>
+<%- include('partials/layout-start', { title: 'Invitation accepted' }) %>
+
+<span class="eyebrow">Team update</span>
+<h1><%= inviteeName %> accepted your invite</h1>
+<p class="lead">Hi <%= inviterFirstName %>,</p>
+<p>
+  A new teammate is ready in <strong><%= organizationName %></strong>.
+  Their account is active and they can sign in to <%= appName %>.
+</p>
+
+<div class="meta">
+  <div class="meta-row">
+    <span class="meta-label">Name</span>
+    <span class="meta-value"><%= inviteeName %></span>
   </div>
-</body>
-</html>
+  <div class="meta-row">
+    <span class="meta-label">Email</span>
+    <span class="meta-value"><%= inviteeEmail %></span>
+  </div>
+  <div class="meta-row">
+    <span class="meta-label">Role</span>
+    <span class="meta-value"><%= role %></span>
+  </div>
+</div>
+
+<div class="btn-wrap">
+  <a class="btn" href="<%= employeesUrl %>">View team</a>
+</div>
+
+<%- include('partials/layout-end') %>

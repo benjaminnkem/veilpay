@@ -50,7 +50,7 @@ const columns: ColumnDef<AuditLog>[] = [
     ),
     cell: ({ row }) => (
       <div className="space-y-0.5">
-        <p className="text-sm">{row.original.resource ?? '—'}</p>
+        <p className="text-sm">{row.original.resource ?? '-'}</p>
         {row.original.entityId ? (
           <p className="font-mono text-[11px] text-muted-foreground">
             {row.original.entityId}
@@ -64,7 +64,7 @@ const columns: ColumnDef<AuditLog>[] = [
     header: 'IP',
     cell: ({ row }) => (
       <span className="font-mono text-xs text-muted-foreground">
-        {row.original.ipAddress ?? '—'}
+        {row.original.ipAddress ?? '-'}
       </span>
     ),
   },

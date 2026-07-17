@@ -10,9 +10,9 @@ import { CompensationModule } from '../compensation/compensation.module';
 import { ApprovalsModule } from '../approvals/approvals.module';
 import { PayrollController } from './payroll.controller';
 import { PayrollService } from './payroll.service';
-import { PAYMENT_PROVIDER } from './providers/payment-provider.interface';
-import { MockPaymentProvider } from './providers/mock-payment.provider';
 import { BlockchainPaymentProvider } from './providers/blockchain-payment.provider';
+import { MockPaymentProvider } from './providers/mock-payment.provider';
+import { PaymentExecutionService } from './providers/payment-execution.service';
 
 @Module({
   imports: [
@@ -30,11 +30,8 @@ import { BlockchainPaymentProvider } from './providers/blockchain-payment.provid
     PayrollService,
     MockPaymentProvider,
     BlockchainPaymentProvider,
-    {
-      provide: PAYMENT_PROVIDER,
-      useExisting: MockPaymentProvider,
-    },
+    PaymentExecutionService,
   ],
-  exports: [PayrollService],
+  exports: [PayrollService, PaymentExecutionService],
 })
 export class PayrollModule {}

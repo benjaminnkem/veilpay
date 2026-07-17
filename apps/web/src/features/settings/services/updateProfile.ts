@@ -20,6 +20,7 @@ export async function getOrganization() {
     timezone: string;
     safeAddress: string | null;
     network: string | null;
+    executionProvider?: string;
   }>('/organizations/me');
 }
 
@@ -28,6 +29,7 @@ export async function updateOrganization(payload: {
   legalName?: string | null;
   safeAddress?: string | null;
   network?: string | null;
+  executionProvider?: string;
   currency?: string;
   timezone?: string;
 }) {

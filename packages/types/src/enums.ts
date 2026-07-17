@@ -20,6 +20,7 @@ export enum CompensationType {
   SALARY = 'SALARY',
   BONUS = 'BONUS',
   ALLOWANCE = 'ALLOWANCE',
+  DEDUCTION = 'DEDUCTION',
 }
 
 export enum CompensationFrequency {
@@ -38,9 +39,11 @@ export enum PayrollStatus {
   PENDING_APPROVAL = 'PENDING_APPROVAL',
   APPROVED = 'APPROVED',
   PROCESSING = 'PROCESSING',
+  BLOCKCHAIN_PENDING = 'BLOCKCHAIN_PENDING',
   COMPLETED = 'COMPLETED',
   FAILED = 'FAILED',
   CANCELLED = 'CANCELLED',
+  REJECTED = 'REJECTED',
 }
 
 export enum ApprovalStatus {

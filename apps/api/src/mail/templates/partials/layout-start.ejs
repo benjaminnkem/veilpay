@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
+  <title><%= typeof title !== 'undefined' ? title : appName %></title>
+  <!--[if mso]>
+  <style type="text/css">
+    body, table, td { font-family: Arial, Helvetica, sans-serif !important; }
+  </style>
+  <![endif]-->
+  <style type="text/css"><%- include('partials/styles') %></style>
+</head>
+<body>
+  <div class="wrapper" role="article" aria-roledescription="email">
+    <div class="shell">
+      <div class="card">
+        <div class="header">
+          <%- include('partials/header') %>
+        </div>
+        <div class="content">

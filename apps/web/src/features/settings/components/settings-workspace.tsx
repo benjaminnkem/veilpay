@@ -5,7 +5,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
-import { InputField } from '@/components/forms';
+import { InputField, PasswordField, SelectField } from '@/components/forms';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -21,9 +21,9 @@ import {
   getOrganization,
   updateOrganization,
 } from '@/features/settings/services/updateProfile';
-import { authGet, authPatch } from '@/lib/api';
-import { notify } from '@/lib/toast';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
+import { authGet, authPatch, authPost } from '@/lib/api';
+import { notify } from '@/lib/toast';
 
 const orgSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -32,9 +32,22 @@ const orgSchema = z.object({
   timezone: z.string().min(1),
   safeAddress: z.string().optional(),
   network: z.string().optional(),
+  executionProvider: z.enum(['mock', 'blockchain']),
 });
 
+const securitySchema = z
+  .object({
+    currentPassword: z.string().min(8, 'Current password is required'),
+    newPassword: z.string().min(8, 'Use at least 8 characters'),
+    confirmPassword: z.string().min(8),
+  })
+  .refine((v) => v.newPassword === v.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
 type OrgFormValues = z.infer<typeof orgSchema>;
+type SecurityFormValues = z.infer<typeof securitySchema>;
 
 const settingsSchema = z.object({
   fiscalYearStartMonth: z.number().min(1).max(12),
@@ -75,6 +88,8 @@ export function SettingsWorkspace() {
       timezone: orgQuery.data?.timezone ?? 'UTC',
       safeAddress: orgQuery.data?.safeAddress ?? '',
       network: orgQuery.data?.network ?? '',
+      executionProvider:
+        (orgQuery.data?.executionProvider as 'mock' | 'blockchain') ?? 'mock',
     },
   });
 
@@ -91,6 +106,15 @@ export function SettingsWorkspace() {
     },
   });
 
+  const securityForm = useForm<SecurityFormValues>({
+    resolver: zodResolver(securitySchema),
+    defaultValues: {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: '',
+    },
+  });
+
   const onOrgSubmit = orgForm.handleSubmit(async (values) => {
     try {
       await updateOrganization({
@@ -100,6 +124,7 @@ export function SettingsWorkspace() {
         timezone: values.timezone,
         safeAddress: values.safeAddress || null,
         network: values.network || null,
+        executionProvider: values.executionProvider,
       });
       notify.success('Organization updated');
       await orgQuery.refetch();
@@ -118,12 +143,30 @@ export function SettingsWorkspace() {
     }
   });
 
+  const onSecuritySubmit = securityForm.handleSubmit(async (values) => {
+    try {
+      await authPost('/auth/change-password', {
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword,
+      });
+      notify.success('Password updated');
+      securityForm.reset({
+        currentPassword: '',
+        newPassword: '',
+        confirmPassword: '',
+      });
+    } catch (error) {
+      notify.error(error);
+    }
+  });
+
   return (
     <Tabs defaultValue="profile" className="space-y-6">
-      <TabsList className="grid w-full max-w-xl grid-cols-3">
+      <TabsList className="grid w-full max-w-2xl grid-cols-4">
         <TabsTrigger value="profile">Profile</TabsTrigger>
         <TabsTrigger value="organization">Organization</TabsTrigger>
-        <TabsTrigger value="payroll">Payroll rules</TabsTrigger>
+        <TabsTrigger value="payroll">Payroll</TabsTrigger>
+        <TabsTrigger value="security">Security</TabsTrigger>
       </TabsList>
 
       <TabsContent value="profile" className="space-y-4">
@@ -134,19 +177,19 @@ export function SettingsWorkspace() {
             <CardDescription>
               Role{' '}
               <span className="font-medium capitalize text-foreground">
-                {String(user?.role ?? '—').replaceAll('_', ' ').toLowerCase()}
+                {String(user?.role ?? '-').replaceAll('_', ' ').toLowerCase()}
               </span>
             </CardDescription>
           </CardHeader>
         </Card>
       </TabsContent>
 
-      <TabsContent value="organization">
+      <TabsContent value="organization" className="space-y-4">
         <Card className="border-border/70 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Organization</CardTitle>
             <CardDescription>
-              Legal identity and future treasury placeholders.
+              Legal identity, branding, and treasury placeholders for Safe + Nox.
             </CardDescription>
           </CardHeader>
           <form onSubmit={onOrgSubmit}>
@@ -160,7 +203,7 @@ export function SettingsWorkspace() {
               <InputField
                 control={orgForm.control}
                 name="currency"
-                label="Currency"
+                label="Payroll currency"
               />
               <InputField
                 control={orgForm.control}
@@ -170,17 +213,33 @@ export function SettingsWorkspace() {
               <InputField
                 control={orgForm.control}
                 name="safeAddress"
-                label="Safe address"
+                label="Safe treasury address"
+                description="Placeholder until Safe SDK integration"
               />
               <InputField
                 control={orgForm.control}
                 name="network"
-                label="Network"
+                label="Blockchain network"
+                description="e.g. base-sepolia, ethereum"
+              />
+              <SelectField
+                control={orgForm.control}
+                name="executionProvider"
+                label="Execution provider"
+                options={[
+                  { label: 'Mock (development)', value: 'mock' },
+                  {
+                    label: 'Blockchain (Safe + Nox pending)',
+                    value: 'blockchain',
+                  },
+                ]}
               />
             </CardContent>
             <CardFooter>
               <Button type="submit" disabled={orgForm.formState.isSubmitting}>
-                {orgForm.formState.isSubmitting ? 'Saving…' : 'Save organization'}
+                {orgForm.formState.isSubmitting
+                  ? 'Saving…'
+                  : 'Save organization'}
               </Button>
             </CardFooter>
           </form>
@@ -198,8 +257,11 @@ export function SettingsWorkspace() {
           <form onSubmit={onSettingsSubmit}>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium" htmlFor="fiscalYearStartMonth">
-                  Fiscal year start month (1–12)
+                <label
+                  className="text-sm font-medium"
+                  htmlFor="fiscalYearStartMonth"
+                >
+                  Fiscal year start month (1-12)
                 </label>
                 <input
                   id="fiscalYearStartMonth"
@@ -276,6 +338,55 @@ export function SettingsWorkspace() {
               </Button>
             </CardFooter>
           </form>
+        </Card>
+      </TabsContent>
+
+      <TabsContent value="security" className="space-y-4">
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Change password</CardTitle>
+            <CardDescription>
+              Update the password for {user?.email ?? 'your account'}.
+            </CardDescription>
+          </CardHeader>
+          <form onSubmit={onSecuritySubmit}>
+            <CardContent className="max-w-md space-y-4">
+              <PasswordField
+                control={securityForm.control}
+                name="currentPassword"
+                label="Current password"
+              />
+              <PasswordField
+                control={securityForm.control}
+                name="newPassword"
+                label="New password"
+              />
+              <PasswordField
+                control={securityForm.control}
+                name="confirmPassword"
+                label="Confirm new password"
+              />
+            </CardContent>
+            <CardFooter>
+              <Button
+                type="submit"
+                disabled={securityForm.formState.isSubmitting}
+              >
+                {securityForm.formState.isSubmitting
+                  ? 'Updating…'
+                  : 'Update password'}
+              </Button>
+            </CardFooter>
+          </form>
+        </Card>
+        <Card className="border-border/70 shadow-sm">
+          <CardHeader>
+            <CardTitle className="text-base">Sessions & 2FA</CardTitle>
+            <CardDescription>
+              Multi-factor authentication and session management will ship with
+              enterprise hardening. Active sessions are revoked on logout today.
+            </CardDescription>
+          </CardHeader>
         </Card>
       </TabsContent>
     </Tabs>

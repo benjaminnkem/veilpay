@@ -34,6 +34,28 @@ export class EmployeesController {
     return this.employeesService.create(user, dto);
   }
 
+  @Post('import')
+  @Roles(UserRole.OWNER, UserRole.HR, UserRole.SUPER_ADMIN)
+  @ApiOperation({
+    summary: 'Bulk import employees (JSON rows / CSV placeholder)',
+  })
+  bulkImport(
+    @CurrentUser() user: JwtPayloadUser,
+    @Body()
+    body: {
+      rows: Array<{
+        firstName: string;
+        lastName: string;
+        email: string;
+        department?: string;
+        position?: string;
+        walletAddress?: string;
+      }>;
+    },
+  ) {
+    return this.employeesService.bulkImport(user, body.rows ?? []);
+  }
+
   @Get()
   @Roles(
     UserRole.OWNER,
@@ -91,6 +113,26 @@ export class EmployeesController {
     @Body() dto: UpdateEmployeeDto,
   ) {
     return this.employeesService.update(user, id, dto);
+  }
+
+  @Post(':id/suspend')
+  @Roles(UserRole.OWNER, UserRole.HR, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Suspend employee' })
+  suspend(
+    @CurrentUser() user: JwtPayloadUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.employeesService.suspend(user, id);
+  }
+
+  @Post(':id/reactivate')
+  @Roles(UserRole.OWNER, UserRole.HR, UserRole.SUPER_ADMIN)
+  @ApiOperation({ summary: 'Reactivate employee' })
+  reactivate(
+    @CurrentUser() user: JwtPayloadUser,
+    @Param('id', ParseUUIDPipe) id: string,
+  ) {
+    return this.employeesService.reactivate(user, id);
   }
 
   @Delete(':id')

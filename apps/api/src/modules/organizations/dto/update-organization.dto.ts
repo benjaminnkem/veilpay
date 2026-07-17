@@ -38,6 +38,12 @@ export class UpdateOrganizationDto {
   @MaxLength(64)
   network?: string | null;
 
+  @ApiPropertyOptional({ enum: ['mock', 'blockchain'] })
+  @IsOptional()
+  @IsString()
+  @MaxLength(32)
+  executionProvider?: string;
+
   @ApiPropertyOptional()
   @IsOptional()
   @IsString()

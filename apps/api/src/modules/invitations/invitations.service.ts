@@ -260,7 +260,7 @@ export class InvitationsService {
           email,
           department: invitation.department,
           position: invitation.position,
-          status: EmploymentStatus.ONBOARDING,
+          status: EmploymentStatus.ACTIVE,
           hireDate: new Date().toISOString().slice(0, 10),
         });
         await this.employeesRepo.save(employee);
@@ -268,6 +268,7 @@ export class InvitationsService {
         employee.userId = user.id;
         employee.department = invitation.department ?? employee.department;
         employee.position = invitation.position ?? employee.position;
+        employee.status = EmploymentStatus.ACTIVE;
         await this.employeesRepo.save(employee);
       }
 

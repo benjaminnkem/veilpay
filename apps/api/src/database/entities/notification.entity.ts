@@ -38,6 +38,12 @@ export class NotificationEntity extends BaseEntity {
   @Column({ type: 'timestamptz', nullable: true })
   readAt!: Date | null;
 
+  @Column({ type: 'boolean', default: false })
+  isArchived!: boolean;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  archivedAt!: Date | null;
+
   @Column({ type: 'jsonb', nullable: true })
   metadata!: Record<string, unknown> | null;
 }

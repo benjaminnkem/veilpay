@@ -1,38 +1,36 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payroll rejected</title>
-  <style><%- include('partials/styles') %></style>
-</head>
-<body>
-  <div class="wrapper">
-    <div class="card">
-      <div class="header">
-        <div class="brand"><%= appName %></div>
-      </div>
-      <div class="content">
-        <h1>Payroll rejected</h1>
-        <p>Hi <%= firstName %>,</p>
-        <p>
-          <strong><%= payrollName %></strong> was rejected at the
-          <strong><%= level %></strong> approval step and returned to draft.
-        </p>
-        <% if (comments) { %>
-          <div class="meta">
-            <strong>Comments:</strong><br />
-            <%= comments %>
-          </div>
-        <% } %>
-        <p>
-          <a class="btn" href="<%= payrollUrl %>">Review payroll</a>
-        </p>
-      </div>
-      <div class="footer">
-        © <%= year %> <%= appName %>.
-      </div>
-    </div>
+<%- include('partials/layout-start', { title: 'Payroll rejected' }) %>
+
+<span class="eyebrow">Payroll</span>
+<h1>Payroll needs attention</h1>
+<p class="lead">Hi <%= firstName %>,</p>
+<p>
+  <strong><%= payrollName %></strong> was rejected at the
+  <strong><%= level %></strong> approval step.
+</p>
+
+<div class="note note-danger">
+  The run was marked rejected. Review comments, update the draft if needed, and resubmit.
+</div>
+
+<div class="meta">
+  <div class="meta-row">
+    <span class="meta-label">Payroll run</span>
+    <span class="meta-value"><%= payrollName %></span>
   </div>
-</body>
-</html>
+  <div class="meta-row">
+    <span class="meta-label">Rejected at</span>
+    <span class="meta-value"><%= level %></span>
+  </div>
+  <% if (comments) { %>
+    <div class="meta-row">
+      <span class="meta-label">Comments</span>
+      <span class="meta-value"><%= comments %></span>
+    </div>
+  <% } %>
+</div>
+
+<div class="btn-wrap">
+  <a class="btn" href="<%= payrollUrl %>">Review payroll</a>
+</div>
+
+<%- include('partials/layout-end') %>
