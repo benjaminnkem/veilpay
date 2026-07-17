@@ -1,31 +1,40 @@
-<%- include('partials/layout-start', { title: 'Welcome to ' + appName }) %>
+<%- include('partials/layout-start', {
+  title: 'Welcome to ' + appName,
+  preheader: 'Your organization workspace is ready on ' + appName + '.'
+}) %>
 
-<span class="eyebrow">Welcome</span>
-<h1>Your workspace is ready, <%= firstName %></h1>
-<p class="lead">
-  <strong><%= organizationName %></strong> is set up on <%= appName %>.
-  Hire people, define compensation, run payroll, and move approvals from one
-  confidential control plane.
+<%- include('partials/eyebrow', { label: 'Welcome' }) %>
+
+<h1 class="email-title" style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#142016;letter-spacing:-0.3px;">
+  Your workspace is ready, <%= firstName %>
+</h1>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  <strong style="color:#142016;"><%= organizationName %></strong> is set up on <%= appName %>.
+  Hire people, define compensation, run payroll, and move approvals from one confidential control plane.
 </p>
 
-<div class="meta">
-  <div class="meta-row">
-    <span class="meta-label">Organization</span>
-    <span class="meta-value"><%= organizationName %></span>
-  </div>
-  <div class="meta-row">
-    <span class="meta-label">Next step</span>
-    <span class="meta-value">Open the dashboard and invite your team</span>
-  </div>
-</div>
+<%- include('partials/meta', {
+  rows: [
+    { label: 'Organization', value: organizationName },
+    { label: 'Next step', value: 'Open the dashboard and invite your team' }
+  ]
+}) %>
 
-<div class="btn-wrap">
-  <a class="btn" href="<%= dashboardUrl %>">Open dashboard</a>
-</div>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 18px 0;">
+  <tr>
+    <td style="padding:0;">
+      <%- include('partials/button', { href: dashboardUrl, label: 'Open dashboard' }) %>
+    </td>
+  </tr>
+</table>
 
-<p class="muted">
+<p class="email-muted" style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#6b786f;">
   Prefer the sign-in page?
-  <a href="<%= loginUrl %>"><%= loginUrl %></a>
+  <a class="email-link" href="<%= loginUrl %>" target="_blank" rel="noopener noreferrer"
+     style="color:#4f9a0d;text-decoration:underline;word-break:break-all;">
+    <%= loginUrl %>
+  </a>
 </p>
 
 <%- include('partials/layout-end') %>

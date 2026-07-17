@@ -170,16 +170,21 @@ export class AuthService {
   async logout(userId: string, refreshToken?: string) {
     if (refreshToken) {
       const tokenHash = hashToken(refreshToken);
-      await this.refreshRepo.update(
-        { userId, tokenHash, revokedAt: undefined as never },
-        { revokedAt: new Date() },
-      );
+      await this.refreshRepo
+        .createQueryBuilder()
+        .update()
+        .set({ revokedAt: new Date() })
+        .where(
+          'userId = :userId AND tokenHash = :tokenHash AND "revokedAt" IS NULL',
+          { userId, tokenHash },
+        )
+        .execute();
     } else {
       await this.refreshRepo
         .createQueryBuilder()
         .update()
         .set({ revokedAt: new Date() })
-        .where('userId = :userId AND revokedAt IS NULL', { userId })
+        .where('userId = :userId AND "revokedAt" IS NULL', { userId })
         .execute();
     }
 

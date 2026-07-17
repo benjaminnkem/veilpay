@@ -1,30 +1,40 @@
-<%- include('partials/layout-start', { title: 'Payroll approved' }) %>
+<%- include('partials/layout-start', {
+  title: 'Payroll approved',
+  preheader: payrollName + ' is fully approved and ready for execution.'
+}) %>
 
-<span class="eyebrow">Payroll</span>
-<h1>Payroll fully approved</h1>
-<p class="lead">Hi <%= firstName %>,</p>
-<p>
-  <strong><%= payrollName %></strong> completed every approval step and is ready
-  for execution.
+<%- include('partials/eyebrow', { label: 'Payroll' }) %>
+
+<h1 class="email-title" style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#142016;letter-spacing:-0.3px;">
+  Payroll fully approved
+</h1>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  Hi <%= firstName %>,
 </p>
 
-<div class="note note-success">
-  Ready for execution. Open the run to launch payment processing when your treasury flow is prepared.
-</div>
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  <strong style="color:#142016;"><%= payrollName %></strong> completed every approval step and is ready for execution.
+</p>
 
-<div class="meta">
-  <div class="meta-row">
-    <span class="meta-label">Payroll run</span>
-    <span class="meta-value"><%= payrollName %></span>
-  </div>
-  <div class="meta-row">
-    <span class="meta-label">Status</span>
-    <span class="meta-value">Approved</span>
-  </div>
-</div>
+<%- include('partials/note', {
+  type: 'success',
+  text: 'Ready for execution. Open the run to launch payment processing when your treasury flow is prepared.'
+}) %>
 
-<div class="btn-wrap">
-  <a class="btn" href="<%= payrollUrl %>">Open payroll</a>
-</div>
+<%- include('partials/meta', {
+  rows: [
+    { label: 'Payroll run', value: payrollName },
+    { label: 'Status', value: 'Approved' }
+  ]
+}) %>
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 20px 0;">
+  <tr>
+    <td style="padding:0;">
+      <%- include('partials/button', { href: payrollUrl, label: 'Open payroll' }) %>
+    </td>
+  </tr>
+</table>
 
 <%- include('partials/layout-end') %>

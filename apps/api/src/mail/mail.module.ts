@@ -26,9 +26,13 @@ import { MailService } from './mail.service';
         },
         template: {
           dir: join(__dirname, 'templates'),
-          adapter: new EjsAdapter({ inlineCssEnabled: false }),
+          adapter: new EjsAdapter({
+            inlineCssEnabled: true,
+          }),
           options: {
             strict: false,
+            views: [join(__dirname, 'templates')],
+            root: join(__dirname, 'templates'),
           },
         },
       }),

@@ -1,33 +1,39 @@
-<%- include('partials/layout-start', { title: 'Payroll submitted' }) %>
+<%- include('partials/layout-start', {
+  title: 'Payroll submitted',
+  preheader: payrollName + ' was submitted for approval.'
+}) %>
 
-<span class="eyebrow">Payroll</span>
-<h1>Payroll submitted for approval</h1>
-<p class="lead">Hi <%= firstName %>,</p>
-<p>
-  <strong><%= payrollName %></strong> was submitted and is now moving through
-  your approval sequence.
+<%- include('partials/eyebrow', { label: 'Payroll' }) %>
+
+<h1 class="email-title" style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#142016;letter-spacing:-0.3px;">
+  Payroll submitted for approval
+</h1>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  Hi <%= firstName %>,
 </p>
 
-<div class="meta">
-  <div class="meta-row">
-    <span class="meta-label">Payroll run</span>
-    <span class="meta-value"><%= payrollName %></span>
-  </div>
-  <div class="meta-row">
-    <span class="meta-label">Employees included</span>
-    <span class="meta-value"><%= employeeCount %></span>
-  </div>
-  <div class="meta-row">
-    <span class="meta-label">Status</span>
-    <span class="meta-value">Pending approval</span>
-  </div>
-</div>
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  <strong style="color:#142016;"><%= payrollName %></strong> was submitted and is now moving through your approval sequence.
+</p>
 
-<div class="btn-wrap">
-  <a class="btn" href="<%= payrollUrl %>">Review payroll</a>
-</div>
+<%- include('partials/meta', {
+  rows: [
+    { label: 'Payroll run', value: payrollName },
+    { label: 'Employees included', value: String(employeeCount) },
+    { label: 'Status', value: 'Pending approval' }
+  ]
+}) %>
 
-<p class="muted">
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 18px 0;">
+  <tr>
+    <td style="padding:0;">
+      <%- include('partials/button', { href: payrollUrl, label: 'Review payroll' }) %>
+    </td>
+  </tr>
+</table>
+
+<p class="email-muted" style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#6b786f;">
   Approvers will be notified in sequence (HR, Finance, CEO by default).
 </p>
 

@@ -1,39 +1,50 @@
-<%- include('partials/layout-start', { title: "You're invited to " + organizationName }) %>
+<%- include('partials/layout-start', {
+  title: "You're invited to " + organizationName,
+  preheader: inviterName + ' invited you to join ' + organizationName + ' on ' + appName + '.'
+}) %>
 
-<span class="eyebrow">Invitation</span>
-<h1>Join <%= organizationName %> on <%= appName %></h1>
-<p class="lead">Hi <%= inviteeName %>,</p>
-<p>
-  <strong><%= inviterName %></strong> invited you to collaborate on confidential
+<%- include('partials/eyebrow', { label: 'Invitation' }) %>
+
+<h1 class="email-title" style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#142016;letter-spacing:-0.3px;">
+  Join <%= organizationName %> on <%= appName %>
+</h1>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  Hi <%= inviteeName %>,
+</p>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  <strong style="color:#142016;"><%= inviterName %></strong> invited you to collaborate on confidential
   payroll and workforce operations.
 </p>
 
-<div class="meta">
-  <div class="meta-row">
-    <span class="meta-label">Organization</span>
-    <span class="meta-value"><%= organizationName %></span>
-  </div>
-  <div class="meta-row">
-    <span class="meta-label">Access role</span>
-    <span class="meta-value"><%= role %></span>
-  </div>
-  <div class="meta-row">
-    <span class="meta-label">Expires</span>
-    <span class="meta-value"><%= expiresAt %></span>
-  </div>
-</div>
+<%- include('partials/meta', {
+  rows: [
+    { label: 'Organization', value: organizationName },
+    { label: 'Access role', value: role },
+    { label: 'Expires', value: expiresAt }
+  ]
+}) %>
 
-<div class="btn-wrap">
-  <a class="btn" href="<%= inviteUrl %>">Accept invitation</a>
-</div>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 18px 0;">
+  <tr>
+    <td style="padding:0;">
+      <%- include('partials/button', { href: inviteUrl, label: 'Accept invitation' }) %>
+    </td>
+  </tr>
+</table>
 
-<div class="note note-info">
-  This link is unique to you. Do not forward it to anyone else.
-</div>
+<%- include('partials/note', {
+  type: 'info',
+  text: 'This link is unique to you. Do not forward it to anyone else.'
+}) %>
 
-<p class="muted">
+<p class="email-muted" style="margin:0 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#6b786f;">
   Or paste this link into your browser:<br />
-  <a href="<%= inviteUrl %>"><%= inviteUrl %></a>
+  <a class="email-link" href="<%= inviteUrl %>" target="_blank" rel="noopener noreferrer"
+     style="color:#4f9a0d;text-decoration:underline;word-break:break-all;">
+    <%= inviteUrl %>
+  </a>
 </p>
 
 <%- include('partials/layout-end') %>

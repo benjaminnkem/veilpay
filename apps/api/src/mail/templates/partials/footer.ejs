@@ -1,15 +1,20 @@
-<div class="footer">
-  <p style="margin: 0 0 6px; color: inherit; font-size: 12px;">
-    © <%= year %> <%= appName %>. Built for confidential payroll operations.
-  </p>
-  <p style="margin: 0; color: inherit; font-size: 12px;">
-    <% if (typeof webUrl !== 'undefined' && webUrl) { %>
-      <a href="<%= webUrl %>"><%= webUrl.replace(/^https?:\/\//, '') %></a>
-    <% } else { %>
-      This message was sent by <%= appName %>.
-    <% } %>
-  </p>
-  <p style="margin: 10px 0 0; color: inherit; font-size: 11px;">
-    If you were not expecting this email, you can ignore it safely.
-  </p>
-</div>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;width:100%;">
+  <tr>
+    <td align="center" class="email-footer" style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#8a968c;text-align:center;">
+      <p style="margin:0 0 6px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#8a968c;">
+        &copy; <%= year %> <%= appName %>. Built for confidential payroll operations.
+      </p>
+      <% if (typeof webUrl !== 'undefined' && webUrl) { %>
+        <p style="margin:0 0 8px 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:1.5;color:#8a968c;">
+          <a class="email-link" href="<%= webUrl %>" target="_blank" rel="noopener noreferrer"
+             style="color:#4f9a0d;text-decoration:underline;">
+            <%= String(webUrl).replace(/^https?:\/\//, '') %>
+          </a>
+        </p>
+      <% } %>
+      <p style="margin:0;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.5;color:#8a968c;">
+        If you were not expecting this email, you can ignore it safely.
+      </p>
+    </td>
+  </tr>
+</table>
