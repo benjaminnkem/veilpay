@@ -8,6 +8,7 @@ import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/providers/AuthProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { ThemeProvider } from '@/providers/ThemeProvider';
+import { Web3Provider } from '@/providers/Web3Provider';
 
 interface AppProvidersProps {
   children: ReactNode;
@@ -16,15 +17,17 @@ interface AppProvidersProps {
 
 export function AppProviders({ children, session }: AppProvidersProps) {
   return (
-    <ThemeProvider>
-      <AuthProvider session={session}>
-        <QueryProvider>
-          <TooltipProvider delay={200}>
-            {children}
-            <Toaster position="top-right" richColors closeButton />
-          </TooltipProvider>
-        </QueryProvider>
-      </AuthProvider>
-    </ThemeProvider>
+    <QueryProvider>
+      <ThemeProvider>
+        <AuthProvider session={session}>
+          <Web3Provider>
+            <TooltipProvider delay={200}>
+              {children}
+              <Toaster position="top-right" richColors closeButton />
+            </TooltipProvider>
+          </Web3Provider>
+        </AuthProvider>
+      </ThemeProvider>
+    </QueryProvider>
   );
 }
