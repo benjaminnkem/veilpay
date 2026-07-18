@@ -13,15 +13,16 @@ export class MockPaymentProvider implements PaymentProvider {
   async executePayroll(
     request: ExecutePayrollPaymentRequest,
   ): Promise<ExecutePayrollPaymentResult> {
+    const payable = request.items.filter((item) => item.amountCents > 0);
+    const totalCents = payable.reduce((sum, item) => sum + item.amountCents, 0);
     this.logger.log(
-      `Mock payment rail for payroll ${request.payrollId} (${request.items.length} items)`,
+      `Mock payment rail for payroll ${request.payrollId} (${payable.length} payable / ${request.items.length} items, $${(totalCents / 100).toFixed(2)})`,
     );
 
     return {
       success: true,
       status: 'BLOCKCHAIN_PENDING',
-      message:
-        'Blockchain integration will be completed using Safe SDK and Nox Protocol.',
+      message: `Mock rail staged ${payable.length} recipient batch totaling $${(totalCents / 100).toFixed(2)}. Switch organization execution provider to blockchain and fund the Safe for live multi-employee USDC settlement.`,
       provider: this.kind,
       transactionHash: null,
       externalReference: `pending_${request.payrollId}_${Date.now()}`,

@@ -30,6 +30,9 @@
     "@nestjs/throttler": "^6.5.0",
     "@nestjs/typeorm": "^11.0.3",
     "@repo/types": "workspace:*",
+    "@safe-global/api-kit": "^5.0.1",
+    "@safe-global/protocol-kit": "^8.0.4",
+    "@safe-global/types-kit": "^4.0.1",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
@@ -43,7 +46,8 @@
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
     "typeorm": "^1.1.0",
-    "uuid": "^14.0.1"
+    "uuid": "^14.0.1",
+    "viem": "^2.47.6"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",

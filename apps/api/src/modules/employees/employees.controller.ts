@@ -20,6 +20,7 @@ import { EmployeesService } from './employees.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { EmployeeQueryDto } from './dto/employee-query.dto';
+import { SetPayoutWalletDto } from './dto/set-payout-wallet.dto';
 
 @ApiTags('employees')
 @ApiBearerAuth()
@@ -85,6 +86,29 @@ export class EmployeesController {
   @ApiOperation({ summary: 'List departments with counts' })
   departments(@CurrentUser() user: JwtPayloadUser) {
     return this.employeesService.departments(user);
+  }
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get the employee record linked to the current user' })
+  getMe(@CurrentUser() user: JwtPayloadUser) {
+    return this.employeesService.getMe(user);
+  }
+
+  @Post('me/wallet')
+  @ApiOperation({
+    summary: 'Link payout wallet to the current user employee record',
+  })
+  setMyWallet(
+    @CurrentUser() user: JwtPayloadUser,
+    @Body() dto: SetPayoutWalletDto,
+  ) {
+    return this.employeesService.setMyPayoutWallet(user, dto);
+  }
+
+  @Delete('me/wallet')
+  @ApiOperation({ summary: 'Clear payout wallet on the current employee record' })
+  clearMyWallet(@CurrentUser() user: JwtPayloadUser) {
+    return this.employeesService.clearMyPayoutWallet(user);
   }
 
   @Get(':id')

@@ -16,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PayoutWalletCard } from '@/features/settings/components/payout-wallet-card';
 import { ProfileSettingsForm } from '@/features/settings/components/profile-settings-form';
 import { TreasurySettings } from '@/features/settings/components/treasury-settings';
 import {
@@ -162,6 +163,7 @@ export function SettingsWorkspace() {
 
       <TabsContent value="profile" className="space-y-4">
         <ProfileSettingsForm />
+        <PayoutWalletCard />
         <Card className="border-border/70 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Access</CardTitle>

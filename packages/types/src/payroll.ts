@@ -19,6 +19,17 @@ export interface PayrollItem extends Timestamps {
   notes: string | null;
 }
 
+export interface PayrollPayoutReadiness {
+  itemCount: number;
+  zeroPayCount: number;
+  payableCount: number;
+  readyCount: number;
+  missingWalletCount: number;
+  payableNetPayCents: number;
+  readyEmployeeNames: string[];
+  missingWalletNames: string[];
+}
+
 export interface Payroll extends Timestamps {
   id: string;
   organizationId: string;
@@ -44,6 +55,7 @@ export interface Payroll extends Timestamps {
   executionMessage: string | null;
   createdById: string;
   items?: PayrollItem[];
+  payoutReadiness?: PayrollPayoutReadiness;
 }
 
 export interface CreatePayrollInput {

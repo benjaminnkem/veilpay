@@ -1,12 +1,15 @@
 import {
+  BadRequestException,
   ConflictException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditAction, EmploymentStatus } from '@repo/types';
-import { EmployeeEntity } from '../../database/entities';
+import { getAddress, isAddress, verifyMessage } from 'viem';
+import { EmployeeEntity, UserEntity } from '../../database/entities';
 import { buildMeta } from '../../common/dto/pagination.dto';
 import type { JwtPayloadUser } from '../../common/decorators/current-user.decorator';
 import { requireOrganizationId } from '../../common/utils/org.util';
@@ -14,12 +17,17 @@ import { AuditLogsService } from '../audit-logs/audit-logs.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 import { UpdateEmployeeDto } from './dto/update-employee.dto';
 import { EmployeeQueryDto } from './dto/employee-query.dto';
+import { SetPayoutWalletDto } from './dto/set-payout-wallet.dto';
+
+const WALLET_MESSAGE_MAX_AGE_MS = 15 * 60 * 1000;
 
 @Injectable()
 export class EmployeesService {
   constructor(
     @InjectRepository(EmployeeEntity)
     private readonly employeesRepo: Repository<EmployeeEntity>,
+    @InjectRepository(UserEntity)
+    private readonly usersRepo: Repository<UserEntity>,
     private readonly auditLogs: AuditLogsService,
   ) {}
 
@@ -323,6 +331,160 @@ export class EmployeesService {
       message:
         'CSV bulk import processed. Full file upload pipeline can replace this JSON endpoint later.',
     };
+  }
+
+  async getMe(actor: JwtPayloadUser) {
+    const employee = await this.findLinkedEmployee(actor);
+    return serializeEmployee(employee);
+  }
+
+  async setMyPayoutWallet(actor: JwtPayloadUser, dto: SetPayoutWalletDto) {
+    const employee = await this.findLinkedEmployee(actor);
+    const walletAddress = getAddress(dto.walletAddress);
+
+    this.assertPayoutMessage(actor, employee, walletAddress, dto.message);
+
+    const valid = await verifyMessage({
+      address: walletAddress,
+      message: dto.message,
+      signature: dto.signature as `0x${string}`,
+    });
+
+    if (!valid) {
+      throw new UnauthorizedException(
+        'Wallet signature is invalid. Sign the verification message with the connected wallet.',
+      );
+    }
+
+    employee.walletAddress = walletAddress;
+    if (!employee.userId) {
+      employee.userId = actor.id;
+    }
+    await this.employeesRepo.save(employee);
+
+    const user = await this.usersRepo.findOne({ where: { id: actor.id } });
+    if (user) {
+      user.walletAddress = walletAddress;
+      await this.usersRepo.save(user);
+    }
+
+    await this.auditLogs.log({
+      organizationId: employee.organizationId,
+      actorId: actor.id,
+      actorEmail: actor.email,
+      action: AuditAction.EMPLOYEE_UPDATED,
+      entityType: 'Employee',
+      entityId: employee.id,
+      metadata: {
+        action: 'payout_wallet_linked',
+        walletAddress,
+      },
+    });
+
+    return serializeEmployee(employee);
+  }
+
+  async clearMyPayoutWallet(actor: JwtPayloadUser) {
+    const employee = await this.findLinkedEmployee(actor);
+    employee.walletAddress = null;
+    await this.employeesRepo.save(employee);
+
+    const user = await this.usersRepo.findOne({ where: { id: actor.id } });
+    if (user) {
+      user.walletAddress = null;
+      await this.usersRepo.save(user);
+    }
+
+    await this.auditLogs.log({
+      organizationId: employee.organizationId,
+      actorId: actor.id,
+      actorEmail: actor.email,
+      action: AuditAction.EMPLOYEE_UPDATED,
+      entityType: 'Employee',
+      entityId: employee.id,
+      metadata: { action: 'payout_wallet_cleared' },
+    });
+
+    return serializeEmployee(employee);
+  }
+
+  private async findLinkedEmployee(
+    actor: JwtPayloadUser,
+  ): Promise<EmployeeEntity> {
+    const orgId = requireOrganizationId(actor);
+
+    let employee = await this.employeesRepo.findOne({
+      where: { organizationId: orgId, userId: actor.id },
+    });
+
+    if (!employee) {
+      employee = await this.employeesRepo.findOne({
+        where: {
+          organizationId: orgId,
+          email: actor.email.toLowerCase(),
+        },
+      });
+      if (employee && !employee.userId) {
+        employee.userId = actor.id;
+        await this.employeesRepo.save(employee);
+      }
+    }
+
+    if (!employee) {
+      throw new NotFoundException(
+        'No employee record is linked to your account. Ask HR to invite or create your employee profile.',
+      );
+    }
+
+    return employee;
+  }
+
+  private assertPayoutMessage(
+    actor: JwtPayloadUser,
+    employee: EmployeeEntity,
+    walletAddress: string,
+    message: string,
+  ): void {
+    if (!isAddress(walletAddress)) {
+      throw new BadRequestException('Invalid wallet address');
+    }
+
+    const lines = message.split('\n').map((l) => l.trim());
+    const hasHeader = lines.some((l) =>
+      l.toLowerCase().includes('veilpay payout wallet'),
+    );
+    const hasWallet = lines.some((l) =>
+      l.toLowerCase().includes(walletAddress.toLowerCase()),
+    );
+    const hasEmail = lines.some((l) =>
+      l.toLowerCase().includes(actor.email.toLowerCase()),
+    );
+    const hasEmployeeId = lines.some((l) => l.includes(employee.id));
+
+    if (!hasHeader || !hasWallet || !hasEmail || !hasEmployeeId) {
+      throw new BadRequestException(
+        'Signed message does not match the expected payout verification format.',
+      );
+    }
+
+    const issuedLine = lines.find((l) =>
+      l.toLowerCase().startsWith('issued:'),
+    );
+    if (issuedLine) {
+      const iso = issuedLine.slice(issuedLine.indexOf(':') + 1).trim();
+      const issuedAt = Date.parse(iso);
+      if (!Number.isFinite(issuedAt)) {
+        throw new BadRequestException('Invalid Issued timestamp in message');
+      }
+      if (Date.now() - issuedAt > WALLET_MESSAGE_MAX_AGE_MS) {
+        throw new BadRequestException(
+          'Wallet verification message expired. Sign a new message and try again.',
+        );
+      }
+      if (issuedAt > Date.now() + 60_000) {
+        throw new BadRequestException('Wallet verification timestamp is in the future');
+      }
+    }
   }
 }
 

@@ -99,12 +99,23 @@ export function CreatePayrollDialog() {
     return activeEmployees.filter((e) => selectedIds.includes(e.id));
   }, [activeEmployees, selectAll, selectedIds]);
 
+  const walletStats = useMemo(() => {
+    const withWallet = selectedEmployees.filter((e) =>
+      Boolean(e.walletAddress),
+    ).length;
+    return {
+      total: selectedEmployees.length,
+      withWallet,
+      missing: selectedEmployees.length - withWallet,
+    };
+  }, [selectedEmployees]);
+
   const mutation = useApiMutation({
     mutationFn: createPayroll,
     onSuccess: async (payroll) => {
       notify.success(
         'Payroll draft created',
-        'Review totals, then submit for HR → Finance → CEO approval.'
+        'Review totals and wallet readiness, then submit for HR → Finance → CEO approval.',
       );
       await qc.invalidateQueries({ queryKey: payrollRunsQueryKey });
       setOpen(false);
@@ -149,7 +160,7 @@ export function CreatePayrollDialog() {
   const toggleEmployee = (id: string, checked: boolean) => {
     setSelectAll(false);
     setSelectedIds((prev) =>
-      checked ? [...new Set([...prev, id])] : prev.filter((x) => x !== id)
+      checked ? [...new Set([...prev, id])] : prev.filter((x) => x !== id),
     );
   };
 
@@ -169,8 +180,8 @@ export function CreatePayrollDialog() {
         <DialogHeader>
           <DialogTitle>Create payroll</DialogTitle>
           <DialogDescription>
-            Multi-step builder: period → employees → review → draft. Execution
-            stays off-chain until Safe + Nox is connected.
+            Multi-employee builder: period → employees → review → draft. Safe
+            execution batches one USDC transfer per payable wallet.
           </DialogDescription>
         </DialogHeader>
 
@@ -184,7 +195,7 @@ export function CreatePayrollDialog() {
                   ? 'bg-primary text-primary-foreground'
                   : index < step
                     ? 'bg-primary/15 text-foreground'
-                    : 'bg-muted text-muted-foreground'
+                    : 'bg-muted text-muted-foreground',
               )}
             >
               {index + 1}. {label}
@@ -227,16 +238,36 @@ export function CreatePayrollDialog() {
 
           {step === 1 ? (
             <div className="space-y-3">
-              <label className="flex items-center gap-2 text-sm font-medium">
-                <Checkbox
-                  checked={selectAll}
-                  onCheckedChange={(v) => {
-                    setSelectAll(Boolean(v));
-                    if (v) setSelectedIds([]);
-                  }}
-                />
-                Include all active employees ({activeEmployees.length})
-              </label>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <label className="flex items-center gap-2 text-sm font-medium">
+                  <Checkbox
+                    checked={selectAll}
+                    onCheckedChange={(v) => {
+                      setSelectAll(Boolean(v));
+                      if (v) setSelectedIds([]);
+                    }}
+                  />
+                  Include all active employees ({activeEmployees.length})
+                </label>
+                {selectedEmployees.length > 0 ? (
+                  <div className="flex flex-wrap gap-1.5 text-xs">
+                    <Badge variant="secondary">
+                      {walletStats.withWallet} wallet ready
+                    </Badge>
+                    {walletStats.missing > 0 ? (
+                      <Badge variant="outline">
+                        {walletStats.missing} missing wallet
+                      </Badge>
+                    ) : null}
+                  </div>
+                ) : null}
+              </div>
+              {walletStats.missing > 0 ? (
+                <p className="text-xs text-amber-700 dark:text-amber-300">
+                  Employees without a payout wallet can still be included. They
+                  must link one before blockchain execution.
+                </p>
+              ) : null}
               <div className="max-h-64 space-y-1 overflow-y-auto rounded-lg border border-border/70 p-2">
                 {employeesQuery.isLoading ? (
                   <p className="p-2 text-sm text-muted-foreground">Loading…</p>
@@ -268,7 +299,8 @@ export function CreatePayrollDialog() {
               <p className="text-muted-foreground">
                 Compensation is snapshotted when the draft is created. Current
                 salary, bonus, allowance, and deduction records are applied
-                automatically.
+                automatically. Payout wallets are re-synced at submit and
+                execute.
               </p>
               <div className="rounded-lg border border-border/70 p-3">
                 <div className="font-medium">
@@ -276,9 +308,22 @@ export function CreatePayrollDialog() {
                   {selectedEmployees.length === 1 ? '' : 's'} selected
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
+                  <Badge variant="secondary">
+                    {walletStats.withWallet} ready for on-chain pay
+                  </Badge>
+                  {walletStats.missing > 0 ? (
+                    <Badge variant="outline">
+                      {walletStats.missing} need wallet
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">All wallets linked</Badge>
+                  )}
+                </div>
+                <div className="mt-3 flex flex-wrap gap-1.5">
                   {selectedEmployees.slice(0, 12).map((e) => (
                     <Badge key={e.id} variant="secondary">
                       {e.firstName} {e.lastName}
+                      {e.walletAddress ? '' : ' · no wallet'}
                     </Badge>
                   ))}
                   {selectedEmployees.length > 12 ? (
@@ -302,12 +347,13 @@ export function CreatePayrollDialog() {
                 <PreviewField label="Pay date" value={form.watch('payDate')} />
                 <PreviewField
                   label="Employees"
-                  value={String(selectedEmployees.length)}
+                  value={`${selectedEmployees.length} (${walletStats.withWallet} wallet ready)`}
                 />
               </div>
               <p className="text-muted-foreground">
                 Creating a draft runs the payroll engine and generates line
-                items. You can regenerate before submission.
+                items for every selected employee. You can regenerate before
+                submission.
               </p>
             </div>
           ) : null}
@@ -315,12 +361,19 @@ export function CreatePayrollDialog() {
           {step === 4 ? (
             <div className="space-y-3 text-sm">
               <div className="rounded-lg border border-primary/25 bg-primary/5 p-4">
-                <p className="font-medium">Ready to create draft</p>
+                <p className="font-medium">Ready to create multi-employee draft</p>
                 <p className="mt-1 text-muted-foreground">
-                  After creation you can review totals, submit for approval, and
-                  eventually execute. Blockchain settlement stays pending until
-                  Safe + Nox integration.
+                  After creation, review wallet readiness and totals, submit for
+                  approval, then execute one batched Safe USDC transfer per
+                  payable employee.
                 </p>
+                {walletStats.missing > 0 ? (
+                  <p className="mt-2 text-amber-700 dark:text-amber-300">
+                    {walletStats.missing} selected employee
+                    {walletStats.missing === 1 ? '' : 's'} still need a payout
+                    wallet before blockchain execution.
+                  </p>
+                ) : null}
               </div>
               {form.watch('notes') ? (
                 <PreviewField label="Notes" value={form.watch('notes') ?? ''} />
@@ -377,6 +430,7 @@ function EmployeeRow({
   disabled?: boolean;
   onCheckedChange: (checked: boolean) => void;
 }) {
+  const hasWallet = Boolean(employee.walletAddress);
   return (
     <label className="flex cursor-pointer items-center gap-3 rounded-md px-2 py-2 hover:bg-muted/50">
       <Checkbox
@@ -389,9 +443,16 @@ function EmployeeRow({
           {employee.firstName} {employee.lastName}
         </div>
         <div className="truncate text-xs text-muted-foreground">
-          {employee.department ?? '-'} · {employee.position ?? employee.title ?? '-'}
+          {employee.department ?? '-'} ·{' '}
+          {employee.position ?? employee.title ?? '-'}
         </div>
       </div>
+      <Badge
+        variant={hasWallet ? 'secondary' : 'outline'}
+        className="shrink-0 text-[10px]"
+      >
+        {hasWallet ? 'Wallet ready' : 'No wallet'}
+      </Badge>
     </label>
   );
 }

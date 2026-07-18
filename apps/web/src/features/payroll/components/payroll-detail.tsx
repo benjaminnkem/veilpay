@@ -4,10 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   ArrowLeftIcon,
   BlocksIcon,
+  ExternalLinkIcon,
   ShieldAlertIcon,
   WalletIcon,
 } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 import { QueryState } from '@/components/shared';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -40,6 +42,11 @@ import {
   submitPayroll,
 } from '@/features/payroll/services/getPayrollRuns';
 import { payrollRunsQueryKey } from '@/features/payroll/hooks/use-payroll-runs';
+import {
+  computePayoutReadiness,
+  shortWallet,
+} from '@/features/payroll/utils/payout-readiness';
+import { getNetworkByKey } from '@/lib/web3/config';
 import { formatCurrency, formatDate } from '@/lib/utils';
 import { notify } from '@/lib/toast';
 
@@ -83,15 +90,23 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
     mutationFn: () => executePayroll(payrollId),
     onSuccess: async (run) => {
       const status = String(run.status).toUpperCase();
-      if (status === 'BLOCKCHAIN_PENDING') {
+      if (status === 'COMPLETED') {
+        notify.success(
+          'Payroll executed',
+          run.transactionHash
+            ? `Transaction ${run.transactionHash.slice(0, 12)}…`
+            : (run.executionMessage ?? 'USDC transfers submitted from Safe.'),
+        );
+      } else if (status === 'BLOCKCHAIN_PENDING') {
         notify.info(
-          'Blockchain integration pending',
+          'Awaiting Safe signatures or confirmation',
           run.executionMessage ??
-            'Safe SDK and Nox Protocol execution will complete this step.'
+            'Transaction proposed. Collect remaining Safe owner signatures if needed.',
         );
       } else {
         notify.success('Executed', 'Payroll processed via payment provider.');
       }
+      await qc.invalidateQueries({ queryKey: ['treasury-balances'] });
       await invalidate();
     },
     onError: (e) => notify.error(e),
@@ -100,7 +115,10 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
   const regenerate = useMutation({
     mutationFn: () => regeneratePayroll(payrollId),
     onSuccess: async () => {
-      notify.success('Regenerated', 'Payroll items refreshed from compensation.');
+      notify.success(
+        'Regenerated',
+        'Payroll items refreshed from compensation.',
+      );
       await invalidate();
     },
     onError: (e) => notify.error(e),
@@ -119,8 +137,28 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
   const status = String(payroll?.status ?? '').toUpperCase();
   const canModify = status === 'DRAFT' || status === 'REJECTED';
   const canCancel = !['COMPLETED', 'PROCESSING', 'BLOCKCHAIN_PENDING'].includes(
-    status
+    status,
   );
+
+  const readiness = useMemo(() => {
+    if (payroll?.payoutReadiness) return payroll.payoutReadiness;
+    return computePayoutReadiness(payroll?.items);
+  }, [payroll]);
+
+  const network = getNetworkByKey(payroll?.network ?? orgQuery.data?.network);
+  const explorerTxUrl =
+    payroll?.transactionHash && network
+      ? `${network.explorer}/tx/${payroll.transactionHash}`
+      : null;
+  const isBlockchain =
+    (orgQuery.data?.executionProvider ?? 'mock') === 'blockchain';
+  const canExecute =
+    status === 'APPROVED' &&
+    readiness.payableCount > 0 &&
+    readiness.missingWalletCount === 0 &&
+    (!isBlockchain ||
+      (Boolean(orgQuery.data?.safeAddress) && Boolean(orgQuery.data?.network)));
+  const requiredUsdc = readiness.payableNetPayCents / 100;
 
   return (
     <div className="space-y-6">
@@ -175,7 +213,9 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                       <Button
                         size="sm"
                         onClick={() => submit.mutate()}
-                        disabled={submit.isPending}
+                        disabled={
+                          submit.isPending || readiness.payableCount === 0
+                        }
                       >
                         Submit for approval
                       </Button>
@@ -185,7 +225,7 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                     <Button
                       size="sm"
                       onClick={() => execute.mutate()}
-                      disabled={execute.isPending}
+                      disabled={execute.isPending || !canExecute}
                     >
                       Execute payroll
                     </Button>
@@ -203,36 +243,54 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                 </div>
               </CardHeader>
               <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 text-sm">
-                <Stat
-                  label="Employees"
-                  value={String(payroll.employeeCount)}
-                />
+                <Stat label="Employees" value={String(payroll.employeeCount)} />
                 <Stat
                   label="Net total"
                   value={formatCurrency(
                     payroll.totalAmount ??
                       (payroll.totalNetPayCents ?? 0) / 100,
-                    payroll.currency
+                    payroll.currency,
                   )}
                 />
                 <Stat
-                  label="Base"
-                  value={formatCurrency(
-                    (payroll.totalBaseSalaryCents ?? 0) / 100,
-                    payroll.currency
-                  )}
+                  label="Ready to pay"
+                  value={`${readiness.readyCount} / ${readiness.payableCount || payroll.employeeCount}`}
                 />
                 <Stat
-                  label="Deductions"
-                  value={formatCurrency(
-                    (payroll.totalDeductionsCents ?? 0) / 100,
-                    payroll.currency
-                  )}
+                  label="Missing wallets"
+                  value={String(readiness.missingWalletCount)}
                 />
               </CardContent>
             </Card>
 
-            {status === 'APPROVED' || status === 'BLOCKCHAIN_PENDING' ? (
+            {readiness.missingWalletCount > 0 || readiness.zeroPayCount > 0 ? (
+              <Alert>
+                <WalletIcon />
+                <AlertTitle>Payout readiness</AlertTitle>
+                <AlertDescription>
+                  <span className="block">
+                    {readiness.readyCount} ready ·{' '}
+                    {readiness.missingWalletCount} missing wallet ·{' '}
+                    {readiness.zeroPayCount} zero-pay (skipped on execute)
+                  </span>
+                  {readiness.missingWalletCount > 0 ? (
+                    <span className="mt-2 block text-amber-700 dark:text-amber-300">
+                      Missing wallets:{' '}
+                      {readiness.missingWalletNames.slice(0, 8).join(', ')}
+                      {readiness.missingWalletCount > 8
+                        ? ` (+${readiness.missingWalletCount - 8} more)`
+                        : ''}
+                      . Employees link wallets under Settings → Payout wallet.
+                      Wallets re-sync automatically at submit and execute.
+                    </span>
+                  ) : null}
+                </AlertDescription>
+              </Alert>
+            ) : null}
+
+            {status === 'APPROVED' ||
+            status === 'BLOCKCHAIN_PENDING' ||
+            status === 'COMPLETED' ? (
               <Card className="border-primary/25 bg-primary/5">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-base">
@@ -240,20 +298,35 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                     Execution
                   </CardTitle>
                   <CardDescription>
-                    Payment rails use the PaymentExecutionService abstraction.
-                    Controllers never talk to blockchain SDKs directly.
+                    One Safe multi-send batches a USDC transfer to each ready
+                    employee wallet. Zero-pay lines are skipped. Amounts are
+                    public on-chain until Nox.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-3 text-sm">
+                    <Stat
+                      label="Transfers"
+                      value={String(readiness.readyCount)}
+                    />
+                    <Stat
+                      label="Payable total"
+                      value={formatCurrency(
+                        requiredUsdc,
+                        payroll.currency,
+                      )}
+                    />
+                    <Stat
+                      label="Skipped"
+                      value={`${readiness.zeroPayCount} zero-pay · ${readiness.missingWalletCount} no wallet`}
+                    />
+                  </div>
+
                   {orgQuery.data?.safeAddress && orgQuery.data?.network ? (
                     <TreasuryBalancesPanel
                       safeAddress={orgQuery.data.safeAddress}
                       network={orgQuery.data.network}
-                      requiredUsdc={
-                        (payroll.totalAmount ??
-                          (payroll.totalNetPayCents ?? 0) / 100) ||
-                        undefined
-                      }
+                      requiredUsdc={requiredUsdc || undefined}
                     />
                   ) : (
                     <p className="text-sm text-amber-700 dark:text-amber-300">
@@ -261,42 +334,75 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                       settings before on-chain execution.
                     </p>
                   )}
+
                   {status === 'APPROVED' ? (
                     <>
                       <p className="text-sm text-muted-foreground">
-                        Fully approved and ready for execution. Clicking Execute
-                        payroll hands the run to the payment provider.
+                        Fully approved. Execute builds a single Safe batch of{' '}
+                        {readiness.readyCount} USDC transfer
+                        {readiness.readyCount === 1 ? '' : 's'} totaling{' '}
+                        {formatCurrency(requiredUsdc, payroll.currency)}.
                       </p>
+                      {readiness.missingWalletCount > 0 ? (
+                        <p className="text-sm text-amber-700 dark:text-amber-300">
+                          Execution is blocked until every payable employee has
+                          a payout wallet ({readiness.missingWalletCount}{' '}
+                          remaining).
+                        </p>
+                      ) : null}
                       <Button
                         onClick={() => execute.mutate()}
-                        disabled={execute.isPending}
+                        disabled={execute.isPending || !canExecute}
                       >
                         {execute.isPending
-                          ? 'Executing…'
-                          : 'Execute payroll'}
+                          ? 'Executing batch…'
+                          : `Execute ${readiness.readyCount} transfer${readiness.readyCount === 1 ? '' : 's'}`}
                       </Button>
                     </>
-                  ) : (
+                  ) : null}
+
+                  {status === 'BLOCKCHAIN_PENDING' || status === 'COMPLETED' ? (
                     <Alert>
                       <ShieldAlertIcon />
-                      <AlertTitle>Blockchain integration pending</AlertTitle>
+                      <AlertTitle>
+                        {status === 'COMPLETED'
+                          ? 'Payroll batch executed on-chain'
+                          : 'Safe multi-recipient batch pending'}
+                      </AlertTitle>
                       <AlertDescription>
                         {payroll.executionMessage ??
-                          'Blockchain integration will be completed using Safe SDK and Nox Protocol.'}
-                        {payroll.executionProvider ? (
-                          <span className="mt-2 block text-xs">
-                            Provider: {payroll.executionProvider}
-                            {payroll.network
-                              ? ` · Network: ${payroll.network}`
-                              : ''}
-                            {payroll.transactionHash
-                              ? ` · Tx: ${payroll.transactionHash}`
-                              : ''}
-                          </span>
-                        ) : null}
+                          (status === 'COMPLETED'
+                            ? 'USDC transfers were submitted from the organization Safe.'
+                            : 'Awaiting additional Safe signatures or chain confirmation.')}
+                        <span className="mt-2 block space-y-1 text-xs">
+                          {payroll.executionProvider ? (
+                            <span className="block">
+                              Provider: {payroll.executionProvider}
+                              {payroll.network
+                                ? ` · Network: ${payroll.network}`
+                                : ''}
+                            </span>
+                          ) : null}
+                          {payroll.transactionHash ? (
+                            <span className="block font-mono break-all">
+                              Tx: {payroll.transactionHash}
+                            </span>
+                          ) : null}
+                          {explorerTxUrl ? (
+                            <a
+                              href={explorerTxUrl}
+                              target="_blank"
+                              rel="noreferrer"
+                              className="inline-flex items-center gap-1 text-primary hover:underline"
+                            >
+                              View on explorer
+                              <ExternalLinkIcon className="size-3" />
+                            </a>
+                          ) : null}
+                        </span>
                       </AlertDescription>
                     </Alert>
-                  )}
+                  ) : null}
                 </CardContent>
               </Card>
             ) : null}
@@ -304,9 +410,7 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
             <Card className="border-border/60">
               <CardHeader>
                 <CardTitle className="text-base">Approval timeline</CardTitle>
-                <CardDescription>
-                  HR → Finance → CEO sequence
-                </CardDescription>
+                <CardDescription>HR → Finance → CEO sequence</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
                 {!timelineQuery.data?.steps?.length ? (
@@ -345,7 +449,8 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
               <CardHeader>
                 <CardTitle className="text-base">Line items</CardTitle>
                 <CardDescription>
-                  Compensation snapshot at generation time
+                  Compensation snapshot at generation time · payout wallets
+                  re-sync at submit/execute
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -358,6 +463,7 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Employee</TableHead>
+                        <TableHead>Payout</TableHead>
                         <TableHead className="text-right">Base</TableHead>
                         <TableHead className="text-right">Bonus</TableHead>
                         <TableHead className="text-right">Allowance</TableHead>
@@ -366,48 +472,72 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {payroll.items.map((item) => (
-                        <TableRow key={item.id}>
-                          <TableCell>
-                            <div>{item.employeeName}</div>
-                            {item.walletAddress ? (
-                              <div className="font-mono text-[11px] text-muted-foreground">
-                                {item.walletAddress}
-                              </div>
-                            ) : null}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(
-                              item.baseSalaryCents / 100,
-                              item.currency
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(
-                              item.bonusCents / 100,
-                              item.currency
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(
-                              item.allowanceCents / 100,
-                              item.currency
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right">
-                            {formatCurrency(
-                              item.deductionsCents / 100,
-                              item.currency
-                            )}
-                          </TableCell>
-                          <TableCell className="text-right font-medium">
-                            {formatCurrency(
-                              item.netPayCents / 100,
-                              item.currency
-                            )}
-                          </TableCell>
-                        </TableRow>
-                      ))}
+                      {payroll.items.map((item) => {
+                        const payoutStatus =
+                          item.netPayCents <= 0
+                            ? 'zero'
+                            : item.walletAddress
+                              ? 'ready'
+                              : 'missing';
+                        return (
+                          <TableRow key={item.id}>
+                            <TableCell>
+                              <div>{item.employeeName}</div>
+                              {item.walletAddress ? (
+                                <div className="font-mono text-[11px] text-muted-foreground">
+                                  {shortWallet(item.walletAddress)}
+                                </div>
+                              ) : null}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant={
+                                  payoutStatus === 'ready'
+                                    ? 'secondary'
+                                    : 'outline'
+                                }
+                                className="text-[10px] capitalize"
+                              >
+                                {payoutStatus === 'ready'
+                                  ? 'Ready'
+                                  : payoutStatus === 'zero'
+                                    ? 'Zero pay'
+                                    : 'No wallet'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(
+                                item.baseSalaryCents / 100,
+                                item.currency,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(
+                                item.bonusCents / 100,
+                                item.currency,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(
+                                item.allowanceCents / 100,
+                                item.currency,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right">
+                              {formatCurrency(
+                                item.deductionsCents / 100,
+                                item.currency,
+                              )}
+                            </TableCell>
+                            <TableCell className="text-right font-medium">
+                              {formatCurrency(
+                                item.netPayCents / 100,
+                                item.currency,
+                              )}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
                     </TableBody>
                   </Table>
                 )}

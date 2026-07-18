@@ -36,6 +36,12 @@ export default () => ({
     secure: (process.env.MAIL_SECURE ?? 'false') === 'true',
     user: process.env.MAIL_USER ?? '',
     pass: process.env.MAIL_PASS ?? '',
-    from: process.env.MAIL_FROM ?? process.env.MAIL_USER ?? 'noreply@veilpay.app',
+    from:
+      process.env.MAIL_FROM ?? process.env.MAIL_USER ?? 'noreply@veilpay.app',
+  },
+  blockchain: {
+    rpcUrl: process.env.BLOCKCHAIN_RPC_URL ?? '',
+    safeOwnerPrivateKey: process.env.SAFE_OWNER_PRIVATE_KEY ?? '',
+    safeApiKey: process.env.SAFE_API_KEY ?? '',
   },
 });

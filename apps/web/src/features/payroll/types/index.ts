@@ -18,6 +18,17 @@ export interface PayrollItem {
   notes: string | null;
 }
 
+export interface PayrollPayoutReadiness {
+  itemCount: number;
+  zeroPayCount: number;
+  payableCount: number;
+  readyCount: number;
+  missingWalletCount: number;
+  payableNetPayCents: number;
+  readyEmployeeNames: string[];
+  missingWalletNames: string[];
+}
+
 export interface PayrollRun {
   id: string;
   organizationId?: string;
@@ -43,6 +54,7 @@ export interface PayrollRun {
   executionProvider?: string | null;
   executionMessage?: string | null;
   items?: PayrollItem[];
+  payoutReadiness?: PayrollPayoutReadiness;
   createdAt?: string;
   updatedAt?: string;
 }

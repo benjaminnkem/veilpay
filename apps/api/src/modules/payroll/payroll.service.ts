@@ -243,6 +243,15 @@ export class PayrollService {
       throw new BadRequestException('Cannot submit payroll with no items');
     }
 
+    await this.syncItemWalletsFromEmployees(payroll);
+
+    const readiness = computePayoutReadiness(payroll.items ?? []);
+    if (readiness.payableCount === 0) {
+      throw new BadRequestException(
+        'Cannot submit payroll with no payable amounts. At least one employee must have positive net pay.',
+      );
+    }
+
     payroll.status = PayrollStatus.PENDING_APPROVAL;
     payroll.submittedAt = new Date();
     await this.payrollRepo.save(payroll);
@@ -292,7 +301,35 @@ export class PayrollService {
       );
     }
 
+    await this.syncItemWalletsFromEmployees(payroll);
+
     const org = await this.orgRepo.findOne({ where: { id: orgId } });
+    const providerKind = org?.executionProvider ?? 'mock';
+    const readiness = computePayoutReadiness(payroll.items ?? []);
+
+    if (readiness.payableCount === 0) {
+      throw new BadRequestException(
+        'No payable amounts to execute. Every line item has zero net pay.',
+      );
+    }
+
+    if (providerKind === 'blockchain') {
+      if (!org?.safeAddress || !org?.network) {
+        throw new BadRequestException(
+          'Link a Safe treasury and network in Organization settings before blockchain execution.',
+        );
+      }
+      if (readiness.missingWalletCount > 0) {
+        const names = readiness.missingWalletNames.slice(0, 8).join(', ');
+        const more =
+          readiness.missingWalletCount > 8
+            ? ` (+${readiness.missingWalletCount - 8} more)`
+            : '';
+        throw new BadRequestException(
+          `${readiness.missingWalletCount} of ${readiness.payableCount} payable employee(s) still need a payout wallet: ${names}${more}. They can link one under Settings → Payout wallet, then re-run execute.`,
+        );
+      }
+    }
 
     payroll.status = PayrollStatus.PROCESSING;
     await this.payrollRepo.save(payroll);
@@ -307,12 +344,13 @@ export class PayrollService {
           network: org?.network,
           items: (payroll.items ?? []).map((item) => ({
             employeeId: item.employeeId,
+            employeeName: item.employeeName,
             amountCents: centsToNumber(item.netPayCents),
             currency: item.currency,
             walletAddress: item.walletAddress,
           })),
         },
-        org?.executionProvider ?? 'mock',
+        providerKind,
       );
 
       if (!result.success || result.status === 'FAILED') {
@@ -528,6 +566,36 @@ export class PayrollService {
     await this.payrollRepo.save(payroll);
   }
 
+  private async syncItemWalletsFromEmployees(
+    payroll: PayrollEntity,
+  ): Promise<void> {
+    const items = payroll.items ?? [];
+    if (!items.length) return;
+
+    const employees = await this.employeesRepo.find({
+      where: {
+        organizationId: payroll.organizationId,
+        id: In(items.map((item) => item.employeeId)),
+      },
+    });
+    const walletByEmployee = new Map(
+      employees.map((emp) => [emp.id, emp.walletAddress ?? null]),
+    );
+
+    const dirty: PayrollItemEntity[] = [];
+    for (const item of items) {
+      const latest = walletByEmployee.get(item.employeeId) ?? null;
+      if ((item.walletAddress ?? null) !== latest) {
+        item.walletAddress = latest;
+        dirty.push(item);
+      }
+    }
+
+    if (dirty.length) {
+      await this.itemsRepo.save(dirty);
+    }
+  }
+
   private assertDraft(payroll: PayrollEntity): void {
     if (
       payroll.status !== PayrollStatus.DRAFT &&
@@ -541,6 +609,42 @@ export class PayrollService {
       payroll.status = PayrollStatus.DRAFT;
     }
   }
+}
+
+function computePayoutReadiness(items: PayrollItemEntity[]) {
+  let zeroPayCount = 0;
+  let readyCount = 0;
+  let missingWalletCount = 0;
+  let payableNetPayCents = 0;
+  const readyEmployeeNames: string[] = [];
+  const missingWalletNames: string[] = [];
+
+  for (const item of items) {
+    const net = centsToNumber(item.netPayCents);
+    if (net <= 0) {
+      zeroPayCount += 1;
+      continue;
+    }
+    payableNetPayCents += net;
+    if (item.walletAddress) {
+      readyCount += 1;
+      readyEmployeeNames.push(item.employeeName);
+    } else {
+      missingWalletCount += 1;
+      missingWalletNames.push(item.employeeName);
+    }
+  }
+
+  return {
+    itemCount: items.length,
+    zeroPayCount,
+    payableCount: readyCount + missingWalletCount,
+    readyCount,
+    missingWalletCount,
+    payableNetPayCents,
+    readyEmployeeNames,
+    missingWalletNames,
+  };
 }
 
 function serializeItem(item: PayrollItemEntity) {
@@ -564,6 +668,7 @@ function serializeItem(item: PayrollItemEntity) {
 }
 
 function serializePayroll(p: PayrollEntity, withItems = false) {
+  const items = withItems && p.items ? p.items.map(serializeItem) : undefined;
   return {
     id: p.id,
     organizationId: p.organizationId,
@@ -578,7 +683,6 @@ function serializePayroll(p: PayrollEntity, withItems = false) {
     totalAllowanceCents: centsToNumber(p.totalAllowanceCents),
     totalDeductionsCents: centsToNumber(p.totalDeductionsCents),
     totalNetPayCents: centsToNumber(p.totalNetPayCents),
-    // Frontend-friendly aliases
     totalAmount: centsToNumber(p.totalNetPayCents) / 100,
     periodLabel: `${p.periodStart} → ${p.periodEnd}`,
     scheduledAt: p.payDate,
@@ -593,7 +697,9 @@ function serializePayroll(p: PayrollEntity, withItems = false) {
     executionProvider: p.executionProvider,
     executionMessage: p.executionMessage,
     createdById: p.createdById,
-    items: withItems && p.items ? p.items.map(serializeItem) : undefined,
+    items,
+    payoutReadiness:
+      withItems && p.items ? computePayoutReadiness(p.items) : undefined,
     createdAt: p.createdAt.toISOString(),
     updatedAt: p.updatedAt.toISOString(),
   };

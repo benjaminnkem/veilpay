@@ -7,6 +7,7 @@ export type PaymentExecutionStatus =
 
 export interface PayrollPaymentItem {
   employeeId: string;
+  employeeName?: string | null;
   amountCents: number;
   currency: string;
   walletAddress?: string | null;
