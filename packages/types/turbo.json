@@ -2,10 +2,11 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "outputs": []
+      "outputs": ["dist/**"]
     },
-    "check-types": {
-      "outputs": []
+    "dev": {
+      "cache": false,
+      "persistent": true
     }
   }
 }

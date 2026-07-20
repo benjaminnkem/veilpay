@@ -1,18 +1,102 @@
 'use client';
 
-import { WalletIcon } from 'lucide-react';
+import type { ColumnDef } from '@tanstack/react-table';
+import { MoreHorizontalIcon, WalletIcon } from 'lucide-react';
+import Link from 'next/link';
 
-import { QueryState } from '@/components/shared';
-import { Badge } from '@/components/ui/badge';
+import { QueryState, StatusBadge } from '@/components/shared';
+import { Button } from '@/components/ui/button';
+import { DataTable } from '@/components/ui/data-table';
+import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { ROUTES } from '@/constants/routes';
 import { usePayrollRuns } from '@/features/payroll/hooks/use-payroll-runs';
+import type { PayrollRun } from '@/features/payroll/types';
 import { formatCurrency, formatDate } from '@/lib/utils';
+
+const columns: ColumnDef<PayrollRun>[] = [
+  {
+    accessorKey: 'name',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Run" />
+    ),
+    accessorFn: (row) => row.name ?? row.periodLabel,
+    cell: ({ row }) => (
+      <div className="min-w-[160px] space-y-0.5">
+        <Link
+          href={`${ROUTES.payroll}/${row.original.id}`}
+          className="font-medium hover:underline"
+        >
+          {row.original.name ?? row.original.periodLabel}
+        </Link>
+        <div className="text-xs text-muted-foreground">
+          {row.original.periodLabel}
+        </div>
+      </div>
+    ),
+  },
+  {
+    accessorKey: 'status',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Status" />
+    ),
+    cell: ({ row }) => <StatusBadge status={String(row.original.status)} />,
+  },
+  {
+    accessorKey: 'employeeCount',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Employees" />
+    ),
+    cell: ({ row }) => row.original.employeeCount,
+  },
+  {
+    accessorKey: 'totalAmount',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Net total" />
+    ),
+    cell: ({ row }) =>
+      formatCurrency(row.original.totalAmount, row.original.currency),
+  },
+  {
+    accessorKey: 'scheduledAt',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Pay date" />
+    ),
+    cell: ({ row }) => formatDate(row.original.scheduledAt),
+  },
+  {
+    id: 'actions',
+    cell: ({ row }) => (
+      <DropdownMenu>
+        <DropdownMenuTrigger
+          render={
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon-sm"
+              aria-label="Open row actions"
+            />
+          }
+        >
+          <MoreHorizontalIcon />
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            render={<Link href={`${ROUTES.payroll}/${row.original.id}`} />}
+            nativeButton={false}
+          >
+            Open run
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ),
+  },
+];
 
 export function PayrollRunsList() {
   const query = usePayrollRuns();
@@ -27,45 +111,16 @@ export function PayrollRunsList() {
       emptyIcon={WalletIcon}
       emptyTitle="No payroll runs"
       emptyDescription="Create a payroll cycle to process confidential compensation."
-      loadingVariant="cards"
+      loadingVariant="table"
     >
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-        {query.data?.map((run) => (
-          <Card key={run.id} className="border-border/60">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <CardTitle className="text-base">{run.periodLabel}</CardTitle>
-                  <CardDescription>
-                    Scheduled {formatDate(run.scheduledAt)}
-                  </CardDescription>
-                </div>
-                <Badge variant="secondary" className="capitalize">
-                  {run.status.replaceAll('_', ' ')}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Employees</span>
-                <span className="font-medium">{run.employeeCount}</span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Total</span>
-                <span className="font-medium">
-                  {formatCurrency(run.totalAmount, run.currency)}
-                </span>
-              </div>
-              <div className="flex justify-between gap-4">
-                <span className="text-muted-foreground">Confidential</span>
-                <span className="font-medium">
-                  {run.confidential ? 'Enabled' : 'Disabled'}
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
+      <DataTable
+        columns={columns}
+        data={query.data ?? []}
+        filterColumn="name"
+        filterPlaceholder="Search payroll runs…"
+        getRowId={(row) => row.id}
+        pageSize={10}
+      />
     </QueryState>
   );
 }

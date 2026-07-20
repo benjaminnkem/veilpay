@@ -16,5 +16,5 @@ When writing or modifying tests, configuring `hardhat.config.ts`, or interacting
 
 ## Docs
 
-- Hardhat 3 — https://hardhat.org/llms.txt
-- viem — https://viem.sh/llms.txt
+- Hardhat 3 - https://hardhat.org/llms.txt
+- viem - https://viem.sh/llms.txt

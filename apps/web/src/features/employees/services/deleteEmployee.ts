@@ -1,5 +1,5 @@
-import { apiDelete } from '@/lib/api';
+import { authDelete } from '@/lib/api';
 
 export async function deleteEmployee(id: string): Promise<void> {
-  await apiDelete(`/employees/${id}`);
+  await authDelete(`/employees/${id}`);
 }

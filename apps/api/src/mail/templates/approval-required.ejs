@@ -1,0 +1,44 @@
+<%- include('partials/layout-start', {
+  title: 'Approval required',
+  preheader: payrollName + ' is waiting for ' + level + ' approval.'
+}) %>
+
+<%- include('partials/eyebrow', { label: 'Action required' }) %>
+
+<h1 class="email-title" style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#142016;letter-spacing:-0.3px;">
+  Your approval is needed
+</h1>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  Hi <%= firstName %>,
+</p>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  <strong style="color:#142016;"><%= payrollName %></strong> is waiting for
+  <strong style="color:#142016;"><%= level %></strong> review before it can continue.
+</p>
+
+<%- include('partials/meta', {
+  rows: [
+    { label: 'Payroll run', value: payrollName },
+    { label: 'Approval level', value: level },
+    { label: 'Queue', value: 'Approvals' }
+  ]
+}) %>
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 10px 0;">
+  <tr>
+    <td style="padding:0 10px 0 0;">
+      <%- include('partials/button', { href: approvalsUrl, label: 'Review approvals' }) %>
+    </td>
+    <td style="padding:0;">
+      <%- include('partials/button', { href: payrollUrl, label: 'Open payroll', variant: 'secondary' }) %>
+    </td>
+  </tr>
+</table>
+
+<p class="email-muted" style="margin:12px 0 20px 0;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:#6b786f;">
+  Approve or reject from the Approvals board. Comments are optional but recommended on rejections.
+</p>
+
+<%- include('partials/layout-end') %>

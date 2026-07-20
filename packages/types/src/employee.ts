@@ -1,25 +1,67 @@
-export type EmployeeStatus = 'active' | 'inactive' | 'on_leave' | 'terminated';
+import type { EmploymentStatus, UserRole } from './enums.js';
+import type { Timestamps, PaginationQuery } from './common.js';
 
-export interface Employee {
+export interface Employee extends Timestamps {
   id: string;
-  companyId: string;
+  organizationId: string;
+  userId: string | null;
+  employeeNumber: string | null;
   firstName: string;
   lastName: string;
   email: string;
-  walletAddress?: string;
-  status: EmployeeStatus;
-  salaryCents: number;
-  currency: string;
-  createdAt: string;
-  updatedAt: string;
+  department: string | null;
+  position: string | null;
+  status: EmploymentStatus;
+  hireDate: string | null;
+  terminationDate: string | null;
+
+  /** Placeholder for future wallet payouts */
+  walletAddress: string | null;
+  managerId: string | null;
+  phone: string | null;
+  country: string | null;
+  notes: string | null;
 }
 
 export interface CreateEmployeeInput {
-  companyId: string;
   firstName: string;
   lastName: string;
   email: string;
+  department?: string;
+  position?: string;
+  status?: EmploymentStatus;
+  hireDate?: string;
   walletAddress?: string;
-  salaryCents: number;
-  currency?: string;
+  managerId?: string;
+  phone?: string;
+  country?: string;
+  notes?: string;
+  employeeNumber?: string;
+}
+
+export interface UpdateEmployeeInput {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+  department?: string | null;
+  position?: string | null;
+  status?: EmploymentStatus;
+  hireDate?: string | null;
+  terminationDate?: string | null;
+  walletAddress?: string | null;
+  managerId?: string | null;
+  phone?: string | null;
+  country?: string | null;
+  notes?: string | null;
+  employeeNumber?: string | null;
+}
+
+export interface EmployeeListQuery extends PaginationQuery {
+  status?: EmploymentStatus;
+  department?: string;
+}
+
+export interface DepartmentSummary {
+  name: string;
+  employeeCount: number;
 }

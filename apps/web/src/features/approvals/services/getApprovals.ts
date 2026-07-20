@@ -1,40 +1,36 @@
-import { apiGet } from '@/lib/api';
-import type { ApprovalRequest } from '@/features/approvals/types';
+import { authGet, authPost } from '@/lib/api';
+import type {
+  ApprovalRequest,
+  ApprovalTimeline,
+} from '@/features/approvals/types';
+import type { PaginatedResponse, PaginationParams } from '@/types/api';
 
-const DEMO_APPROVALS: ApprovalRequest[] = [
-  {
-    id: 'apr_1',
-    title: 'March payroll release',
-    requester: 'Sam Okoye',
-    type: 'payroll',
-    status: 'pending',
-    createdAt: '2026-03-24T10:00:00.000Z',
-    summary: 'Release encrypted payroll batch for 128 employees.',
-  },
-  {
-    id: 'apr_2',
-    title: 'Compensation band update',
-    requester: 'Riley Chen',
-    type: 'compensation',
-    status: 'pending',
-    createdAt: '2026-03-22T14:30:00.000Z',
-    summary: 'Promote 4 engineers to L5 compensation band.',
-  },
-  {
-    id: 'apr_3',
-    title: 'Audit export access',
-    requester: 'Jordan Lee',
-    type: 'access',
-    status: 'approved',
-    createdAt: '2026-03-18T09:15:00.000Z',
-    summary: 'Grant temporary access to encrypted audit exports.',
-  },
-];
+export async function getApprovals(
+  params?: PaginationParams
+): Promise<ApprovalRequest[]> {
+  const result = await authGet<PaginatedResponse<ApprovalRequest>>(
+    '/approvals',
+    { params }
+  );
+  return result.data;
+}
 
-export async function getApprovals(): Promise<ApprovalRequest[]> {
-  try {
-    return await apiGet<ApprovalRequest[]>('/approvals');
-  } catch {
-    return DEMO_APPROVALS;
-  }
+export async function getApprovalTimeline(
+  payrollId: string
+): Promise<ApprovalTimeline> {
+  return authGet<ApprovalTimeline>(`/approvals/payroll/${payrollId}`);
+}
+
+export async function approveStep(
+  id: string,
+  comments?: string
+): Promise<unknown> {
+  return authPost(`/approvals/${id}/approve`, { comments });
+}
+
+export async function rejectStep(
+  id: string,
+  comments?: string
+): Promise<unknown> {
+  return authPost(`/approvals/${id}/reject`, { comments });
 }

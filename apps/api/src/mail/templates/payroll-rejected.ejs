@@ -1,0 +1,45 @@
+<%- include('partials/layout-start', {
+  title: 'Payroll rejected',
+  preheader: payrollName + ' was rejected and needs attention.'
+}) %>
+
+<%- include('partials/eyebrow', { label: 'Payroll' }) %>
+
+<h1 class="email-title" style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#142016;letter-spacing:-0.3px;">
+  Payroll needs attention
+</h1>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  Hi <%= firstName %>,
+</p>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  <strong style="color:#142016;"><%= payrollName %></strong> was rejected at the
+  <strong style="color:#142016;"><%= level %></strong> approval step.
+</p>
+
+<%- include('partials/note', {
+  type: 'danger',
+  text: 'The run was marked rejected. Review comments, update the draft if needed, and resubmit.'
+}) %>
+
+<%
+  const metaRows = [
+    { label: 'Payroll run', value: payrollName },
+    { label: 'Rejected at', value: level }
+  ];
+  if (comments) {
+    metaRows.push({ label: 'Comments', value: comments });
+  }
+%>
+<%- include('partials/meta', { rows: metaRows }) %>
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 20px 0;">
+  <tr>
+    <td style="padding:0;">
+      <%- include('partials/button', { href: payrollUrl, label: 'Review payroll' }) %>
+    </td>
+  </tr>
+</table>
+
+<%- include('partials/layout-end') %>

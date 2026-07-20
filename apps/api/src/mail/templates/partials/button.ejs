@@ -1,0 +1,27 @@
+<%
+  const btnHref = href;
+  const btnLabel = label;
+  const isSecondary = typeof variant !== 'undefined' && variant === 'secondary';
+  const bg = isSecondary ? '#ffffff' : '#6fbf1f';
+  const color = isSecondary ? '#142016' : '#142016';
+  const border = isSecondary ? '1px solid #d7e0cf' : '1px solid #4f9a0d';
+  const className = isSecondary ? 'email-btn-secondary' : 'email-btn-primary';
+%>
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;mso-table-lspace:0pt;mso-table-rspace:0pt;">
+  <tr>
+    <td align="left" style="border-radius:10px;background-color:<%= bg %>;border:<%= border %>;" class="<%= className %>">
+      <!--[if mso]>
+      <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" xmlns:w="urn:schemas-microsoft-com:office:word" href="<%= btnHref %>" style="height:46px;v-text-anchor:middle;width:220px;" arcsize="14%" stroke="f" fillcolor="<%= bg %>">
+        <w:anchorlock/>
+        <center style="color:<%= color %>;font-family:Arial,sans-serif;font-size:14px;font-weight:bold;"><%= btnLabel %></center>
+      </v:roundrect>
+      <![endif]-->
+      <!--[if !mso]><!-- -->
+      <a href="<%= btnHref %>" target="_blank" rel="noopener noreferrer"
+         style="display:inline-block;padding:14px 22px;font-family:Arial,Helvetica,sans-serif;font-size:14px;line-height:18px;font-weight:700;color:<%= color %>;text-decoration:none;border-radius:10px;letter-spacing:-0.1px;">
+        <%= btnLabel %>
+      </a>
+      <!--<![endif]-->
+    </td>
+  </tr>
+</table>

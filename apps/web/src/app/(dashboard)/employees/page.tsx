@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/shared';
-import { Button } from '@/components/ui/button';
+import { CreateEmployeeDialog } from '@/features/employees/components/create-employee-dialog';
 import { EmployeesTable } from '@/features/employees/components/employees-table';
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function EmployeesPage() {
       <PageHeader
         title="Employees"
         description="Maintain your workforce directory and compensation metadata."
-        actions={<Button type="button">Add employee</Button>}
+        actions={<CreateEmployeeDialog />}
       />
       <EmployeesTable />
     </div>

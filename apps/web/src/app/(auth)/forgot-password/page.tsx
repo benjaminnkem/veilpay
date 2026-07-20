@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { Suspense } from 'react';
 
 import { AuthShell } from '@/components/layout/auth-shell';
 import { ForgotPasswordForm } from '@/features/auth/components/forgot-password-form';
@@ -12,9 +13,11 @@ export default function ForgotPasswordPage() {
   return (
     <AuthShell
       title="Forgot password"
-      description="We will email you a secure reset link."
+      description="Request a reset link, or set a new password from your email."
     >
-      <ForgotPasswordForm />
+      <Suspense fallback={<div className="text-sm text-muted-foreground">Loading…</div>}>
+        <ForgotPasswordForm />
+      </Suspense>
     </AuthShell>
   );
 }

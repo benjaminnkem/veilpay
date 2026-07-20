@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+  <meta name="x-apple-disable-message-reformatting" />
+  <meta name="color-scheme" content="light dark" />
+  <meta name="supported-color-schemes" content="light dark" />
+  <title><%= typeof title !== 'undefined' ? title : appName %></title>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <style type="text/css">
+    table, td, div, p, a { font-family: Arial, Helvetica, sans-serif !important; }
+  </style>
+  <![endif]-->
+  <style type="text/css"><%- include('./styles') %></style>
+</head>
+<body class="email-body" style="margin:0;padding:0;width:100%;background-color:#f4f6f2;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;">
+  <div style="display:none;font-size:1px;line-height:1px;max-height:0;max-width:0;opacity:0;overflow:hidden;mso-hide:all;">
+    <%= typeof preheader !== 'undefined' ? preheader : (typeof title !== 'undefined' ? title : appName) %>
+  </div>
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" class="email-body" style="border-collapse:collapse;width:100%;background-color:#f4f6f2;">
+    <tr>
+      <td align="center" style="padding:40px 16px;background-color:#f4f6f2;">
+        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;width:100%;max-width:600px;margin:0 auto;">
+          <tr>
+            <td class="email-card" style="background-color:#ffffff;border:1px solid #e2e8d8;border-radius:18px;overflow:hidden;box-shadow:0 12px 40px rgba(20,32,22,0.08);">
+              <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;width:100%;">
+                <tr>
+                  <td class="email-header" style="padding:22px 28px;border-bottom:1px solid #e6ebe0;background-color:#eef8d9;">
+                    <%- include('./header') %>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:28px 28px 8px 28px;">

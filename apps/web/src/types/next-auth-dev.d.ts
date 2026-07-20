@@ -5,13 +5,16 @@ import type { UserRole } from '@/types/auth';
 declare module 'next-auth' {
   interface Session {
     accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    error?: string;
     user: {
       id: string;
       email: string;
       name: string;
-      role: UserRole;
-      organizationId?: string;
-      organizationName?: string;
+      role: UserRole | string;
+      organizationId?: string | null;
+      organizationName?: string | null;
       avatarUrl?: string | null;
       accessToken?: string;
     } & DefaultSession['user'];
@@ -21,11 +24,13 @@ declare module 'next-auth' {
     id: string;
     email: string;
     name: string;
-    role: UserRole;
-    organizationId?: string;
-    organizationName?: string;
+    role: UserRole | string;
+    organizationId?: string | null;
+    organizationName?: string | null;
     avatarUrl?: string | null;
     accessToken?: string;
+    refreshToken?: string;
+    expiresIn?: number;
   }
 }
 
@@ -34,10 +39,13 @@ declare module 'next-auth/jwt' {
     id?: string;
     email?: string;
     name?: string;
-    role?: UserRole;
-    organizationId?: string;
-    organizationName?: string;
+    role?: UserRole | string;
+    organizationId?: string | null;
+    organizationName?: string | null;
     avatarUrl?: string | null;
     accessToken?: string;
+    refreshToken?: string;
+    accessTokenExpires?: number;
+    error?: string;
   }
 }

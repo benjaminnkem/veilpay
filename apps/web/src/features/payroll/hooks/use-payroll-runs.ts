@@ -8,6 +8,6 @@ export const payrollRunsQueryKey = ['payroll', 'runs'] as const;
 export function usePayrollRuns() {
   return useApiQuery({
     queryKey: payrollRunsQueryKey,
-    queryFn: getPayrollRuns,
+    queryFn: () => getPayrollRuns(),
   });
 }

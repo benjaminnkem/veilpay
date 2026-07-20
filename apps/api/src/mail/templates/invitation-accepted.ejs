@@ -1,0 +1,37 @@
+<%- include('partials/layout-start', {
+  title: 'Invitation accepted',
+  preheader: inviteeName + ' accepted your invitation to ' + organizationName + '.'
+}) %>
+
+<%- include('partials/eyebrow', { label: 'Team update' }) %>
+
+<h1 class="email-title" style="margin:0 0 12px 0;font-family:Arial,Helvetica,sans-serif;font-size:24px;line-height:1.25;font-weight:700;color:#142016;letter-spacing:-0.3px;">
+  <%= inviteeName %> accepted your invite
+</h1>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  Hi <%= inviterFirstName %>,
+</p>
+
+<p class="email-text" style="margin:0 0 14px 0;font-family:Arial,Helvetica,sans-serif;font-size:15px;line-height:1.55;color:#3d4a3f;">
+  A new teammate is ready in <strong style="color:#142016;"><%= organizationName %></strong>.
+  Their account is active and they can sign in to <%= appName %>.
+</p>
+
+<%- include('partials/meta', {
+  rows: [
+    { label: 'Name', value: inviteeName },
+    { label: 'Email', value: inviteeEmail },
+    { label: 'Role', value: role }
+  ]
+}) %>
+
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;margin:0 0 20px 0;">
+  <tr>
+    <td style="padding:0;">
+      <%- include('partials/button', { href: employeesUrl, label: 'View team' }) %>
+    </td>
+  </tr>
+</table>
+
+<%- include('partials/layout-end') %>

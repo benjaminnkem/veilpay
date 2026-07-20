@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 
 import { PageHeader } from '@/components/shared';
-import { Button } from '@/components/ui/button';
+import { CreatePayrollDialog } from '@/features/payroll/components/create-payroll-dialog';
 import { PayrollRunsList } from '@/features/payroll/components/payroll-runs-list';
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function PayrollPage() {
       <PageHeader
         title="Payroll"
         description="Schedule encrypted payroll cycles and track release status."
-        actions={<Button type="button">New payroll run</Button>}
+        actions={<CreatePayrollDialog />}
       />
       <PayrollRunsList />
     </div>

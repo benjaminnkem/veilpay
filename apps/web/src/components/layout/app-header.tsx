@@ -1,8 +1,13 @@
 'use client';
 
-import { BellIcon, LogOutIcon, MenuIcon, UserIcon } from 'lucide-react';
+import {
+  BellIcon,
+  LogOutIcon,
+  SettingsIcon,
+  UserIcon,
+} from 'lucide-react';
 import Link from 'next/link';
-import { signOut } from 'next-auth/react';
+import { usePathname } from 'next/navigation';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -15,9 +20,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
+import { SidebarTrigger } from '@/components/ui/sidebar';
 import { ROUTES } from '@/constants/routes';
+import { logout } from '@/features/auth/services/logout';
+import { useUnreadCount } from '@/features/notifications/hooks/use-notifications';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-import { useUiStore } from '@/stores/ui-store';
 
 function getInitials(name?: string | null) {
   if (!name) return 'VP';
@@ -29,25 +37,43 @@ function getInitials(name?: string | null) {
     .toUpperCase();
 }
 
+const TITLE_MAP: Record<string, string> = {
+  [ROUTES.dashboard]: 'Dashboard',
+  [ROUTES.employees]: 'Employees',
+  [ROUTES.payroll]: 'Payroll',
+  [ROUTES.approvals]: 'Approvals',
+  [ROUTES.auditLogs]: 'Audit logs',
+  [ROUTES.notifications]: 'Notifications',
+  [ROUTES.invitations]: 'Invitations',
+  [ROUTES.settings]: 'Settings',
+};
+
+function resolveTitle(pathname: string): string {
+  const match = Object.entries(TITLE_MAP).find(
+    ([href]) => pathname === href || pathname.startsWith(`${href}/`)
+  );
+  return match?.[1] ?? 'Workspace';
+}
+
 export function AppHeader() {
+  const pathname = usePathname();
   const { user } = useCurrentUser();
-  const setSidebarOpen = useUiStore((state) => state.setSidebarOpen);
+  const unread = useUnreadCount();
+  const unreadCount = unread.data?.count ?? 0;
+  const title = resolveTitle(pathname);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-border/80 bg-background/80 px-4 backdrop-blur-md sm:px-6">
-      <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon-sm"
-          className="lg:hidden"
-          onClick={() => setSidebarOpen(true)}
-          aria-label="Open sidebar"
-        >
-          <MenuIcon />
-        </Button>
-        <div className="hidden text-sm text-muted-foreground sm:block">
-          Enterprise payroll
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center justify-between gap-3 border-b border-border/80 bg-background/85 px-4 backdrop-blur-md sm:px-6">
+      <div className="flex min-w-0 items-center gap-2">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="hidden h-5 sm:block" />
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium tracking-tight">{title}</p>
+          {user?.organizationName ? (
+            <p className="truncate text-[11px] text-muted-foreground">
+              {user.organizationName}
+            </p>
+          ) : null}
         </div>
       </div>
 
@@ -56,9 +82,15 @@ export function AppHeader() {
           type="button"
           variant="ghost"
           size="icon-sm"
+          className="relative"
           aria-label="Notifications"
+          nativeButton={false}
+          render={<Link href={ROUTES.notifications} />}
         >
           <BellIcon />
+          {unreadCount > 0 ? (
+            <span className="absolute top-1 right-1 size-1.5 rounded-full bg-primary" />
+          ) : null}
         </Button>
 
         <DropdownMenu>
@@ -82,7 +114,7 @@ export function AppHeader() {
               {user?.name ?? 'Account'}
             </span>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
+          <DropdownMenuContent align="end" className="w-60">
             <DropdownMenuGroup>
               <DropdownMenuLabel className="font-normal">
                 <div className="flex flex-col gap-0.5">
@@ -92,23 +124,37 @@ export function AppHeader() {
                   <span className="text-xs text-muted-foreground">
                     {user?.email ?? 'Signed in'}
                   </span>
+                  {user?.role ? (
+                    <span className="text-[11px] text-muted-foreground capitalize">
+                      {String(user.role).replaceAll('_', ' ').toLowerCase()}
+                    </span>
+                  ) : null}
                 </div>
               </DropdownMenuLabel>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
-                render={<Link href={ROUTES.settings} />}
+                render={<Link href={ROUTES.profile} />}
                 nativeButton={false}
               >
                 <UserIcon />
-                Settings
+                Profile
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                render={<Link href={ROUTES.settings} />}
+                nativeButton={false}
+              >
+                <SettingsIcon />
+                Workspace settings
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem
-                onClick={() => signOut({ callbackUrl: ROUTES.login })}
+                onClick={() => {
+                  void logout();
+                }}
               >
                 <LogOutIcon />
                 Sign out

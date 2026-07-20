@@ -1,0 +1,17 @@
+<%
+  const kind = typeof type !== 'undefined' ? type : 'info';
+  const map = {
+    info: { bg: '#eff8ff', border: '#b2ddff', color: '#175cd3', cls: 'email-note-info' },
+    success: { bg: '#e8f8ee', border: '#b7e4c7', color: '#16803c', cls: 'email-note-success' },
+    warning: { bg: '#fff8e8', border: '#f0d48a', color: '#a16207', cls: 'email-note-warning' },
+    danger: { bg: '#fef3f2', border: '#fecdca', color: '#b42318', cls: 'email-note-danger' },
+  };
+  const s = map[kind] || map.info;
+%>
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="border-collapse:collapse;width:100%;margin:0 0 16px 0;">
+  <tr>
+    <td class="<%= s.cls %>" style="padding:12px 14px;border-radius:10px;background-color:<%= s.bg %>;border:1px solid <%= s.border %>;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.5;color:<%= s.color %>;">
+      <%= text %>
+    </td>
+  </tr>
+</table>

@@ -3,8 +3,9 @@
 import type { ColumnDef } from '@tanstack/react-table';
 import { ScrollTextIcon } from 'lucide-react';
 
-import { QueryState } from '@/components/shared';
+import { QueryState, StatusBadge } from '@/components/shared';
 import { DataTable } from '@/components/ui/data-table';
+import { DataTableColumnHeader } from '@/components/ui/data-table-column-header';
 import { useAuditLogs } from '@/features/audit-logs/hooks/use-audit-logs';
 import type { AuditLog } from '@/features/audit-logs/types';
 import { formatDate } from '@/lib/utils';
@@ -12,7 +13,9 @@ import { formatDate } from '@/lib/utils';
 const columns: ColumnDef<AuditLog>[] = [
   {
     accessorKey: 'createdAt',
-    header: 'Timestamp',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Timestamp" />
+    ),
     cell: ({ row }) =>
       formatDate(row.original.createdAt, {
         month: 'short',
@@ -24,19 +27,46 @@ const columns: ColumnDef<AuditLog>[] = [
   },
   {
     accessorKey: 'actor',
-    header: 'Actor',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Actor" />
+    ),
+    cell: ({ row }) => (
+      <span className="text-sm">{row.original.actor ?? 'System'}</span>
+    ),
   },
   {
     accessorKey: 'action',
-    header: 'Action',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Action" />
+    ),
+    cell: ({ row }) => (
+      <StatusBadge status={String(row.original.action)} className="font-mono" />
+    ),
   },
   {
     accessorKey: 'resource',
-    header: 'Resource',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Resource" />
+    ),
+    cell: ({ row }) => (
+      <div className="space-y-0.5">
+        <p className="text-sm">{row.original.resource ?? '-'}</p>
+        {row.original.entityId ? (
+          <p className="font-mono text-[11px] text-muted-foreground">
+            {row.original.entityId}
+          </p>
+        ) : null}
+      </div>
+    ),
   },
   {
     accessorKey: 'ipAddress',
     header: 'IP',
+    cell: ({ row }) => (
+      <span className="font-mono text-xs text-muted-foreground">
+        {row.original.ipAddress ?? '-'}
+      </span>
+    ),
   },
 ];
 
@@ -61,6 +91,8 @@ export function AuditLogsTable() {
         filterColumn="actor"
         filterPlaceholder="Filter by actor…"
         emptyMessage="No audit events match your filters."
+        getRowId={(row) => row.id}
+        pageSize={15}
       />
     </QueryState>
   );

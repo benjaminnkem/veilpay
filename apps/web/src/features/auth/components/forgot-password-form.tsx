@@ -2,6 +2,7 @@
 
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -15,6 +16,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { ROUTES } from '@/constants/routes';
+import { ResetPasswordForm } from '@/features/auth/components/reset-password-form';
 import {
   forgotPasswordSchema,
   type ForgotPasswordFormValues,
@@ -24,6 +26,8 @@ import { useApiMutation } from '@/hooks/useApiMutation';
 import { notify } from '@/lib/toast';
 
 export function ForgotPasswordForm() {
+  const searchParams = useSearchParams();
+  const token = searchParams.get('token')?.trim() ?? '';
   const [submitted, setSubmitted] = useState(false);
 
   const form = useForm<ForgotPasswordFormValues>({
@@ -43,10 +47,14 @@ export function ForgotPasswordForm() {
       setSubmitted(true);
       notify.success(
         'Check your inbox',
-        'If an account exists, reset instructions were sent.',
+        'If an account exists, reset instructions were sent.'
       );
     },
   });
+
+  if (token.length >= 20) {
+    return <ResetPasswordForm token={token} />;
+  }
 
   const onSubmit = form.handleSubmit(async (values) => {
     await mutation.mutateAsync(values);
@@ -60,7 +68,7 @@ export function ForgotPasswordForm() {
         </CardHeader>
         <CardContent className="text-sm text-muted-foreground">
           If an account exists for that address, we sent instructions to reset
-          your password.
+          your password. Open the link in that email to choose a new password.
         </CardContent>
         <CardFooter>
           <Button
