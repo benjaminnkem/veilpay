@@ -206,6 +206,16 @@ importers:
         version: 8.63.0(eslint@9.39.5(jiti@2.7.0))(typescript@5.9.2)
 
   apps/contracts:
+    dependencies:
+      '@iexec-nox/nox-confidential-contracts':
+        specifier: 0.2.2
+        version: 0.2.2
+      '@iexec-nox/nox-protocol-contracts':
+        specifier: 0.2.4
+        version: 0.2.4
+      '@openzeppelin/contracts':
+        specifier: ^5.6.1
+        version: 5.6.1
     devDependencies:
       '@nomicfoundation/hardhat-ignition':
         specifier: ^3.1.8
@@ -1160,6 +1170,12 @@ packages:
         optional: true
       viem:
         optional: true
+
+  '@iexec-nox/nox-confidential-contracts@0.2.2':
+    resolution: {integrity: sha512-5Kt/Xzlk6Ekj/7hZa5+s8vDd6wQDdENRSxCbZp4Pomi85MdWjI/jJwfOqPWV+bF7Tm9Lew2Aon9UF0El9WVPkQ==}
+
+  '@iexec-nox/nox-protocol-contracts@0.2.4':
+    resolution: {integrity: sha512-jXunAVPc0W6Zcv5QiHx699BYd8U+Tw9U5O+3Xcbcq4y5gry2Z6FyWwGvYL0VjV9MJQL0zcVIcdkBL3ZyM5FfSg==}
 
   '@img/colour@1.1.0':
     resolution: {integrity: sha512-Td76q7j57o/tLVdgS746cYARfSyxk8iEfRxewL9h4OMzYhbW4TAcppl0mT4eyqXddh6L/jwoM75mo7ixa/pCeQ==}
@@ -2119,6 +2135,14 @@ packages:
 
   '@one-ini/wasm@0.1.1':
     resolution: {integrity: sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==}
+
+  '@openzeppelin/contracts-upgradeable@5.6.1':
+    resolution: {integrity: sha512-n4a/vfRs114lXyUdYg7pyY8LvFKWvCDF5lEcRRAVxap8g6ZEdLqm+9tmt2zTtRHcNMxTYp9y5t6KBof4tHp7Og==}
+    peerDependencies:
+      '@openzeppelin/contracts': 5.6.1
+
+  '@openzeppelin/contracts@5.6.1':
+    resolution: {integrity: sha512-Ly6SlsVJ3mj+b18W3R8gNufB7dTICT105fJhodGAGgyC2oqnBAhqSiNDJ8V8DLY05cCz81GLI0CU5vNYA1EC/w==}
 
   '@panva/hkdf@1.2.1':
     resolution: {integrity: sha512-6oclG6Y3PiDFcoyk8srjLfVKyMfVCKJ27JwNPViuXziFpmdz+MZnZN/aKY0JGXgYuO/VghU0jcOAZgWXZ1Dmrw==}
@@ -4685,6 +4709,9 @@ packages:
 
   encoding-sniffer@0.2.1:
     resolution: {integrity: sha512-5gvq20T6vfpekVtqrYQsSCFZ1wEg5+wW0/QaZMWkFr6BqD3NfKs0rLCx4rrVlSWJeZb5NBJgVLswK/w2MWU+Gw==}
+
+  encrypted-types@0.0.4:
+    resolution: {integrity: sha512-f55ccBBUwvqWqr3ymAVOLZ6bzjsSQZlDN0GcKFmzkvTpml4Vm3Y6BCaHhCuW/ctrabTJJ3DFnUsjtFOpokJUaQ==}
 
   end-of-stream@1.4.5:
     resolution: {integrity: sha512-ooEGc6HP26xXq/N+GCGOT0JKCLDGrq2bQUZrQ7gyrJiZANJ/8YDTxTpQBXGMn+WbIQXNVpyWymm7KYVICQnyOg==}
@@ -9956,6 +9983,17 @@ snapshots:
     transitivePeerDependencies:
       - graphql
 
+  '@iexec-nox/nox-confidential-contracts@0.2.2':
+    dependencies:
+      '@iexec-nox/nox-protocol-contracts': 0.2.4
+      '@openzeppelin/contracts': 5.6.1
+
+  '@iexec-nox/nox-protocol-contracts@0.2.4':
+    dependencies:
+      '@openzeppelin/contracts': 5.6.1
+      '@openzeppelin/contracts-upgradeable': 5.6.1(@openzeppelin/contracts@5.6.1)
+      encrypted-types: 0.0.4
+
   '@img/colour@1.1.0':
     optional: true
 
@@ -11130,6 +11168,12 @@ snapshots:
 
   '@one-ini/wasm@0.1.1':
     optional: true
+
+  '@openzeppelin/contracts-upgradeable@5.6.1(@openzeppelin/contracts@5.6.1)':
+    dependencies:
+      '@openzeppelin/contracts': 5.6.1
+
+  '@openzeppelin/contracts@5.6.1': {}
 
   '@panva/hkdf@1.2.1': {}
 
@@ -14637,6 +14681,8 @@ snapshots:
       iconv-lite: 0.6.3
       whatwg-encoding: 3.1.1
     optional: true
+
+  encrypted-types@0.0.4: {}
 
   end-of-stream@1.4.5:
     dependencies:

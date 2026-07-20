@@ -1,5 +1,36 @@
 export const ERC7984_ABI = [
   {
+    type: 'error',
+    name: 'ERC7984ZeroBalance',
+    inputs: [{ name: 'account', type: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'ERC7984UnauthorizedUseOfEncryptedAmount',
+    inputs: [
+      { name: 'amountHandle', type: 'bytes32' },
+      { name: 'account', type: 'address' },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'ERC7984UnauthorizedCaller',
+    inputs: [{ name: 'caller', type: 'address' }],
+  },
+  {
+    type: 'error',
+    name: 'ERC7984UnauthorizedSpender',
+    inputs: [
+      { name: 'holder', type: 'address' },
+      { name: 'spender', type: 'address' },
+    ],
+  },
+  {
+    type: 'error',
+    name: 'SafeERC20FailedOperation',
+    inputs: [{ name: 'token', type: 'address' }],
+  },
+  {
     type: 'function',
     name: 'name',
     stateMutability: 'view',

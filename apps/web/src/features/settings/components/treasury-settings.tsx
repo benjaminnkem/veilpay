@@ -497,9 +497,9 @@ export function TreasurySettings() {
               Nox confidential payroll
             </CardTitle>
             <CardDescription>
-              Settle pay as encrypted ERC-7984 transfers via iExec Nox. Amounts
-              stay handles on-chain; only authorized viewers can decrypt.
-              Ethereum Sepolia only for the hackathon track.
+              Settle pay as encrypted ERC-7984 transfers via iExec Nox from your
+              linked Safe. USDC is wrapped on the Safe; MetaMask is only the
+              owner signer. Ethereum Sepolia for the hackathon track.
             </CardDescription>
           </div>
           {orgQuery.data?.executionProvider === 'nox' && linkedCToken ? (
@@ -548,18 +548,14 @@ export function TreasurySettings() {
             className="font-mono text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            Deploy a wrapper for Sepolia USDC with the{' '}
-            <a
-              href="https://cdefi-wizard.iex.ec"
-              target="_blank"
-              rel="noreferrer"
-              className="text-primary underline-offset-2 hover:underline"
-            >
-              Nox Contracts Wizard
-            </a>{' '}
-            or set <code className="text-[11px]">NOX_CTOKEN_ADDRESS</code> on
-            the API. Fund the Nox payer EOA with USDC; execute wraps then
-            confidential-transfers each employee.
+            Deploy locally:{' '}
+            <code className="text-[11px]">
+              pnpm --filter contracts deploy:wcusdc
+            </code>{' '}
+            (see <code className="text-[11px]">apps/contracts/README.md</code>
+            ). Or set <code className="text-[11px]">NOX_CTOKEN_ADDRESS</code>{' '}
+            on the API. Fund the Safe with USDC + ETH; execute wraps from the
+            Safe then confidential-transfers each employee.
           </p>
         </div>
         {linkedCToken ? (

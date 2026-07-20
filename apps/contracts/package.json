@@ -11,6 +11,7 @@
     "test:nodejs": "hardhat test nodejs",
     "node": "hardhat node",
     "deploy:local": "hardhat ignition deploy ignition/modules/Counter.ts",
+    "deploy:wcusdc": "hardhat run scripts/deploy-wcusdc.ts --network sepolia",
     "check-types": "hardhat compile --quiet",
     "lint": "echo \"No lint configured for contracts\"",
     "clean": "rm -rf artifacts cache dist coverage typechain-types ignition/deployments .turbo",
@@ -25,5 +26,10 @@
     "hardhat": "^3.9.1",
     "typescript": "~5.9.2",
     "viem": "^2.47.6"
+  },
+  "dependencies": {
+    "@iexec-nox/nox-confidential-contracts": "0.2.2",
+    "@iexec-nox/nox-protocol-contracts": "0.2.4",
+    "@openzeppelin/contracts": "^5.6.1"
   }
 }

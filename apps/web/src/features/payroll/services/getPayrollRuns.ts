@@ -29,7 +29,9 @@ export async function submitPayroll(id: string): Promise<PayrollRun> {
 }
 
 export async function executePayroll(id: string): Promise<PayrollRun> {
-  return authPost<PayrollRun>(`/payroll/${id}/execute`);
+  return authPost<PayrollRun>(`/payroll/${id}/execute`, undefined, {
+    timeout: 180_000,
+  });
 }
 
 export async function cancelPayroll(id: string): Promise<PayrollRun> {

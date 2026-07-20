@@ -20,7 +20,7 @@ export type AuthRefreshHandler = (
 export function createBaseClient(): AxiosInstance {
   return axios.create({
     baseURL: clientEnv.NEXT_PUBLIC_API_URL,
-    timeout: 30_000,
+    timeout: 60_000,
     headers: { ...DEFAULT_HEADERS },
   });
 }

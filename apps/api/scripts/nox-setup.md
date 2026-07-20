@@ -9,42 +9,38 @@ VeilPay settles payroll through **iExec Nox** when the organization
    (`0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238`).
 2. Set the wrapper address on the org (`confidentialTokenAddress`) or API env
    `NOX_CTOKEN_ADDRESS`.
-3. Fund the **Nox payer EOA** (`NOX_PAYER_PRIVATE_KEY` or `SAFE_OWNER_PRIVATE_KEY`)
-   with Sepolia ETH (gas) and Sepolia USDC.
+3. Link the **organization Safe** (holds Sepolia USDC + a little ETH for gas).
+   `SAFE_OWNER_PRIVATE_KEY` is only the Safe owner signer (e.g. MetaMask) — it
+   does **not** need to hold payroll USDC.
 4. Create → approve → **Execute payroll**. The API will:
-   - wrap USDC into the confidential token when the payer has enough underlying
-   - `encryptInput` each net amount with `@iexec-nox/handle`
-   - call `confidentialTransfer(to, handle, proof)` per employee
+   - `encryptInput` each net amount with `@iexec-nox/handle` (owner signs gateway)
+   - Safe multi-send: `USDC.approve` → `cToken.wrap(safe, total)` →
+     `confidentialTransfer` per employee (all as the Safe)
 
-## Deploy a wrapper
+## Deploy a wrapper (local Hardhat)
 
-Use the official wizard (recommended):
+Skip the online wizard. From the monorepo:
 
-- https://cdefi-wizard.iex.ec
-- https://docs.noxprotocol.io/guides/build-confidential-tokens/erc20-to-erc7984-wrapper
+```sh
+export SEPOLIA_PRIVATE_KEY=0xYOUR_KEY
+export SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
 
-Solidity sketch:
-
-```solidity
-import {ERC20ToERC7984Wrapper} from "@iexec-nox/nox-confidential-contracts/contracts/token/extensions/ERC20ToERC7984Wrapper.sol";
-import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-
-contract WrappedSepoliaUSDC is ERC20ToERC7984Wrapper {
-    constructor(IERC20 usdc)
-        ERC20ToERC7984Wrapper(usdc)
-        ERC7984("Wrapped Confidential USDC", "wcUSDC", "")
-    {}
-}
+pnpm --filter contracts compile
+pnpm --filter contracts deploy:wcusdc
 ```
+
+Uses `apps/contracts/contracts/WrappedSepoliaUSDC.sol` on top of official
+`@iexec-nox/nox-confidential-contracts` (solc **0.8.35**, `evmVersion: osaka`).
+Full notes: `apps/contracts/README.md`.
 
 ## API env
 
 ```env
 BLOCKCHAIN_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
-NOX_PAYER_PRIVATE_KEY=0x...
-NOX_CTOKEN_ADDRESS=0x...
-# optional fallback signer
-SAFE_OWNER_PRIVATE_KEY=0x...
+SAFE_OWNER_PRIVATE_KEY=0x...   # MetaMask owner of the org Safe
+NOX_CTOKEN_ADDRESS=0x...       # deployed wcUSDC wrapper
+# optional override if different from Safe owner
+# NOX_PAYER_PRIVATE_KEY=0x...
 ```
 
 ## Nox protocol (Sepolia)

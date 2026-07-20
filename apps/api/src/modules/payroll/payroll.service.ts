@@ -319,13 +319,17 @@ export class PayrollService {
           'Link a Safe treasury and network in Organization settings before blockchain execution.',
         );
       }
-      if (
-        providerKind === 'nox' &&
-        (!org?.confidentialTokenAddress || !org?.network)
-      ) {
-        throw new BadRequestException(
-          'Set confidentialTokenAddress (ERC-7984 cToken) and network (sepolia) in Organization settings before Nox execution.',
-        );
+      if (providerKind === 'nox') {
+        if (!org?.confidentialTokenAddress || !org?.network) {
+          throw new BadRequestException(
+            'Set confidentialTokenAddress (ERC-7984 cToken) and network (sepolia) in Organization settings before Nox execution.',
+          );
+        }
+        if (!org?.safeAddress) {
+          throw new BadRequestException(
+            'Link the organization Safe treasury. Nox wraps USDC held by the Safe and pays from the Safe (MetaMask is only the owner signer).',
+          );
+        }
       }
       if (readiness.missingWalletCount > 0) {
         const names = readiness.missingWalletNames.slice(0, 8).join(', ');

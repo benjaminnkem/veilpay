@@ -1,57 +1,80 @@
-# Sample Hardhat 3 Project (`node:test` and `viem`)
+# VeilPay contracts
 
-This project showcases a Hardhat 3 project using the native Node.js test runner (`node:test`) and the `viem` library for Ethereum interactions.
+Hardhat 3 + viem. Includes a **Nox ERC-7984 wrapper** for Circle Sepolia USDC so VeilPay can run confidential payroll without the online wizard.
 
-To learn more about Hardhat 3, please visit the [Getting Started guide](https://hardhat.org/docs/getting-started#getting-started-with-hardhat-3). To share your feedback, join our [Hardhat 3](https://hardhat.org/hardhat3-telegram-group) Telegram group or [open an issue](https://github.com/NomicFoundation/hardhat/issues/new) in our GitHub issue tracker.
+## Prerequisites
 
-## Project Overview
+- Node.js **≥ 22** (Nox packages tested on 24)
+- pnpm 9
+- Sepolia ETH on the deployer key
 
-This example project includes:
+## Install & compile
 
-- A simple Hardhat configuration file.
-- Foundry-compatible Solidity unit tests.
-- TypeScript integration tests using [`node:test`](nodejs.org/api/test.html), the new Node.js native test runner, and [`viem`](https://viem.sh/).
-- Examples demonstrating how to connect to different types of networks, including locally simulating OP mainnet.
+From monorepo root (or this package):
 
-## Usage
-
-### Running Tests
-
-To run all the tests in the project, execute the following command:
-
-```shell
-npx hardhat test
+```sh
+pnpm install
+pnpm --filter contracts compile
 ```
 
-You can also selectively run the Solidity or `node:test` tests:
+Solidity **0.8.35** + `evmVersion: osaka` (required by `@iexec-nox/nox-protocol-contracts`). Hardhat also builds `Nox.sol` via `npmFilesToBuild`.
 
-```shell
-npx hardhat test solidity
-npx hardhat test nodejs
+## Deploy ERC-20 → ERC-7984 wrapper (Sepolia)
+
+1. Set env (copy `.env.example` or export inline):
+
+```sh
+export SEPOLIA_PRIVATE_KEY=0xYOUR_DEPLOYER_KEY
+export SEPOLIA_RPC_URL=https://ethereum-sepolia-rpc.publicnode.com
+# optional; defaults to Circle Sepolia USDC
+export SEPOLIA_USDC=0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238
 ```
 
-### Make a deployment to Sepolia
+`hardhat.config.ts` also accepts `NOX_PAYER_PRIVATE_KEY` / `SAFE_OWNER_PRIVATE_KEY` and `BLOCKCHAIN_RPC_URL`.
 
-This project includes an example Ignition module to deploy the contract. You can deploy this module to a locally simulated chain or to Sepolia.
+2. Deploy:
 
-To run the deployment to a local chain:
-
-```shell
-npx hardhat ignition deploy ignition/modules/Counter.ts
+```sh
+pnpm --filter contracts deploy:wcusdc
 ```
 
-To run the deployment to Sepolia, you need an account with funds to send the transaction. The provided Hardhat configuration includes a Configuration Variable called `SEPOLIA_PRIVATE_KEY`, which you can use to set the private key of the account you want to use.
+Or:
 
-You can set the `SEPOLIA_PRIVATE_KEY` variable using the `hardhat-keystore` plugin or by setting it as an environment variable.
-
-To set the `SEPOLIA_PRIVATE_KEY` config variable using `hardhat-keystore`:
-
-```shell
-npx hardhat keystore set SEPOLIA_PRIVATE_KEY
+```sh
+cd apps/contracts
+pnpm deploy:wcusdc
 ```
 
-After setting the variable, you can run the deployment with the Sepolia network:
+3. Copy the printed `wcUSDC` address into:
 
-```shell
-npx hardhat ignition deploy --network sepolia ignition/modules/Counter.ts
+- API: `NOX_CTOKEN_ADDRESS=0x...`
+- Web: Organization settings → **Nox confidential payroll** → paste address → mode **Confidential Nox**
+
+4. Fund the **Nox payer** EOA with Sepolia ETH + USDC. Payroll execute will `wrap` then `confidentialTransfer`.
+
+## Contract
+
+`contracts/WrappedSepoliaUSDC.sol` — thin subclass of:
+
+`@iexec-nox/nox-confidential-contracts` → `ERC20ToERC7984Wrapper`
+
+Constructor (matches current Nox package, not the older docs sketch):
+
+```solidity
+ERC20ToERC7984Wrapper(name, symbol, contractURI, underlying)
 ```
+
+## Sample Counter
+
+Legacy sample: `contracts/Counter.sol` + `pnpm deploy:local`.
+
+## Nox references
+
+| Item | Value |
+| ---- | ----- |
+| Chain | Ethereum Sepolia `11155111` |
+| NoxCompute | `0x24ef36ec5b626d7dcd09a98f3083c2758f0f77bf` |
+| Sepolia USDC | `0x1c7D4B196Cb0C7B01d743Fbc6116a902379C7238` |
+| Packages | `@iexec-nox/nox-confidential-contracts@0.2.2`, `nox-protocol-contracts@0.2.4` |
+
+See also `apps/api/scripts/nox-setup.md`.
