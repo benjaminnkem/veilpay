@@ -58,4 +58,6 @@ NOX_CTOKEN_ADDRESS=0x...       # deployed wcUSDC wrapper
 2. Employees link payout wallets
 3. Payroll approve path
 4. Execute → explorer shows transfers without public amounts
-5. Employee decrypts confidential balance with handle SDK / cToken demo tools
+5. Employee: **Settings → Confidential payout (Nox)**
+   - **Decrypt balance** (private view via Nox ACL)
+   - **Unwrap all to USDC** (2 txs: burn + finalize with publicDecrypt proof)
