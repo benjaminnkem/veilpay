@@ -15,7 +15,7 @@
     "check-types": "hardhat compile --quiet",
     "lint": "echo \"No lint configured for contracts\"",
     "clean": "rm -rf artifacts cache dist coverage typechain-types ignition/deployments .turbo",
-    "dev": "hardhat node"
+    "dev": "node api.js && hardhat node"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.1.8",

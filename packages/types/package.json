@@ -21,7 +21,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "check-types": "tsc -p tsconfig.json --noEmit",
-    "dev": "tsc -p tsconfig.json --watch",
+    "dev": "node api.js && tsc -p tsconfig.json --watch",
     "lint": "echo \"No lint configured for @repo/types\"",
     "clean": "rm -rf dist .turbo"
   },

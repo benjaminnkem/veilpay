@@ -3,21 +3,15 @@
 import { BellIcon } from 'lucide-react';
 import Link from 'next/link';
 
-import { QueryState, StatusBadge } from '@/components/shared';
+import { QueryState } from '@/components/shared';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
 import {
   useMarkAllNotificationsRead,
   useMarkNotificationRead,
   useNotifications,
 } from '@/features/notifications/hooks/use-notifications';
-import { formatDate } from '@/lib/utils';
+import { cn, formatDate } from '@/lib/utils';
 
 export function NotificationsList() {
   const query = useNotifications();
@@ -27,15 +21,16 @@ export function NotificationsList() {
   const unread = items.filter((n) => !n.isRead).length;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <div className="flex items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
-          {unread > 0 ? `${unread} unread` : 'All caught up'}
+        <p className="text-xs text-muted-foreground">
+          {unread > 0 ? `${unread} unread` : 'All read'}
         </p>
         <Button
           type="button"
-          variant="outline"
+          variant="ghost"
           size="sm"
+          className="h-7 text-xs"
           disabled={markAll.isPending || unread === 0}
           onClick={() => markAll.mutate()}
         >
@@ -51,58 +46,91 @@ export function NotificationsList() {
         isEmpty={!items.length}
         emptyIcon={BellIcon}
         emptyTitle="No notifications"
-        emptyDescription="You’re all caught up."
-        loadingVariant="cards"
+        emptyDescription="You're all caught up."
       >
-        <div className="space-y-3">
-          {items.map((n) => (
-            <Card
-              key={n.id}
-              className={
-                n.isRead
-                  ? 'border-border/70 shadow-sm'
-                  : 'border-border/70 border-l-2 border-l-primary shadow-sm'
-              }
-            >
-              <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
-                <div className="space-y-1">
-                  <CardTitle className="text-base">{n.title}</CardTitle>
-                  <CardDescription>
+        <div className="overflow-hidden rounded-lg border border-border/70">
+          {items.map((n, index) => {
+            const row = (
+              <div
+                className={cn(
+                  'flex items-start gap-3 px-3 py-2.5 transition-colors',
+                  index > 0 && 'border-t border-border/60',
+                  !n.isRead && 'bg-primary/5',
+                  n.link && 'hover:bg-muted/40',
+                )}
+              >
+                <span
+                  className={cn(
+                    'mt-1.5 size-1.5 shrink-0 rounded-full',
+                    n.isRead ? 'bg-transparent' : 'bg-primary',
+                  )}
+                />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span
+                      className={cn(
+                        'truncate text-sm',
+                        !n.isRead ? 'font-medium' : 'font-normal',
+                      )}
+                    >
+                      {n.title}
+                    </span>
+                    <Badge
+                      variant="outline"
+                      className="h-5 px-1.5 text-[10px] font-normal capitalize"
+                    >
+                      {String(n.type).replaceAll('_', ' ').toLowerCase()}
+                    </Badge>
+                  </div>
+                  {n.body ? (
+                    <p className="mt-0.5 line-clamp-1 text-xs text-muted-foreground">
+                      {n.body}
+                    </p>
+                  ) : null}
+                </div>
+                <div className="flex shrink-0 flex-col items-end gap-1">
+                  <span className="text-[11px] text-muted-foreground tabular-nums">
                     {formatDate(n.createdAt, {
                       month: 'short',
                       day: 'numeric',
                       hour: '2-digit',
                       minute: '2-digit',
                     })}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <StatusBadge status={n.type} />
+                  </span>
                   {!n.isRead ? (
-                    <Button
+                    <button
                       type="button"
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => markRead.mutate(n.id)}
+                      className="text-[11px] text-muted-foreground hover:text-foreground"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        markRead.mutate(n.id);
+                      }}
                     >
                       Mark read
-                    </Button>
+                    </button>
                   ) : null}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-2 text-sm text-muted-foreground">
-                <p>{n.body}</p>
-                {n.link ? (
-                  <Link
-                    href={n.link}
-                    className="text-foreground underline-offset-4 hover:underline"
-                  >
-                    View details
-                  </Link>
-                ) : null}
-              </CardContent>
-            </Card>
-          ))}
+              </div>
+            );
+
+            if (n.link) {
+              return (
+                <Link
+                  key={n.id}
+                  href={n.link}
+                  className="block"
+                  onClick={() => {
+                    if (!n.isRead) markRead.mutate(n.id);
+                  }}
+                >
+                  {row}
+                </Link>
+              );
+            }
+
+            return <div key={n.id}>{row}</div>;
+          })}
         </div>
       </QueryState>
     </div>
