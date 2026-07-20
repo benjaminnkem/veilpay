@@ -275,8 +275,18 @@ export async function unwrapConfidentialBalance(params: {
     /* ignore storage errors */
   }
 
-  onStatus?.('Waiting for Nox public decryption of burn amount…');
   const handleClient = await createNoxHandleClient(walletClient);
+  onStatus?.('Waiting for Nox to compute burn result + public-decrypt ACL…');
+  await waitUntilPubliclyDecryptable(
+    publicClient,
+    unwrapRequestId,
+    onStatus,
+  );
+  await waitUntilPrivateDecryptable(
+    handleClient,
+    unwrapRequestId,
+    onStatus,
+  );
   const { value, decryptionProof } = await pollPublicDecrypt(
     handleClient,
     unwrapRequestId,
@@ -358,8 +368,18 @@ export async function finalizePendingUnwrap(params: {
     );
   }
 
-  onStatus?.('Fetching Nox public decryption proof…');
   const handleClient = await createNoxHandleClient(walletClient);
+  onStatus?.('Waiting for Nox public-decrypt ACL + ciphertext…');
+  await waitUntilPubliclyDecryptable(
+    publicClient,
+    unwrapRequestId,
+    onStatus,
+  );
+  await waitUntilPrivateDecryptable(
+    handleClient,
+    unwrapRequestId,
+    onStatus,
+  );
   const { value, decryptionProof } = await pollPublicDecrypt(
     handleClient,
     unwrapRequestId,
@@ -513,12 +533,90 @@ function explainContractError(err: unknown, fn: string): string {
   return `${fn} failed: ${msg.slice(0, 500)}`;
 }
 
+const NOX_COMPUTE_ADDRESS =
+  '0x24ef36ec5b626d7dcd09a98f3083c2758f0f77bf' as Address;
+
+const NOX_PUBLIC_ABI = [
+  {
+    type: 'function',
+    name: 'isPubliclyDecryptable',
+    stateMutability: 'view',
+    inputs: [{ name: 'handle', type: 'bytes32' }],
+    outputs: [{ type: 'bool' }],
+  },
+] as const;
+
+async function waitUntilPubliclyDecryptable(
+  publicClient: PublicClient,
+  handle: Hex,
+  onStatus?: (message: string) => void,
+): Promise<void> {
+  const maxAttempts = 30;
+  for (let i = 0; i < maxAttempts; i += 1) {
+    try {
+      const ok = (await publicClient.readContract({
+        address: NOX_COMPUTE_ADDRESS,
+        abi: NOX_PUBLIC_ABI,
+        functionName: 'isPubliclyDecryptable',
+        args: [handle],
+      })) as boolean;
+      if (ok) {
+        onStatus?.(
+          'On-chain public-decrypt flag is set. Waiting for Nox gateway…',
+        );
+        await sleep(3_000);
+        return;
+      }
+    } catch {
+      /* retry */
+    }
+    onStatus?.(
+      `Waiting for allowPublicDecryption on-chain (${i + 1}/${maxAttempts})…`,
+    );
+    await sleep(2_000);
+  }
+  throw new Error(
+    `Handle ${handle.slice(0, 12)}… is not marked publicly decryptable on NoxCompute after waiting. The unwrap tx may have failed to call allowPublicDecryption.`,
+  );
+}
+
+async function waitUntilPrivateDecryptable(
+  handleClient: Awaited<ReturnType<typeof createNoxHandleClient>>,
+  handle: Hex,
+  onStatus?: (message: string) => void,
+): Promise<void> {
+  const maxAttempts = 25;
+  for (let i = 0; i < maxAttempts; i += 1) {
+    try {
+      await handleClient.decrypt(handle as `0x${string}`);
+      onStatus?.('Burn ciphertext is ready. Requesting public decryption proof…');
+      await sleep(2_000);
+      return;
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      const name = err instanceof Error ? err.name : '';
+      const pending =
+        name === 'NotYetComputedHandleError' ||
+        /not yet computed|not computed|pending|UnknownHandle/i.test(message);
+      if (!pending && i > 3) {
+        onStatus?.(
+          `Private decrypt not ready (${message.slice(0, 80)}). Still waiting…`,
+        );
+      }
+      onStatus?.(
+        `Waiting for Nox runner to compute burn handle (${i + 1}/${maxAttempts})…`,
+      );
+      await sleep(3_000);
+    }
+  }
+}
+
 async function pollPublicDecrypt(
   handleClient: Awaited<ReturnType<typeof createNoxHandleClient>>,
   handle: Hex,
   onStatus?: (message: string) => void,
 ): Promise<{ value: bigint | string | boolean; decryptionProof: string }> {
-  const maxAttempts = 20;
+  const maxAttempts = 30;
   for (let i = 0; i < maxAttempts; i += 1) {
     try {
       const result = await handleClient.publicDecrypt(handle as `0x${string}`);
@@ -528,14 +626,21 @@ async function pollPublicDecrypt(
       const message = err instanceof Error ? err.message : String(err);
       const pending =
         name === 'NotYetComputedHandleError' ||
-        /not yet computed|not computed|pending/i.test(message);
+        /not yet computed|not computed|pending|not publicly decryptable|access_denied|Access denied|403/i.test(
+          message,
+        );
       if (!pending || i === maxAttempts - 1) {
+        if (/not publicly decryptable|access_denied/i.test(message)) {
+          throw new Error(
+            `Nox gateway still says the burn handle is not publicly decryptable (on-chain flag can lag in the gateway). Wait 30–60s and click Finalize pending unwrap. Detail: ${message}`,
+          );
+        }
         throw err instanceof Error ? err : new Error(message);
       }
       onStatus?.(
-        `Nox runner still computing unwrap amount (${i + 1}/${maxAttempts})…`,
+        `Nox gateway not ready for public decrypt (${i + 1}/${maxAttempts})…`,
       );
-      await sleep(2_000);
+      await sleep(3_000);
     }
   }
   throw new Error('Timed out waiting for Nox public decryption');

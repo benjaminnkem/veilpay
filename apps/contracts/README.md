@@ -50,7 +50,7 @@ pnpm deploy:wcusdc
 - API: `NOX_CTOKEN_ADDRESS=0x...`
 - Web: Organization settings → **Nox confidential payroll** → paste address → mode **Confidential Nox**
 
-4. Fund the **Nox payer** EOA with Sepolia ETH + USDC. Payroll execute will `wrap` then `confidentialTransfer`.
+4. Fund the **org Safe** with Sepolia USDC + ETH (wrap). Fund the **Safe owner MetaMask** with Sepolia ETH (confidential pays). See root [README.md](../../README.md#sepolia-dry-run-confidential-payroll).
 
 ## Contract
 
