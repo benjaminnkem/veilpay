@@ -30,7 +30,7 @@ export function ImagePlaceholder({
       className={cn(
         'group relative flex w-full flex-col overflow-hidden border border-white/10 bg-[linear-gradient(145deg,rgba(99,102,241,0.08),rgba(15,16,22,0.9)_45%,rgba(24,24,32,0.95))]',
         ASPECT[aspect],
-        className,
+        className
       )}
     >
       <div className="pointer-events-none absolute inset-0 opacity-40 [background-image:radial-gradient(circle_at_1px_1px,rgba(255,255,255,0.08)_1px,transparent_0)] [background-size:18px_18px]" />
@@ -43,9 +43,7 @@ export function ImagePlaceholder({
           <p className="text-sm font-medium tracking-tight text-foreground">
             {title}
           </p>
-          <p className="text-xs leading-5 text-muted-foreground">
-            {searchHint}
-          </p>
+          <p className="text-xs leading-5 text-muted-foreground">{searchHint}</p>
         </figcaption>
       </div>
     </figure>

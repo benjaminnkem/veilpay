@@ -6,7 +6,11 @@ export const PUBLIC_ROUTES = [
   '/unauthorized',
 ] as const;
 
-export const AUTH_ROUTES = ['/login', '/register', '/forgot-password'] as const;
+export const AUTH_ROUTES = [
+  '/login',
+  '/register',
+  '/forgot-password',
+] as const;
 
 export const PROTECTED_ROUTE_PREFIXES = [
   '/dashboard',
@@ -35,18 +39,18 @@ export type AppRoute = (typeof ROUTES)[keyof typeof ROUTES];
 
 export function isAuthRoute(pathname: string): boolean {
   return AUTH_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 }
 
 export function isProtectedRoute(pathname: string): boolean {
   return PROTECTED_ROUTE_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
   );
 }
 
 export function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some(
-    (route) => pathname === route || pathname.startsWith(`${route}/`),
+    (route) => pathname === route || pathname.startsWith(`${route}/`)
   );
 }

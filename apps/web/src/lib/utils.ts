@@ -7,7 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 
 export function formatDate(
   value: string | Date,
-  options?: Intl.DateTimeFormatOptions,
+  options?: Intl.DateTimeFormatOptions
 ): string {
   const date = typeof value === 'string' ? new Date(value) : value;
 
@@ -22,7 +22,7 @@ export function formatDate(
 export function formatCurrency(
   amount: number,
   currency = 'USD',
-  locale = 'en-US',
+  locale = 'en-US'
 ): string {
   return new Intl.NumberFormat(locale, {
     style: 'currency',

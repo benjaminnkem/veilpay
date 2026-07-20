@@ -78,7 +78,7 @@ export function HeroScene({ className }: HeroSceneProps) {
       <div
         className={cn(
           'relative h-full min-h-[320px] w-full overflow-hidden rounded-none bg-[radial-gradient(circle_at_50%_40%,rgba(99,102,241,0.18),transparent_55%)]',
-          className,
+          className
         )}
         aria-hidden
       />
@@ -89,7 +89,7 @@ export function HeroScene({ className }: HeroSceneProps) {
     <div
       className={cn(
         'relative h-full min-h-[320px] w-full overflow-hidden',
-        className,
+        className
       )}
       aria-hidden
     >

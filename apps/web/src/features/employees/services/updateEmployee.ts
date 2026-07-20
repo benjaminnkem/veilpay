@@ -6,7 +6,10 @@ import type {
 
 export async function updateEmployee(
   id: string,
-  payload: UpdateEmployeePayload,
+  payload: UpdateEmployeePayload
 ): Promise<Employee> {
-  return apiPatch<Employee, UpdateEmployeePayload>(`/employees/${id}`, payload);
+  return apiPatch<Employee, UpdateEmployeePayload>(
+    `/employees/${id}`,
+    payload
+  );
 }

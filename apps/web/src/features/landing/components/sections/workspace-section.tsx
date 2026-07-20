@@ -110,9 +110,7 @@ export function WorkspaceSection() {
                   >
                     <div>
                       <p className="text-sm font-medium">{item.title}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {item.meta}
-                      </p>
+                      <p className="text-xs text-muted-foreground">{item.meta}</p>
                     </div>
                     <span className="text-[11px] text-muted-foreground">
                       {item.status}
@@ -158,9 +156,7 @@ export function WorkspaceSection() {
               </div>
             </div>
             <div className="flex items-baseline justify-between gap-4 px-1">
-              <p className="text-sm font-medium tracking-tight">
-                {audit.title}
-              </p>
+              <p className="text-sm font-medium tracking-tight">{audit.title}</p>
               <p className="font-mono text-[11px] text-muted-foreground">03</p>
             </div>
           </motion.div>

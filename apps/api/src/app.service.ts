@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { Company } from '@repo/types';
 
 @Injectable()
 export class AppService {
@@ -10,8 +11,8 @@ export class AppService {
     return { status: 'ok', service: 'api' };
   }
 
-  /** Static compatibility sample; production company data is tenant-scoped. */
-  getSampleCompany() {
+  /** Example shape shared via @repo/types — replace with real data later. */
+  getSampleCompany(): Company {
     return {
       id: 'cmp_demo',
       name: 'VeilPay Demo Co',

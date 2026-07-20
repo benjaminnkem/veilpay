@@ -37,12 +37,7 @@ export function ErrorState({
         {(onRetry || action) && (
           <div className="flex flex-wrap gap-2">
             {onRetry ? (
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={onRetry}
-              >
+              <Button type="button" variant="outline" size="sm" onClick={onRetry}>
                 Try again
               </Button>
             ) : null}

@@ -60,22 +60,24 @@ api.interceptors.request.use(
 
     return config;
   },
-  (error: AxiosError) => Promise.reject(parseApiError(error)),
+  (error: AxiosError) => Promise.reject(parseApiError(error))
 );
 
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error: AxiosError) => Promise.reject(parseApiError(error)),
+  (error: AxiosError) => Promise.reject(parseApiError(error))
 );
 
-export async function apiRequest<T>(config: AxiosRequestConfig): Promise<T> {
+export async function apiRequest<T>(
+  config: AxiosRequestConfig
+): Promise<T> {
   const response = await api.request<T>(config);
   return response.data;
 }
 
 export async function apiGet<T>(
   url: string,
-  config?: AxiosRequestConfig,
+  config?: AxiosRequestConfig
 ): Promise<T> {
   return apiRequest<T>({ ...config, method: 'GET', url });
 }
@@ -83,7 +85,7 @@ export async function apiGet<T>(
 export async function apiPost<T, D = unknown>(
   url: string,
   data?: D,
-  config?: AxiosRequestConfig,
+  config?: AxiosRequestConfig
 ): Promise<T> {
   return apiRequest<T>({ ...config, method: 'POST', url, data });
 }
@@ -91,7 +93,7 @@ export async function apiPost<T, D = unknown>(
 export async function apiPut<T, D = unknown>(
   url: string,
   data?: D,
-  config?: AxiosRequestConfig,
+  config?: AxiosRequestConfig
 ): Promise<T> {
   return apiRequest<T>({ ...config, method: 'PUT', url, data });
 }
@@ -99,14 +101,14 @@ export async function apiPut<T, D = unknown>(
 export async function apiPatch<T, D = unknown>(
   url: string,
   data?: D,
-  config?: AxiosRequestConfig,
+  config?: AxiosRequestConfig
 ): Promise<T> {
   return apiRequest<T>({ ...config, method: 'PATCH', url, data });
 }
 
 export async function apiDelete<T>(
   url: string,
-  config?: AxiosRequestConfig,
+  config?: AxiosRequestConfig
 ): Promise<T> {
   return apiRequest<T>({ ...config, method: 'DELETE', url });
 }
@@ -114,7 +116,7 @@ export async function apiDelete<T>(
 export async function apiUpload<T>(
   url: string,
   formData: FormData,
-  config?: AxiosRequestConfig,
+  config?: AxiosRequestConfig
 ): Promise<T> {
   return apiRequest<T>({
     ...config,

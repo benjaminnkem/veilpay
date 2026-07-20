@@ -23,7 +23,7 @@ export function LandingNav() {
         'fixed inset-x-0 top-0 z-50 transition-[background,border-color,backdrop-filter] duration-300',
         scrolled
           ? 'border-b border-white/8 bg-[#0b0c10]/72 backdrop-blur-xl'
-          : 'border-b border-transparent bg-transparent',
+          : 'border-b border-transparent bg-transparent'
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-[1200px] items-center justify-between px-4 sm:px-6">

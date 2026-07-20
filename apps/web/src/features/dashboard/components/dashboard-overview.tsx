@@ -75,7 +75,10 @@ export function DashboardOverview() {
                   {stat.value}
                 </CardTitle>
               </div>
-              <stat.icon className="size-4 text-muted-foreground" aria-hidden />
+              <stat.icon
+                className="size-4 text-muted-foreground"
+                aria-hidden
+              />
             </CardHeader>
             <CardContent className="text-xs text-muted-foreground">
               {stat.description}

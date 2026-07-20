@@ -10,20 +10,13 @@
     "test:solidity": "hardhat test solidity",
     "test:nodejs": "hardhat test nodejs",
     "node": "hardhat node",
-    "deploy:local": "hardhat ignition deploy --network localhost ignition/modules/Payroll.ts",
-    "deploy:sepolia": "hardhat ignition deploy --network sepolia ignition/modules/Payroll.ts",
-    "export:deployment": "hardhat run --network localhost scripts/export-deployment.ts",
-    "export:sepolia": "hardhat run --network sepolia scripts/export-deployment.ts",
-    "test:nox": "NOX_E2E=1 hardhat test --grep nox-e2e test/NoxPayroll.e2e.ts",
-    "format:check": "prettier --plugin=prettier-plugin-solidity --check \"contracts/{ConfidentialPayroll,ConfidentialUSDC,MockUSDC,PayrollManifest,TestConfidentialUSDC}.sol\" \"contracts/test/**/*.sol\" \"ignition/modules/Payroll.ts\" \"test/{ConfidentialPayroll,NoxPayroll.e2e}.ts\"",
+    "deploy:local": "hardhat ignition deploy ignition/modules/Counter.ts",
     "check-types": "hardhat compile --quiet",
     "lint": "echo \"No lint configured for contracts\"",
     "clean": "rm -rf artifacts cache dist coverage typechain-types ignition/deployments .turbo",
     "dev": "hardhat node"
   },
   "devDependencies": {
-    "@iexec-nox/handle": "0.1.0-beta.13",
-    "@iexec-nox/nox-hardhat-plugin": "0.1.0",
     "@nomicfoundation/hardhat-ignition": "^3.1.8",
     "@nomicfoundation/hardhat-toolbox-viem": "^5.0.7",
     "@repo/typescript-config": "workspace:*",
@@ -32,11 +25,5 @@
     "hardhat": "^3.9.1",
     "typescript": "~5.9.2",
     "viem": "^2.47.6"
-  },
-  "dependencies": {
-    "@iexec-nox/nox-confidential-contracts": "0.2.2",
-    "@iexec-nox/nox-protocol-contracts": "0.2.4",
-    "@openzeppelin/contracts": "5.6.1",
-    "encrypted-types": "0.0.4"
   }
 }

@@ -8,7 +8,10 @@ import { Textarea } from '@/components/ui/textarea';
 interface TextareaFieldProps<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
-> extends Omit<React.ComponentProps<typeof Textarea>, 'name' | 'defaultValue'> {
+> extends Omit<
+    React.ComponentProps<typeof Textarea>,
+    'name' | 'defaultValue'
+  > {
   control: Control<TFieldValues>;
   name: TName;
   label?: string;

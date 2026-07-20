@@ -1,5 +1,9 @@
 export type PayrollRunStatus =
-  'draft' | 'pending' | 'processing' | 'completed' | 'failed';
+  | 'draft'
+  | 'pending'
+  | 'processing'
+  | 'completed'
+  | 'failed';
 
 export interface PayrollLineItem {
   employeeId: string;

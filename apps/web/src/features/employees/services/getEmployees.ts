@@ -39,7 +39,7 @@ const DEMO_EMPLOYEES: Employee[] = [
 ];
 
 export async function getEmployees(
-  params?: PaginationParams,
+  params?: PaginationParams
 ): Promise<PaginatedResponse<Employee>> {
   try {
     return await apiGet<PaginatedResponse<Employee>>('/employees', {

@@ -14,7 +14,7 @@ export function useApiQuery<
   TData = TQueryFnData,
   TQueryKey extends QueryKey = QueryKey,
 >(
-  options: UseQueryOptions<TQueryFnData, ApiError, TData, TQueryKey>,
+  options: UseQueryOptions<TQueryFnData, ApiError, TData, TQueryKey>
 ): UseQueryResult<TData, ApiError> {
   const { queryFn, ...rest } = options;
 

@@ -68,7 +68,7 @@ export function DatePickerField<
                   aria-invalid={invalid || undefined}
                   className={cn(
                     'w-full justify-start text-left font-normal',
-                    !selected && 'text-muted-foreground',
+                    !selected && 'text-muted-foreground'
                   )}
                 />
               }

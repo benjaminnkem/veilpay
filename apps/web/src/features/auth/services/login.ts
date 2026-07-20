@@ -22,7 +22,7 @@ export async function login(payload: LoginPayload): Promise<LoginResponse> {
       {
         headers: { 'Content-Type': 'application/json' },
         timeout: 15_000,
-      },
+      }
     );
 
     return response.data;
