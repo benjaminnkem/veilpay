@@ -10,11 +10,8 @@ export const metadata: Metadata = {
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Dashboard"
-        description="Monitor payroll health, approvals, and confidential operations."
-      />
+    <div className="space-y-5">
+      <PageHeader title="Dashboard" />
       <DashboardOverview />
     </div>
   );

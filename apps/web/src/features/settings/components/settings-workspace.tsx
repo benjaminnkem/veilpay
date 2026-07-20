@@ -26,7 +26,12 @@ import {
 } from '@/features/settings/services/updateProfile';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { authGet, authPatch, authPost } from '@/lib/api';
+import {
+  canEditOrgSettings,
+  canManageTreasury,
+} from '@/lib/auth/rbac';
 import { notify } from '@/lib/toast';
+import { cn } from '@/lib/utils';
 
 const orgSchema = z.object({
   name: z.string().min(2, 'Name is required'),
@@ -60,10 +65,15 @@ type SettingsFormValues = z.infer<typeof settingsSchema>;
 
 export function SettingsWorkspace() {
   const { user } = useCurrentUser();
+  const showOrgTab =
+    canEditOrgSettings(user?.role) || canManageTreasury(user?.role);
+  const showPayrollTab = canEditOrgSettings(user?.role);
+  const tabCount = 2 + (showOrgTab ? 1 : 0) + (showPayrollTab ? 1 : 0);
 
   const orgQuery = useQuery({
     queryKey: ['organization', 'me'],
     queryFn: getOrganization,
+    enabled: showOrgTab || canManageTreasury(user?.role),
   });
 
   const settingsQuery = useQuery({
@@ -77,6 +87,7 @@ export function SettingsWorkspace() {
         fiscalYearStartMonth: number;
         defaultApprovalSequence: string[];
       }>('/settings'),
+    enabled: showPayrollTab,
   });
 
   const orgForm = useForm<OrgFormValues>({
@@ -155,10 +166,21 @@ export function SettingsWorkspace() {
 
   return (
     <Tabs defaultValue="profile" className="space-y-6">
-      <TabsList className="grid w-full max-w-2xl grid-cols-4">
+      <TabsList
+        className={cn(
+          'grid w-full max-w-2xl',
+          tabCount === 2 && 'grid-cols-2',
+          tabCount === 3 && 'grid-cols-3',
+          tabCount >= 4 && 'grid-cols-4',
+        )}
+      >
         <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="organization">Organization</TabsTrigger>
-        <TabsTrigger value="payroll">Payroll</TabsTrigger>
+        {showOrgTab ? (
+          <TabsTrigger value="organization">Organization</TabsTrigger>
+        ) : null}
+        {showPayrollTab ? (
+          <TabsTrigger value="payroll">Payroll</TabsTrigger>
+        ) : null}
         <TabsTrigger value="security">Security</TabsTrigger>
       </TabsList>
 
@@ -179,47 +201,60 @@ export function SettingsWorkspace() {
         </Card>
       </TabsContent>
 
-      <TabsContent value="organization" className="space-y-4">
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Organization</CardTitle>
-            <CardDescription>
-              Legal identity, branding, and payroll currency for this workspace.
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={onOrgSubmit}>
-            <CardContent className="grid gap-4 sm:grid-cols-2">
-              <InputField control={orgForm.control} name="name" label="Name" />
-              <InputField
-                control={orgForm.control}
-                name="legalName"
-                label="Legal name"
-              />
-              <InputField
-                control={orgForm.control}
-                name="currency"
-                label="Payroll currency"
-              />
-              <InputField
-                control={orgForm.control}
-                name="timezone"
-                label="Timezone"
-              />
-            </CardContent>
-            <CardFooter>
-              <Button type="submit" disabled={orgForm.formState.isSubmitting}>
-                {orgForm.formState.isSubmitting
-                  ? 'Saving…'
-                  : 'Save organization'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
+      {showOrgTab ? (
+        <TabsContent value="organization" className="space-y-4">
+          {canEditOrgSettings(user?.role) ? (
+            <Card className="border-border/70 shadow-sm">
+              <CardHeader>
+                <CardTitle className="text-base">Organization</CardTitle>
+                <CardDescription>
+                  Legal identity, branding, and payroll currency for this
+                  workspace.
+                </CardDescription>
+              </CardHeader>
+              <form onSubmit={onOrgSubmit}>
+                <CardContent className="grid gap-4 sm:grid-cols-2">
+                  <InputField
+                    control={orgForm.control}
+                    name="name"
+                    label="Name"
+                  />
+                  <InputField
+                    control={orgForm.control}
+                    name="legalName"
+                    label="Legal name"
+                  />
+                  <InputField
+                    control={orgForm.control}
+                    name="currency"
+                    label="Payroll currency"
+                  />
+                  <InputField
+                    control={orgForm.control}
+                    name="timezone"
+                    label="Timezone"
+                  />
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    type="submit"
+                    disabled={orgForm.formState.isSubmitting}
+                  >
+                    {orgForm.formState.isSubmitting
+                      ? 'Saving…'
+                      : 'Save organization'}
+                  </Button>
+                </CardFooter>
+              </form>
+            </Card>
+          ) : null}
 
-        <TreasurySettings />
-      </TabsContent>
+          {canManageTreasury(user?.role) ? <TreasurySettings /> : null}
+        </TabsContent>
+      ) : null}
 
-      <TabsContent value="payroll">
+      {showPayrollTab ? (
+        <TabsContent value="payroll">
         <Card className="border-border/70 shadow-sm">
           <CardHeader>
             <CardTitle className="text-base">Payroll rules</CardTitle>
@@ -313,6 +348,7 @@ export function SettingsWorkspace() {
           </form>
         </Card>
       </TabsContent>
+      ) : null}
 
       <TabsContent value="security" className="space-y-4">
         <Card className="border-border/70 shadow-sm">

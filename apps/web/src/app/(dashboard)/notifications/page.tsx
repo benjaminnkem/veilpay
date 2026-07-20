@@ -10,11 +10,8 @@ export const metadata: Metadata = {
 
 export default function NotificationsPage() {
   return (
-    <div className="space-y-6">
-      <PageHeader
-        title="Notifications"
-        description="Stay on top of approvals, payroll events, and invitations."
-      />
+    <div className="space-y-4">
+      <PageHeader title="Notifications" />
       <NotificationsList />
     </div>
   );

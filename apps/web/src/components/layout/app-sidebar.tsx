@@ -1,19 +1,7 @@
 'use client';
 
-import {
-  BellIcon,
-  Building2Icon,
-  ClipboardCheckIcon,
-  LayoutDashboardIcon,
-  MailPlusIcon,
-  ScrollTextIcon,
-  SettingsIcon,
-  UsersIcon,
-  WalletIcon,
-} from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import type { ComponentType } from 'react';
 
 import {
   Sidebar,
@@ -31,73 +19,12 @@ import {
   SidebarSeparator,
   useSidebar,
 } from '@/components/ui/sidebar';
+import { getNavSectionsForRole } from '@/constants/navigation';
 import { ROUTES } from '@/constants/routes';
 import { useApprovals } from '@/features/approvals/hooks/use-approvals';
 import { useUnreadCount } from '@/features/notifications/hooks/use-notifications';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
-
-type NavItem = {
-  label: string;
-  href: string;
-  icon: ComponentType<{ className?: string }>;
-  badgeKey?: 'approvals' | 'notifications';
-};
-
-type NavSection = {
-  label: string;
-  items: NavItem[];
-};
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    label: 'Overview',
-    items: [
-      {
-        label: 'Dashboard',
-        href: ROUTES.dashboard,
-        icon: LayoutDashboardIcon,
-      },
-    ],
-  },
-  {
-    label: 'Workforce',
-    items: [
-      { label: 'Employees', href: ROUTES.employees, icon: UsersIcon },
-      { label: 'Invitations', href: ROUTES.invitations, icon: MailPlusIcon },
-    ],
-  },
-  {
-    label: 'Payroll',
-    items: [
-      { label: 'Payroll runs', href: ROUTES.payroll, icon: WalletIcon },
-      {
-        label: 'Approvals',
-        href: ROUTES.approvals,
-        icon: ClipboardCheckIcon,
-        badgeKey: 'approvals',
-      },
-    ],
-  },
-  {
-    label: 'Compliance',
-    items: [
-      { label: 'Audit logs', href: ROUTES.auditLogs, icon: ScrollTextIcon },
-      {
-        label: 'Notifications',
-        href: ROUTES.notifications,
-        icon: BellIcon,
-        badgeKey: 'notifications',
-      },
-    ],
-  },
-  {
-    label: 'Workspace',
-    items: [
-      { label: 'Settings', href: ROUTES.settings, icon: SettingsIcon },
-      { label: 'Profile', href: ROUTES.profile, icon: Building2Icon },
-    ],
-  },
-];
+import { canViewApprovals, getHomeHref } from '@/lib/auth/rbac';
 
 function isNavActive(pathname: string, href: string) {
   if (href === ROUTES.settings) {
@@ -110,11 +37,15 @@ export function AppSidebar() {
   const pathname = usePathname();
   const { user } = useCurrentUser();
   const { isMobile, setOpenMobile } = useSidebar();
-  const approvals = useApprovals();
+  const showApprovals = canViewApprovals(user?.role);
+  const approvals = useApprovals({ enabled: showApprovals });
   const unread = useUnreadCount();
 
+  const sections = getNavSectionsForRole(user?.role);
+  const homeHref = getHomeHref(user?.role);
+
   const badges = {
-    approvals: approvals.data?.length ?? 0,
+    approvals: showApprovals ? (approvals.data?.length ?? 0) : 0,
     notifications: unread.data?.count ?? 0,
   };
 
@@ -129,7 +60,7 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               size="lg"
-              render={<Link href={ROUTES.dashboard} />}
+              render={<Link href={homeHref} />}
               tooltip="VeilPay"
               onClick={closeMobile}
             >
@@ -152,7 +83,7 @@ export function AppSidebar() {
       <SidebarSeparator />
 
       <SidebarContent>
-        {NAV_SECTIONS.map((section) => (
+        {sections.map((section) => (
           <SidebarGroup key={section.label}>
             <SidebarGroupLabel>{section.label}</SidebarGroupLabel>
             <SidebarGroupContent>
