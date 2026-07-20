@@ -313,10 +313,18 @@ export class PayrollService {
       );
     }
 
-    if (providerKind === 'blockchain') {
-      if (!org?.safeAddress || !org?.network) {
+    if (providerKind === 'blockchain' || providerKind === 'nox') {
+      if (providerKind === 'blockchain' && (!org?.safeAddress || !org?.network)) {
         throw new BadRequestException(
           'Link a Safe treasury and network in Organization settings before blockchain execution.',
+        );
+      }
+      if (
+        providerKind === 'nox' &&
+        (!org?.confidentialTokenAddress || !org?.network)
+      ) {
+        throw new BadRequestException(
+          'Set confidentialTokenAddress (ERC-7984 cToken) and network (sepolia) in Organization settings before Nox execution.',
         );
       }
       if (readiness.missingWalletCount > 0) {
@@ -342,6 +350,7 @@ export class PayrollService {
           currency: payroll.currency,
           safeAddress: org?.safeAddress,
           network: org?.network,
+          confidentialTokenAddress: org?.confidentialTokenAddress,
           items: (payroll.items ?? []).map((item) => ({
             employeeId: item.employeeId,
             employeeName: item.employeeName,

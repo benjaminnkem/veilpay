@@ -76,7 +76,12 @@ export function TreasurySettings() {
     useState<string>('sepolia');
   const [selectedSafe, setSelectedSafe] = useState('');
   const [manualSafe, setManualSafe] = useState('');
+  const [cTokenAddress, setCTokenAddress] = useState('');
+  const [executionMode, setExecutionMode] = useState<'blockchain' | 'nox'>(
+    'blockchain',
+  );
   const [saving, setSaving] = useState(false);
+  const [savingNox, setSavingNox] = useState(false);
 
   const activeNetwork =
     NETWORK_OPTIONS.find((n) => n.key === selectedNetworkKey) ??
@@ -91,7 +96,21 @@ export function TreasurySettings() {
       setSelectedSafe(orgQuery.data.safeAddress);
       setManualSafe(orgQuery.data.safeAddress);
     }
-  }, [orgQuery.data?.network, orgQuery.data?.safeAddress]);
+    if (orgQuery.data?.confidentialTokenAddress) {
+      setCTokenAddress(orgQuery.data.confidentialTokenAddress);
+    }
+    if (
+      orgQuery.data?.executionProvider === 'nox' ||
+      orgQuery.data?.executionProvider === 'blockchain'
+    ) {
+      setExecutionMode(orgQuery.data.executionProvider);
+    }
+  }, [
+    orgQuery.data?.network,
+    orgQuery.data?.safeAddress,
+    orgQuery.data?.confidentialTokenAddress,
+    orgQuery.data?.executionProvider,
+  ]);
 
   const walletOnCorrectChain = chainId === activeNetwork.id;
 
@@ -158,9 +177,41 @@ export function TreasurySettings() {
     }
   }
 
+  async function saveNoxSettings() {
+    const token = cTokenAddress.trim();
+    if (token && !isValidSafeAddress(token)) {
+      notify.error('Enter a valid confidential token contract address');
+      return;
+    }
+    setSavingNox(true);
+    try {
+      await updateOrganization({
+        confidentialTokenAddress: token || null,
+        network: selectedNetworkKey || 'sepolia',
+        executionProvider: executionMode,
+      });
+      await qc.invalidateQueries({ queryKey: ['organization', 'me'] });
+      await qc.invalidateQueries({ queryKey: ['dashboard'] });
+      notify.success(
+        executionMode === 'nox'
+          ? 'Nox confidential payroll enabled'
+          : 'Execution settings saved',
+        token
+          ? `cToken ${formatAddress(token)} on ${selectedNetworkKey}`
+          : 'No confidential token address set',
+      );
+    } catch (error) {
+      notify.error(error);
+    } finally {
+      setSavingNox(false);
+    }
+  }
+
   const linkedSafe = orgQuery.data?.safeAddress;
+  const linkedCToken = orgQuery.data?.confidentialTokenAddress;
 
   return (
+    <div className="space-y-6">
     <Card className="border-border/70 shadow-sm">
       <CardHeader>
         <div className="flex flex-wrap items-start justify-between gap-3">
@@ -436,5 +487,97 @@ export function TreasurySettings() {
         ) : null}
       </CardFooter>
     </Card>
+
+    <Card className="border-border/70 shadow-sm">
+      <CardHeader>
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-1">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldIcon className="size-4 text-primary" />
+              Nox confidential payroll
+            </CardTitle>
+            <CardDescription>
+              Settle pay as encrypted ERC-7984 transfers via iExec Nox. Amounts
+              stay handles on-chain; only authorized viewers can decrypt.
+              Ethereum Sepolia only for the hackathon track.
+            </CardDescription>
+          </div>
+          {orgQuery.data?.executionProvider === 'nox' && linkedCToken ? (
+            <Badge variant="secondary" className="gap-1">
+              <CheckCircle2Icon className="size-3" />
+              Nox active
+            </Badge>
+          ) : (
+            <Badge variant="outline">Public USDC / mock</Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label htmlFor="execution-mode">Execution mode</Label>
+          <Select
+            value={executionMode}
+            onValueChange={(value) => {
+              if (value === 'nox' || value === 'blockchain') {
+                setExecutionMode(value);
+              }
+            }}
+          >
+            <SelectTrigger id="execution-mode" className="w-full">
+              <SelectValue placeholder="Select mode" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="blockchain">
+                Public Safe multi-send (ERC-20 USDC)
+              </SelectItem>
+              <SelectItem value="nox">
+                Confidential Nox (ERC-7984 amounts hidden)
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="ctoken-address">
+            Confidential token (ERC-7984 / wrapper)
+          </Label>
+          <Input
+            id="ctoken-address"
+            placeholder="0x… cUSDC wrapper on Sepolia"
+            value={cTokenAddress}
+            onChange={(e) => setCTokenAddress(e.target.value.trim())}
+            className="font-mono text-sm"
+          />
+          <p className="text-xs text-muted-foreground">
+            Deploy a wrapper for Sepolia USDC with the{' '}
+            <a
+              href="https://cdefi-wizard.iex.ec"
+              target="_blank"
+              rel="noreferrer"
+              className="text-primary underline-offset-2 hover:underline"
+            >
+              Nox Contracts Wizard
+            </a>{' '}
+            or set <code className="text-[11px]">NOX_CTOKEN_ADDRESS</code> on
+            the API. Fund the Nox payer EOA with USDC; execute wraps then
+            confidential-transfers each employee.
+          </p>
+        </div>
+        {linkedCToken ? (
+          <p className="font-mono text-xs break-all text-muted-foreground">
+            Saved: {linkedCToken}
+          </p>
+        ) : null}
+      </CardContent>
+      <CardFooter>
+        <Button
+          type="button"
+          disabled={savingNox}
+          onClick={() => void saveNoxSettings()}
+        >
+          {savingNox ? 'Saving…' : 'Save Nox / execution settings'}
+        </Button>
+      </CardFooter>
+    </Card>
+    </div>
   );
 }

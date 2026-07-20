@@ -42,11 +42,20 @@ export class UpdateOrganizationDto {
   @MaxLength(64)
   network?: string | null;
 
-  @ApiPropertyOptional({ enum: ['mock', 'blockchain'] })
+  @ApiPropertyOptional({ enum: ['mock', 'blockchain', 'nox'] })
   @IsOptional()
   @IsString()
   @MaxLength(32)
   executionProvider?: string | null;
+
+  @ApiPropertyOptional({
+    description:
+      'ERC-7984 confidential token (or ERC-20 wrapper) used for Nox payroll on Sepolia',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(128)
+  confidentialTokenAddress?: string | null;
 
   @ApiPropertyOptional()
   @IsOptional()

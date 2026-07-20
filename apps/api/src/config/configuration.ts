@@ -43,5 +43,7 @@ export default () => ({
     rpcUrl: process.env.BLOCKCHAIN_RPC_URL ?? '',
     safeOwnerPrivateKey: process.env.SAFE_OWNER_PRIVATE_KEY ?? '',
     safeApiKey: process.env.SAFE_API_KEY ?? '',
+    noxPayerPrivateKey: process.env.NOX_PAYER_PRIVATE_KEY ?? '',
+    noxCtokenAddress: process.env.NOX_CTOKEN_ADDRESS ?? '',
   },
 });

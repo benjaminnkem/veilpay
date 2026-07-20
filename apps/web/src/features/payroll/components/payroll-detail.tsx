@@ -150,14 +150,19 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
     payroll?.transactionHash && network
       ? `${network.explorer}/tx/${payroll.transactionHash}`
       : null;
-  const isBlockchain =
-    (orgQuery.data?.executionProvider ?? 'mock') === 'blockchain';
+  const executionProvider = orgQuery.data?.executionProvider ?? 'mock';
+  const isBlockchain = executionProvider === 'blockchain';
+  const isNox = executionProvider === 'nox';
   const canExecute =
     status === 'APPROVED' &&
     readiness.payableCount > 0 &&
     readiness.missingWalletCount === 0 &&
-    (!isBlockchain ||
-      (Boolean(orgQuery.data?.safeAddress) && Boolean(orgQuery.data?.network)));
+    (isNox
+      ? Boolean(orgQuery.data?.confidentialTokenAddress) &&
+        Boolean(orgQuery.data?.network)
+      : !isBlockchain ||
+        (Boolean(orgQuery.data?.safeAddress) &&
+          Boolean(orgQuery.data?.network)));
   const requiredUsdc = readiness.payableNetPayCents / 100;
 
   return (
@@ -298,9 +303,9 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                     Execution
                   </CardTitle>
                   <CardDescription>
-                    One Safe multi-send batches a USDC transfer to each ready
-                    employee wallet. Zero-pay lines are skipped. Amounts are
-                    public on-chain until Nox.
+                    {isNox
+                      ? 'Nox confidential path: each net amount is encrypted with @iexec-nox/handle and settled as an ERC-7984 confidentialTransfer. Amounts are not public on-chain.'
+                      : 'Safe multi-send path: one public USDC transfer per ready employee wallet. Zero-pay lines are skipped.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -317,12 +322,38 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                       )}
                     />
                     <Stat
-                      label="Skipped"
-                      value={`${readiness.zeroPayCount} zero-pay · ${readiness.missingWalletCount} no wallet`}
+                      label="Rail"
+                      value={
+                        isNox
+                          ? 'Nox ERC-7984'
+                          : isBlockchain
+                            ? 'Safe USDC'
+                            : String(executionProvider)
+                      }
                     />
                   </div>
 
-                  {orgQuery.data?.safeAddress && orgQuery.data?.network ? (
+                  {isNox ? (
+                    <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
+                      <p className="font-medium">Confidential settlement</p>
+                      <p className="mt-1 text-muted-foreground">
+                        Network: {orgQuery.data?.network ?? '—'} · cToken:{' '}
+                        <span className="font-mono text-xs">
+                          {orgQuery.data?.confidentialTokenAddress
+                            ? shortWallet(
+                                orgQuery.data.confidentialTokenAddress,
+                              )
+                            : 'not set'}
+                        </span>
+                      </p>
+                      {!orgQuery.data?.confidentialTokenAddress ? (
+                        <p className="mt-2 text-amber-700 dark:text-amber-300">
+                          Set the ERC-7984 confidential token in Organization
+                          settings (Nox card) before executing.
+                        </p>
+                      ) : null}
+                    </div>
+                  ) : orgQuery.data?.safeAddress && orgQuery.data?.network ? (
                     <TreasuryBalancesPanel
                       safeAddress={orgQuery.data.safeAddress}
                       network={orgQuery.data.network}
@@ -331,17 +362,17 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                   ) : (
                     <p className="text-sm text-amber-700 dark:text-amber-300">
                       No Safe treasury linked yet. Connect one in Organization
-                      settings before on-chain execution.
+                      settings, or switch execution mode to Nox.
                     </p>
                   )}
 
                   {status === 'APPROVED' ? (
                     <>
                       <p className="text-sm text-muted-foreground">
-                        Fully approved. Execute builds a single Safe batch of{' '}
-                        {readiness.readyCount} USDC transfer
-                        {readiness.readyCount === 1 ? '' : 's'} totaling{' '}
-                        {formatCurrency(requiredUsdc, payroll.currency)}.
+                        Fully approved.{' '}
+                        {isNox
+                          ? `Execute will encrypt and confidentially transfer ${readiness.readyCount} payroll amount${readiness.readyCount === 1 ? '' : 's'} totaling ${formatCurrency(requiredUsdc, payroll.currency)}.`
+                          : `Execute builds a Safe batch of ${readiness.readyCount} USDC transfer${readiness.readyCount === 1 ? '' : 's'} totaling ${formatCurrency(requiredUsdc, payroll.currency)}.`}
                       </p>
                       {readiness.missingWalletCount > 0 ? (
                         <p className="text-sm text-amber-700 dark:text-amber-300">
@@ -355,8 +386,12 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                         disabled={execute.isPending || !canExecute}
                       >
                         {execute.isPending
-                          ? 'Executing batch…'
-                          : `Execute ${readiness.readyCount} transfer${readiness.readyCount === 1 ? '' : 's'}`}
+                          ? isNox
+                            ? 'Encrypting & transferring…'
+                            : 'Executing batch…'
+                          : isNox
+                            ? `Execute ${readiness.readyCount} confidential pay${readiness.readyCount === 1 ? '' : 's'}`
+                            : `Execute ${readiness.readyCount} transfer${readiness.readyCount === 1 ? '' : 's'}`}
                       </Button>
                     </>
                   ) : null}
@@ -366,8 +401,13 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                       <ShieldAlertIcon />
                       <AlertTitle>
                         {status === 'COMPLETED'
-                          ? 'Payroll batch executed on-chain'
-                          : 'Safe multi-recipient batch pending'}
+                          ? isNox ||
+                            payroll.executionProvider === 'nox'
+                            ? 'Confidential Nox payroll completed'
+                            : 'Payroll batch executed on-chain'
+                          : isNox || payroll.executionProvider === 'nox'
+                            ? 'Confidential Nox settlement pending'
+                            : 'Safe multi-recipient batch pending'}
                       </AlertTitle>
                       <AlertDescription>
                         {payroll.executionMessage ??

@@ -7,7 +7,6 @@ import type {
 /**
  * Payment rail abstraction.
  * Payroll domain never depends on blockchain / bank / Stripe details.
- * Blockchain (Safe, Nox, USDC) will implement this interface later.
  */
 export interface PaymentProvider {
   readonly kind: PaymentProviderKind;

@@ -12,6 +12,7 @@ import { PayrollController } from './payroll.controller';
 import { PayrollService } from './payroll.service';
 import { BlockchainPaymentProvider } from './providers/blockchain-payment.provider';
 import { MockPaymentProvider } from './providers/mock-payment.provider';
+import { NoxPaymentProvider } from './providers/nox-payment.provider';
 import { PaymentExecutionService } from './providers/payment-execution.service';
 
 @Module({
@@ -30,6 +31,7 @@ import { PaymentExecutionService } from './providers/payment-execution.service';
     PayrollService,
     MockPaymentProvider,
     BlockchainPaymentProvider,
+    NoxPaymentProvider,
     PaymentExecutionService,
   ],
   exports: [PayrollService, PaymentExecutionService],

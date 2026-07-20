@@ -19,6 +19,7 @@
     "clean": "rm -rf dist coverage .turbo tsconfig.build.tsbuildinfo"
   },
   "dependencies": {
+    "@iexec-nox/handle": "0.1.0-beta.13",
     "@nestjs-modules/mailer": "^2.3.7",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.4",

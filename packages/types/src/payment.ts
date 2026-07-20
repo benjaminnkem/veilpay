@@ -1,4 +1,9 @@
-export type PaymentProviderKind = 'mock' | 'blockchain' | 'bank' | 'stripe';
+export type PaymentProviderKind =
+  | 'mock'
+  | 'blockchain'
+  | 'nox'
+  | 'bank'
+  | 'stripe';
 
 export type PaymentExecutionStatus =
   | 'COMPLETED'
@@ -21,6 +26,7 @@ export interface ExecutePayrollPaymentRequest {
   currency: string;
   safeAddress?: string | null;
   network?: string | null;
+  confidentialTokenAddress?: string | null;
   metadata?: Record<string, unknown>;
 }
 

@@ -32,6 +32,9 @@ export class OrganizationEntity extends BaseEntity {
   @Column({ type: 'varchar', length: 32, default: 'mock' })
   executionProvider!: string;
 
+  @Column({ type: 'varchar', length: 128, nullable: true })
+  confidentialTokenAddress!: string | null;
+
   @Column({ type: 'varchar', length: 8, default: 'USD' })
   currency!: string;
 

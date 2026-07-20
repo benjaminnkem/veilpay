@@ -21,6 +21,7 @@ export async function getOrganization() {
     safeAddress: string | null;
     network: string | null;
     executionProvider?: string;
+    confidentialTokenAddress?: string | null;
   }>('/organizations/me');
 }
 
@@ -30,6 +31,7 @@ export async function updateOrganization(payload: {
   safeAddress?: string | null;
   network?: string | null;
   executionProvider?: string | null;
+  confidentialTokenAddress?: string | null;
   currency?: string;
   timezone?: string;
 }) {

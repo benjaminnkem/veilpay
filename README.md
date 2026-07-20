@@ -2,7 +2,7 @@
 
 pnpm + Turborepo monorepo for **VeilPay** - an enterprise payroll platform for Web3 organizations.
 
-The foundation is a complete SaaS payroll stack (auth, employees, compensation, payroll engine, approvals, audit, notifications, invitations). **Blockchain payment execution** (Safe, Nox, confidential USDC) plugs in later via the `PaymentProvider` abstraction.
+The foundation is a complete SaaS payroll stack (auth, employees, compensation, payroll engine, approvals, audit, notifications, invitations). Payment rails plug in via `PaymentProvider`: **mock**, **Safe multi-send (public USDC)**, and **Nox confidential ERC-7984** (encrypted amounts on Ethereum Sepolia).
 
 ## Structure
 
@@ -74,9 +74,10 @@ interface PaymentProvider {
 ```
 
 - **MockPaymentProvider** - default (no funds moved)
-- **BlockchainPaymentProvider** - stub for Safe / Nox / USDC (throws `NotImplemented`)
+- **BlockchainPaymentProvider** - Safe Protocol Kit multi-send of public USDC
+- **NoxPaymentProvider** - `@iexec-nox/handle` encrypt + ERC-7984 `confidentialTransfer` (amounts as handles)
 
-Payroll domain never depends on chain details. Fields like `safeAddress`, `walletAddress`, `transactionHash`, and `network` are nullable placeholders.
+See `apps/api/scripts/nox-setup.md` for Sepolia Nox setup (cToken wrapper, payer key, env).
 
 ### Roles
 

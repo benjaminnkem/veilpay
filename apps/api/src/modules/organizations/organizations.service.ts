@@ -40,6 +40,10 @@ export class OrganizationsService {
         dto.executionProvider !== undefined
           ? dto.executionProvider
           : org.executionProvider,
+      confidentialTokenAddress:
+        dto.confidentialTokenAddress !== undefined
+          ? dto.confidentialTokenAddress
+          : org.confidentialTokenAddress,
       currency: dto.currency ?? org.currency,
       timezone: dto.timezone ?? org.timezone,
       logoUrl: dto.logoUrl !== undefined ? dto.logoUrl : org.logoUrl,
@@ -65,13 +69,24 @@ export class OrganizationsService {
     const org = await this.orgRepo.findOne({ where: { id: orgId } });
     if (!org) throw new NotFoundException('Organization not found');
 
-    const configured = Boolean(org.safeAddress && org.network);
-    const ready = configured;
+    const provider = org.executionProvider ?? 'mock';
+    const hasSafe = Boolean(org.safeAddress && org.network);
+    const hasNox = Boolean(
+      org.confidentialTokenAddress &&
+        org.network &&
+        (provider === 'nox' || org.confidentialTokenAddress),
+    );
+    const configured = hasSafe || Boolean(org.confidentialTokenAddress);
+    const ready =
+      provider === 'nox'
+        ? Boolean(org.confidentialTokenAddress && org.network)
+        : hasSafe;
 
     return {
       safeAddress: org.safeAddress,
       network: org.network,
-      executionProvider: org.executionProvider ?? 'mock',
+      executionProvider: provider,
+      confidentialTokenAddress: org.confidentialTokenAddress ?? null,
       configured,
       ready,
       status: ready
@@ -79,9 +94,14 @@ export class OrganizationsService {
         : configured
           ? 'configured'
           : 'not_configured',
-      message: ready
-        ? 'Safe treasury linked. Blockchain execution can use this Safe for USDC payroll.'
-        : 'Connect a Safe treasury in organization settings to enable on-chain payroll.',
+      message:
+        provider === 'nox' && ready
+          ? 'Nox confidential token ready. Payroll settles as encrypted ERC-7984 transfers on Sepolia.'
+          : hasSafe
+            ? 'Safe treasury linked. Use blockchain for public USDC multi-send, or enable Nox for confidential amounts.'
+            : hasNox
+              ? 'Confidential token configured. Set execution provider to nox and network to sepolia.'
+              : 'Connect a Safe and/or Nox confidential token in organization settings.',
     };
   }
 }
@@ -96,6 +116,7 @@ function serializeOrg(org: OrganizationEntity) {
     safeAddress: org.safeAddress,
     network: org.network,
     executionProvider: org.executionProvider ?? 'mock',
+    confidentialTokenAddress: org.confidentialTokenAddress ?? null,
     currency: org.currency,
     timezone: org.timezone,
     logoUrl: org.logoUrl,

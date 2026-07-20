@@ -18,6 +18,7 @@ export interface DashboardStats {
     safeAddress: string | null;
     network: string | null;
     executionProvider: string;
+    confidentialTokenAddress?: string | null;
     ready: boolean;
     status: string;
     message: string;

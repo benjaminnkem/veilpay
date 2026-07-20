@@ -145,8 +145,17 @@ export class DashboardService {
         runCount: v.count,
       }));
 
-    const configured = Boolean(org.safeAddress && org.network);
-    const ready = configured;
+    const provider = org.executionProvider ?? 'mock';
+    const configured = Boolean(
+      (org.safeAddress && org.network) ||
+        (org.confidentialTokenAddress && org.network),
+    );
+    const ready =
+      provider === 'nox'
+        ? Boolean(org.confidentialTokenAddress && org.network)
+        : provider === 'blockchain'
+          ? Boolean(org.safeAddress && org.network)
+          : configured;
 
     return {
       totalEmployees,
@@ -169,16 +178,22 @@ export class DashboardService {
       treasury: {
         safeAddress: org.safeAddress,
         network: org.network,
-        executionProvider: org.executionProvider ?? 'mock',
+        executionProvider: provider,
+        confidentialTokenAddress: org.confidentialTokenAddress ?? null,
         ready,
         status: ready
           ? 'ready'
           : configured
             ? 'configured'
             : 'not_configured',
-        message: ready
-          ? 'Treasury placeholders configured. Blockchain execution pending Safe + Nox integration.'
-          : 'Add Safe wallet address and network in organization settings.',
+        message:
+          provider === 'nox' && ready
+            ? 'Nox confidential token linked. Payroll amounts settle as encrypted ERC-7984 transfers on Sepolia.'
+            : provider === 'blockchain' && ready
+              ? 'Safe treasury ready for public USDC multi-send. Switch to Nox for confidential amounts.'
+              : configured
+                ? 'Treasury partially configured. Finish Safe and/or Nox cToken setup in settings.'
+                : 'Add Safe treasury and/or Nox confidential token in organization settings.',
       },
       payrollByStatus,
       departmentBreakdown: departmentRows.map((r) => ({

@@ -1,7 +1,7 @@
 import type { OrganizationStatus } from './enums.js';
 import type { Timestamps } from './common.js';
 
-export type ExecutionProviderKind = 'mock' | 'blockchain';
+export type ExecutionProviderKind = 'mock' | 'blockchain' | 'nox';
 
 export interface Organization extends Timestamps {
   id: string;
@@ -12,6 +12,7 @@ export interface Organization extends Timestamps {
   safeAddress: string | null;
   network: string | null;
   executionProvider: ExecutionProviderKind | string;
+  confidentialTokenAddress: string | null;
   currency: string;
   timezone: string;
   logoUrl: string | null;
@@ -21,6 +22,7 @@ export interface TreasuryStatus {
   safeAddress: string | null;
   network: string | null;
   executionProvider: ExecutionProviderKind | string;
+  confidentialTokenAddress: string | null;
   configured: boolean;
   ready: boolean;
   status: 'not_configured' | 'configured' | 'ready' | 'blockchain_pending';
@@ -43,6 +45,7 @@ export interface UpdateOrganizationInput {
   safeAddress?: string | null;
   network?: string | null;
   executionProvider?: ExecutionProviderKind | string;
+  confidentialTokenAddress?: string | null;
   currency?: string;
   timezone?: string;
   logoUrl?: string | null;
