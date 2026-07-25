@@ -188,12 +188,12 @@ export class DashboardService {
             : 'not_configured',
         message:
           provider === 'nox' && ready
-            ? 'Nox confidential token linked. Payroll amounts settle as encrypted ERC-7984 transfers on Sepolia.'
+            ? 'Confidential payroll is ready. Amounts settle as encrypted on-chain transfers.'
             : provider === 'blockchain' && ready
-              ? 'Safe treasury ready for public USDC multi-send. Switch to Nox for confidential amounts.'
+              ? 'Safe treasury is ready for public USDC multi-send.'
               : configured
-                ? 'Treasury partially configured. Finish Safe and/or Nox cToken setup in settings.'
-                : 'Add Safe treasury and/or Nox confidential token in organization settings.',
+                ? 'Treasury is partially configured. Finish setup in settings.'
+                : 'Connect a Safe treasury and confidential token in settings.',
       },
       payrollByStatus,
       departmentBreakdown: departmentRows.map((r) => ({

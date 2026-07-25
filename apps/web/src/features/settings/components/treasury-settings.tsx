@@ -239,12 +239,9 @@ export function TreasurySettings() {
       <CardContent className="space-y-6">
         {!projectIdConfigured ? (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-            Set{' '}
-            <code className="text-xs">
-              NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
-            </code>{' '}
-            in <code className="text-xs">apps/web/.env.local</code> for
-            WalletConnect. You can still paste a Safe address manually below.
+            WalletConnect is not configured in this environment. You can still
+            paste a Safe address manually below, or use an injected wallet such
+            as MetaMask.
           </div>
         ) : null}
 
@@ -497,9 +494,8 @@ export function TreasurySettings() {
               Nox confidential payroll
             </CardTitle>
             <CardDescription>
-              Settle pay as encrypted ERC-7984 transfers via iExec Nox from your
-              linked Safe. USDC is wrapped on the Safe; MetaMask is only the
-              owner signer. Ethereum Sepolia for the hackathon track.
+              Settle payroll as confidential on-chain transfers from your linked
+              Safe. Amounts stay encrypted end to end.
             </CardDescription>
           </div>
           {orgQuery.data?.executionProvider === 'nox' && linkedCToken ? (
@@ -528,34 +524,27 @@ export function TreasurySettings() {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="blockchain">
-                Public Safe multi-send (ERC-20 USDC)
+                Public Safe multi-send (USDC)
               </SelectItem>
               <SelectItem value="nox">
-                Confidential Nox (ERC-7984 amounts hidden)
+                Confidential Nox (amounts hidden)
               </SelectItem>
             </SelectContent>
           </Select>
         </div>
         <div className="space-y-2">
-          <Label htmlFor="ctoken-address">
-            Confidential token (ERC-7984 / wrapper)
-          </Label>
+          <Label htmlFor="ctoken-address">Confidential token address</Label>
           <Input
             id="ctoken-address"
-            placeholder="0x… cUSDC wrapper on Sepolia"
+            placeholder="0x…"
             value={cTokenAddress}
             onChange={(e) => setCTokenAddress(e.target.value.trim())}
             className="font-mono text-sm"
           />
           <p className="text-xs text-muted-foreground">
-            Deploy locally:{' '}
-            <code className="text-[11px]">
-              pnpm --filter contracts deploy:wcusdc
-            </code>{' '}
-            (see <code className="text-[11px]">apps/contracts/README.md</code>
-            ). Or set <code className="text-[11px]">NOX_CTOKEN_ADDRESS</code>{' '}
-            on the API. Fund the Safe with USDC + ETH; execute wraps from the
-            Safe then confidential-transfers each employee.
+            Contract used for encrypted payroll balances on the selected
+            network. Ensure the Safe holds enough USDC and a little ETH for
+            execution fees.
           </p>
         </div>
         {linkedCToken ? (

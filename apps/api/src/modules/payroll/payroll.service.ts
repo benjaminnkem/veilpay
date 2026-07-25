@@ -322,7 +322,7 @@ export class PayrollService {
       if (providerKind === 'nox') {
         if (!org?.confidentialTokenAddress || !org?.network) {
           throw new BadRequestException(
-            'Set confidentialTokenAddress (ERC-7984 cToken) and network (sepolia) in Organization settings before Nox execution.',
+            'Configure a confidential token and network in Organization settings before confidential execution.',
           );
         }
         if (!org?.safeAddress) {

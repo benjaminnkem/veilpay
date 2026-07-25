@@ -305,8 +305,8 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                   </CardTitle>
                   <CardDescription>
                     {isNox
-                      ? 'Nox path: Safe wraps treasury USDC into confidential cToken credited to the owner wallet, then the owner sends encrypted confidentialTransfers. Amounts stay hidden on-chain.'
-                      : 'Safe multi-send path: one public USDC transfer per ready employee wallet. Zero-pay lines are skipped.'}
+                      ? 'Confidential settlement: payroll amounts are encrypted on-chain and paid from your organization Safe.'
+                      : 'Safe multi-send: one public USDC transfer per ready employee wallet. Zero-pay lines are skipped.'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -326,7 +326,7 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                       label="Rail"
                       value={
                         isNox
-                          ? 'Nox ERC-7984'
+                          ? 'Confidential Nox'
                           : isBlockchain
                             ? 'Safe USDC'
                             : String(executionProvider)
@@ -336,32 +336,34 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
 
                   {isNox ? (
                     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-sm">
-                      <p className="font-medium">Confidential settlement (Safe)</p>
+                      <p className="font-medium">Confidential settlement</p>
                       <p className="mt-1 text-muted-foreground">
                         Network: {orgQuery.data?.network ?? '—'} · Safe:{' '}
                         <span className="font-mono text-xs">
                           {orgQuery.data?.safeAddress
                             ? shortWallet(orgQuery.data.safeAddress)
                             : 'not set'}
-                        </span>{' '}
-                        · cToken:{' '}
-                        <span className="font-mono text-xs">
-                          {orgQuery.data?.confidentialTokenAddress
-                            ? shortWallet(
-                                orgQuery.data.confidentialTokenAddress,
-                              )
-                            : 'not set'}
                         </span>
+                        {orgQuery.data?.confidentialTokenAddress ? (
+                          <>
+                            {' '}
+                            · Token:{' '}
+                            <span className="font-mono text-xs">
+                              {shortWallet(
+                                orgQuery.data.confidentialTokenAddress,
+                              )}
+                            </span>
+                          </>
+                        ) : null}
                       </p>
                       <p className="mt-2 text-muted-foreground">
-                        USDC is taken from the Safe. MetaMask owner needs a
-                        little Sepolia ETH for the confidential pay txs. Fund
-                        the Safe with payroll USDC + ETH for the wrap step.
+                        USDC is drawn from the Safe. Keep enough USDC for this
+                        run and a little network ETH for fees.
                       </p>
                       {!orgQuery.data?.confidentialTokenAddress ||
                       !orgQuery.data?.safeAddress ? (
                         <p className="mt-2 text-amber-700 dark:text-amber-300">
-                          Link Safe treasury and set the ERC-7984 cToken in
+                          Link a Safe treasury and confidential token in
                           Organization settings before executing.
                         </p>
                       ) : null}
@@ -430,11 +432,9 @@ export function PayrollDetail({ payrollId }: { payrollId: string }) {
                         {(isNox || payroll.executionProvider === 'nox') &&
                         status === 'COMPLETED' ? (
                           <span className="mt-2 block text-xs text-muted-foreground">
-                            Recipients receive encrypted cToken balances, not
-                            plain USDC in MetaMask. Open the pay tx on Sepolia
-                            explorer and look for ConfidentialTransfer. Safe
-                            USDC only drops on the wrap step (locked in the
-                            cToken contract).
+                            Recipients receive encrypted confidential balances
+                            rather than plain USDC. They can decrypt or unwrap
+                            pay from their payout settings.
                           </span>
                         ) : null}
                         <span className="mt-2 block space-y-1 text-xs">

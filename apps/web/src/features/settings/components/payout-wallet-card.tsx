@@ -153,8 +153,8 @@ export function PayoutWalletCard() {
       <CardContent className="space-y-4">
         {!projectIdConfigured ? (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
-            Set <code className="text-xs">NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID</code>{' '}
-            for WalletConnect. Injected wallets like MetaMask still work.
+            WalletConnect is not configured in this environment. Injected
+            wallets like MetaMask still work.
           </div>
         ) : null}
 

@@ -81,7 +81,7 @@ export function TreasuryBalancesPanel({
           <AlertTriangleIcon className="mt-0.5 size-4 shrink-0" />
           <span>
             {(balancesQuery.error as Error)?.message ||
-              'Could not read Safe balances. Check network and RPC access.'}
+              'Could not read Safe balances. Check the network and try again.'}
           </span>
         </div>
       ) : balances ? (
@@ -131,12 +131,12 @@ export function TreasuryBalancesPanel({
 
           {!balances.usdc ? (
             <p className="text-xs text-muted-foreground">
-              USDC contract is not configured for this network in VeilPay.
+              USDC is not available for this network yet.
             </p>
           ) : null}
 
           <p className="text-[11px] text-muted-foreground">
-            Live via public RPC · {balances.network.name}
+            Live balances · {balances.network.name}
           </p>
         </div>
       ) : null}

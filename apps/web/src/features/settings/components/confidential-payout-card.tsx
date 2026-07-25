@@ -265,13 +265,13 @@ export function ConfidentialPayoutCard() {
               Confidential payout (Nox)
             </CardTitle>
             <CardDescription>
-              After Nox payroll, your pay is an encrypted cToken balance. Decrypt
-              to view the amount privately, or unwrap to receive plain Sepolia
+              After confidential payroll, your pay is an encrypted balance.
+              Decrypt to view the amount privately, or unwrap to receive plain
               USDC.
             </CardDescription>
           </div>
           {balanceQuery.data?.hasConfidential ? (
-            <Badge variant="secondary">cToken balance</Badge>
+            <Badge variant="secondary">Encrypted balance</Badge>
           ) : (
             <Badge variant="outline">No confidential balance</Badge>
           )}
@@ -281,13 +281,13 @@ export function ConfidentialPayoutCard() {
       <CardContent className="space-y-4 text-sm">
         {!cToken ? (
           <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-800 dark:text-amber-200">
-            Organization has no confidential token configured. Finance must set
-            the ERC-7984 cToken under Treasury → Nox.
+            Your organization has not configured confidential payroll yet. Ask
+            finance to enable it under Settings → Treasury.
           </p>
         ) : (
           <div className="rounded-xl border border-border/70 bg-muted/20 p-4 space-y-2">
             <div className="text-xs font-medium tracking-wide text-muted-foreground uppercase">
-              cToken
+              Confidential token
             </div>
             <p className="font-mono text-xs break-all">{cToken}</p>
             <div className="grid gap-2 sm:grid-cols-2 pt-1">

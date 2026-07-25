@@ -96,12 +96,12 @@ export class OrganizationsService {
           : 'not_configured',
       message:
         provider === 'nox' && ready
-          ? 'Nox confidential token ready. Payroll settles as encrypted ERC-7984 transfers on Sepolia.'
+          ? 'Confidential payroll is ready. Amounts settle as encrypted on-chain transfers.'
           : hasSafe
-            ? 'Safe treasury linked. Use blockchain for public USDC multi-send, or enable Nox for confidential amounts.'
+            ? 'Safe treasury linked. Use public multi-send, or enable Nox for confidential amounts.'
             : hasNox
-              ? 'Confidential token configured. Set execution provider to nox and network to sepolia.'
-              : 'Connect a Safe and/or Nox confidential token in organization settings.',
+              ? 'Confidential token configured. Enable Nox execution mode to use it.'
+              : 'Connect a Safe and confidential token in organization settings.',
     };
   }
 }

@@ -76,13 +76,13 @@ export class NoxPaymentProvider implements PaymentProvider {
 
     if (!ownerKey) {
       throw new ServiceUnavailableException(
-        'SAFE_OWNER_PRIVATE_KEY (or NOX_PAYER_PRIVATE_KEY) must be set. It is the Safe owner MetaMask key.',
+        'Safe owner signing key is not configured. Contact your platform administrator.',
       );
     }
 
     if (!cTokenAddress || !isAddress(cTokenAddress)) {
       throw new BadRequestException(
-        'Confidential token address is missing. Set confidentialTokenAddress or NOX_CTOKEN_ADDRESS.',
+        'Confidential token address is missing. Configure it in organization treasury settings.',
       );
     }
 

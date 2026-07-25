@@ -464,7 +464,7 @@ function TreasuryHeroCard({
               <p className="text-sm font-medium">No treasury linked</p>
               <p className="max-w-xl text-xs text-muted-foreground">
                 {treasury.message ||
-                  'Connect a Safe and network to display on-chain ETH and USDC balances here.'}
+                  'Connect a Safe treasury to display on-chain balances here.'}
               </p>
             </div>
             <Button
