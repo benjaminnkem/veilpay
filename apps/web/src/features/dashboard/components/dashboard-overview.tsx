@@ -229,7 +229,7 @@ export function DashboardOverview() {
 
             {showAudit ? (
               <Card className="border-border/60 shadow-none">
-                <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+                <CardHeader className="flex-row flex items-center justify-between space-y-0 pb-2">
                   <div className="space-y-1">
                     <CardTitle className="text-sm font-medium">
                       Recent activity
@@ -238,6 +238,7 @@ export function DashboardOverview() {
                       Latest workspace events and actions
                     </CardDescription>
                   </div>
+
                   <Button
                     size="sm"
                     variant="ghost"
@@ -532,7 +533,9 @@ function SnapshotCard({ stats }: { stats: DashboardStats }) {
   return (
     <Card className="flex h-full min-h-0 flex-col border-border/60 shadow-none">
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-medium">Analytics snapshot</CardTitle>
+        <CardTitle className="text-sm font-medium">
+          Analytics snapshot
+        </CardTitle>
         <CardDescription>Quick signals from this workspace</CardDescription>
       </CardHeader>
       <CardContent className="flex flex-1 flex-col justify-center space-y-3">

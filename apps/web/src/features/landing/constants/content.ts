@@ -160,4 +160,5 @@ export const LANDING_STOCK_IMAGE = {
   search:
     'Unsplash / Pexels search: "dark abstract architecture glass" or "indigo light geometric building night"',
   why: 'Optional atmospheric still for the security panel. No custom design needed.',
+  src: '/dark-glass.jpg',
 } as const;

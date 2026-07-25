@@ -25,7 +25,7 @@ export function SecuritySection() {
   const bigTypeOpacity = useTransform(
     scrollYProgress,
     [0, 0.25, 0.75, 1],
-    [0.15, 0.35, 0.35, 0.1]
+    [0.15, 0.35, 0.35, 0.1],
   );
 
   return (
@@ -37,9 +37,7 @@ export function SecuritySection() {
       <motion.p
         aria-hidden
         style={
-          reduced
-            ? { opacity: 0.12 }
-            : { y: bigTypeY, opacity: bigTypeOpacity }
+          reduced ? { opacity: 0.12 } : { y: bigTypeY, opacity: bigTypeOpacity }
         }
         className="pointer-events-none absolute top-1/2 left-1/2 w-[140%] -translate-x-1/2 -translate-y-1/2 text-center text-[18vw] leading-none font-semibold tracking-[-0.06em] text-white select-none"
       >
@@ -97,13 +95,16 @@ export function SecuritySection() {
           <div className="absolute -inset-8 -z-10 bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.18),transparent_65%)] blur-2xl" />
           <ImagePlaceholder
             aspect="portrait"
+            width={220}
+            height={440}
+            src={LANDING_STOCK_IMAGE.src}
             className="min-h-[360px] lg:min-h-[480px]"
             title={LANDING_STOCK_IMAGE.title}
             searchHint={LANDING_STOCK_IMAGE.search}
           />
-          <p className="text-xs leading-5 text-muted-foreground">
+          {/* <p className="text-xs leading-5 text-muted-foreground">
             {LANDING_STOCK_IMAGE.why}
-          </p>
+          </p> */}
         </motion.div>
       </div>
     </section>
