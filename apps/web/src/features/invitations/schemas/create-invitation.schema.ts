@@ -10,19 +10,18 @@ export const createInvitationSchema = z
     department: z.string().optional(),
     position: z.string().optional(),
     startingSalary: z.number().min(0, 'Salary must be 0 or greater').optional(),
-    salaryCurrency: z.string().min(1).default('USD'),
-    salaryFrequency: z
-      .enum([
-        'HOURLY',
-        'WEEKLY',
-        'BIWEEKLY',
-        'SEMIMONTHLY',
-        'MONTHLY',
-        'QUARTERLY',
-        'ANNUALLY',
-        'ONE_TIME',
-      ])
-      .default('ANNUALLY'),
+    // Keep required (not .default()) so RHF + zodResolver input/output types match.
+    salaryCurrency: z.string().min(1, 'Currency is required'),
+    salaryFrequency: z.enum([
+      'HOURLY',
+      'WEEKLY',
+      'BIWEEKLY',
+      'SEMIMONTHLY',
+      'MONTHLY',
+      'QUARTERLY',
+      'ANNUALLY',
+      'ONE_TIME',
+    ]),
   })
   .superRefine((data, ctx) => {
     if (data.type === 'EMPLOYEE') {
