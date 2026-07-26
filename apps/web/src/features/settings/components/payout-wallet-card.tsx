@@ -17,10 +17,8 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import {
@@ -126,31 +124,23 @@ export function PayoutWalletCard() {
     isSigning || saveMutation.isPending || clearMutation.isPending;
 
   return (
-    <Card className="border-border/70 shadow-sm">
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <WalletIcon className="size-4 text-primary" />
-              Payout wallet
-            </CardTitle>
-            <CardDescription>
-              Connect the wallet where you want to receive payroll. You will sign
-              a short message to prove ownership - no funds move.
-            </CardDescription>
-          </div>
-          {linkedWallet ? (
-            <Badge variant="secondary" className="gap-1">
-              <CheckCircle2Icon className="size-3" />
-              Linked
-            </Badge>
-          ) : (
-            <Badge variant="outline">Not set</Badge>
-          )}
+    <Card className="border-border/60 shadow-none">
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <WalletIcon className="size-4 text-primary" />
+          Wallet status
         </div>
+        {linkedWallet ? (
+          <Badge variant="secondary" className="gap-1">
+            <CheckCircle2Icon className="size-3" />
+            Linked
+          </Badge>
+        ) : (
+          <Badge variant="outline">Not set</Badge>
+        )}
       </CardHeader>
 
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-5">
         {!projectIdConfigured ? (
           <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-sm text-amber-800 dark:text-amber-200">
             WalletConnect is not configured in this environment. Injected

@@ -13,7 +13,7 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <PageHeader
         title="Settings"
-        description="Profile, organization identity, and payroll approval defaults."
+        description="Manage your profile, organization treasury, and payroll preferences."
       />
       <SettingsWorkspace />
     </div>
