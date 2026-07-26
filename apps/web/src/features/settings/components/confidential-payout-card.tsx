@@ -23,10 +23,8 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
   CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { getOrganization } from '@/features/settings/services/updateProfile';
 import { getMyEmployee } from '@/features/settings/services/payout-wallet';
@@ -256,29 +254,20 @@ export function ConfidentialPayoutCard() {
     Boolean(balanceQuery.data?.hasConfidential);
 
   return (
-    <Card className="border-border/70 shadow-sm">
-      <CardHeader>
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="space-y-1">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <ShieldIcon className="size-4 text-primary" />
-              Confidential payout (Nox)
-            </CardTitle>
-            <CardDescription>
-              After confidential payroll, your pay is an encrypted balance.
-              Decrypt to view the amount privately, or unwrap to receive plain
-              USDC.
-            </CardDescription>
-          </div>
-          {balanceQuery.data?.hasConfidential ? (
-            <Badge variant="secondary">Encrypted balance</Badge>
-          ) : (
-            <Badge variant="outline">No confidential balance</Badge>
-          )}
+    <Card className="border-border/60 shadow-none">
+      <CardHeader className="flex-row items-center justify-between space-y-0 pb-2">
+        <div className="flex items-center gap-2 text-sm font-medium">
+          <ShieldIcon className="size-4 text-primary" />
+          Balance status
         </div>
+        {balanceQuery.data?.hasConfidential ? (
+          <Badge variant="secondary">Encrypted balance</Badge>
+        ) : (
+          <Badge variant="outline">No confidential balance</Badge>
+        )}
       </CardHeader>
 
-      <CardContent className="space-y-4 text-sm">
+      <CardContent className="space-y-5 text-sm">
         {!cToken ? (
           <p className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-amber-800 dark:text-amber-200">
             Your organization has not configured confidential payroll yet. Ask

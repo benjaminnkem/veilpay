@@ -8,10 +8,7 @@ import { Button } from '@/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardFooter,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import {
   profileSchema,
@@ -47,39 +44,35 @@ export function ProfileSettingsForm() {
   });
 
   return (
-    <Card className="border-border/60">
-      <CardHeader>
-        <CardTitle className="text-base">Profile</CardTitle>
-        <CardDescription>
-          Manage how your identity appears across VeilPay.
-        </CardDescription>
-      </CardHeader>
+    <Card className="border-border/60 shadow-none">
       <form onSubmit={onSubmit} noValidate>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-(--card-spacing)">
           <InputField
             control={form.control}
             name="name"
             label="Full name"
             autoComplete="name"
           />
-          <InputField
-            control={form.control}
-            name="email"
-            label="Email"
-            type="email"
-            autoComplete="email"
-            disabled
-          />
-          <InputField
-            control={form.control}
-            name="organizationName"
-            label="Organization"
-            disabled
-          />
+          <div className="grid gap-4 sm:grid-cols-2">
+            <InputField
+              control={form.control}
+              name="email"
+              label="Email"
+              type="email"
+              autoComplete="email"
+              disabled
+            />
+            <InputField
+              control={form.control}
+              name="organizationName"
+              label="Organization"
+              disabled
+            />
+          </div>
         </CardContent>
         <CardFooter>
           <Button type="submit" disabled={form.formState.isSubmitting}>
-            {form.formState.isSubmitting ? 'Saving…' : 'Save changes'}
+            {form.formState.isSubmitting ? 'Saving…' : 'Save profile'}
           </Button>
         </CardFooter>
       </form>

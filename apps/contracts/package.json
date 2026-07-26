@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "hardhat compile",
+    "build": "node init && hardhat compile",
     "compile": "hardhat compile",
     "test": "hardhat test",
     "test:solidity": "hardhat test solidity",
@@ -15,7 +15,7 @@
     "check-types": "hardhat compile --quiet",
     "lint": "echo \"No lint configured for contracts\"",
     "clean": "rm -rf artifacts cache dist coverage typechain-types ignition/deployments .turbo",
-    "dev": "hardhat node"
+    "dev": "node init && hardhat node"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-ignition": "^3.1.8",
