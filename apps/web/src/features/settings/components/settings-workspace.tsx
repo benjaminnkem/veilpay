@@ -19,6 +19,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ConfidentialPayoutCard } from '@/features/settings/components/confidential-payout-card';
 import { PayoutWalletCard } from '@/features/settings/components/payout-wallet-card';
 import { ProfileSettingsForm } from '@/features/settings/components/profile-settings-form';
+import { SettingsSection } from '@/features/settings/components/settings-section';
 import { TreasurySettings } from '@/features/settings/components/treasury-settings';
 import {
   getOrganization,
@@ -26,10 +27,7 @@ import {
 } from '@/features/settings/services/updateProfile';
 import { useCurrentUser } from '@/hooks/useCurrentUser';
 import { authGet, authPatch, authPost } from '@/lib/api';
-import {
-  canEditOrgSettings,
-  canManageTreasury,
-} from '@/lib/auth/rbac';
+import { canEditOrgSettings, canManageTreasury } from '@/lib/auth/rbac';
 import { notify } from '@/lib/toast';
 import { cn } from '@/lib/utils';
 
@@ -165,238 +163,311 @@ export function SettingsWorkspace() {
   });
 
   return (
-    <Tabs defaultValue="profile" className="space-y-6">
-      <TabsList
-        className={cn(
-          'grid w-full max-w-2xl',
-          tabCount === 2 && 'grid-cols-2',
-          tabCount === 3 && 'grid-cols-3',
-          tabCount >= 4 && 'grid-cols-4',
-        )}
-      >
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        {showOrgTab ? (
-          <TabsTrigger value="organization">Organization</TabsTrigger>
-        ) : null}
-        {showPayrollTab ? (
-          <TabsTrigger value="payroll">Payroll</TabsTrigger>
-        ) : null}
-        <TabsTrigger value="security">Security</TabsTrigger>
-      </TabsList>
+    <Tabs defaultValue="profile" className="w-full gap-0 space-y-0">
+      <div className="border-b border-border/60 pb-4">
+        <TabsList
+          variant="line"
+          className={cn(
+            'h-auto w-full max-w-2xl justify-start gap-1 rounded-none bg-transparent p-0',
+            tabCount === 2 && 'grid grid-cols-2 sm:inline-flex sm:grid-cols-none',
+            tabCount === 3 && 'grid grid-cols-3 sm:inline-flex sm:grid-cols-none',
+            tabCount >= 4 && 'grid grid-cols-2 sm:inline-flex sm:grid-cols-none',
+          )}
+        >
+          <TabsTrigger value="profile" className="px-3 py-2">
+            Profile
+          </TabsTrigger>
+          {showOrgTab ? (
+            <TabsTrigger value="organization" className="px-3 py-2">
+              Organization
+            </TabsTrigger>
+          ) : null}
+          {showPayrollTab ? (
+            <TabsTrigger value="payroll" className="px-3 py-2">
+              Payroll
+            </TabsTrigger>
+          ) : null}
+          <TabsTrigger value="security" className="px-3 py-2">
+            Security
+          </TabsTrigger>
+        </TabsList>
+      </div>
 
-      <TabsContent value="profile" className="space-y-4">
-        <ProfileSettingsForm />
-        <PayoutWalletCard />
-        <ConfidentialPayoutCard />
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Access</CardTitle>
-            <CardDescription>
-              Role{' '}
-              <span className="font-medium capitalize text-foreground">
-                {String(user?.role ?? '-').replaceAll('_', ' ').toLowerCase()}
+      <TabsContent value="profile" className="mt-8 focus-visible:outline-none">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-12">
+          <SettingsSection
+            step={1}
+            title="Profile"
+            description="How your identity appears across VeilPay."
+          >
+            <ProfileSettingsForm />
+            <div className="rounded-xl border border-border/60 bg-muted/20 px-4 py-3 text-sm">
+              <span className="text-muted-foreground">Role </span>
+              <span className="font-medium capitalize">
+                {String(user?.role ?? '—')
+                  .replaceAll('_', ' ')
+                  .toLowerCase()}
               </span>
-            </CardDescription>
-          </CardHeader>
-        </Card>
+              {user?.email ? (
+                <span className="text-muted-foreground">
+                  {' '}
+                  · {user.email}
+                </span>
+              ) : null}
+            </div>
+          </SettingsSection>
+
+          <SettingsSection
+            step={2}
+            title="Payout wallet"
+            description="Link the wallet where you want to receive payroll. You’ll sign a short message to prove ownership — no funds move."
+          >
+            <PayoutWalletCard />
+          </SettingsSection>
+
+          <SettingsSection
+            step={3}
+            title="Confidential payout"
+            description="After confidential payroll, decrypt your encrypted balance privately or unwrap it to plain USDC."
+          >
+            <ConfidentialPayoutCard />
+          </SettingsSection>
+        </div>
       </TabsContent>
 
       {showOrgTab ? (
-        <TabsContent value="organization" className="space-y-4">
-          {canEditOrgSettings(user?.role) ? (
-            <Card className="border-border/70 shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-base">Organization</CardTitle>
-                <CardDescription>
-                  Legal identity, branding, and payroll currency for this
-                  workspace.
-                </CardDescription>
-              </CardHeader>
-              <form onSubmit={onOrgSubmit}>
-                <CardContent className="grid gap-4 sm:grid-cols-2">
-                  <InputField
-                    control={orgForm.control}
-                    name="name"
-                    label="Name"
+        <TabsContent
+          value="organization"
+          className="mt-8 focus-visible:outline-none"
+        >
+          <div className="mx-auto flex w-full max-w-3xl flex-col gap-12">
+            {canEditOrgSettings(user?.role) ? (
+              <SettingsSection
+                step={1}
+                title="Organization"
+                description="Legal identity and payroll defaults for this workspace."
+              >
+                <Card className="border-border/60 shadow-none">
+                  <form onSubmit={onOrgSubmit}>
+                    <CardContent className="grid gap-4 pt-(--card-spacing) sm:grid-cols-2">
+                      <InputField
+                        control={orgForm.control}
+                        name="name"
+                        label="Name"
+                      />
+                      <InputField
+                        control={orgForm.control}
+                        name="legalName"
+                        label="Legal name"
+                      />
+                      <InputField
+                        control={orgForm.control}
+                        name="currency"
+                        label="Payroll currency"
+                      />
+                      <InputField
+                        control={orgForm.control}
+                        name="timezone"
+                        label="Timezone"
+                      />
+                    </CardContent>
+                    <CardFooter>
+                      <Button
+                        type="submit"
+                        disabled={orgForm.formState.isSubmitting}
+                      >
+                        {orgForm.formState.isSubmitting
+                          ? 'Saving…'
+                          : 'Save organization'}
+                      </Button>
+                    </CardFooter>
+                  </form>
+                </Card>
+              </SettingsSection>
+            ) : null}
+
+            {canManageTreasury(user?.role) ? (
+              <TreasurySettings
+                startStep={canEditOrgSettings(user?.role) ? 2 : 1}
+              />
+            ) : null}
+          </div>
+        </TabsContent>
+      ) : null}
+
+      {showPayrollTab ? (
+        <TabsContent
+          value="payroll"
+          className="mt-8 focus-visible:outline-none"
+        >
+          <div className="mx-auto w-full max-w-3xl">
+            <SettingsSection
+              step={1}
+              title="Payroll rules"
+              description="Approval and generation defaults for this workspace."
+            >
+              <Card className="border-border/60 shadow-none">
+                <form onSubmit={onSettingsSubmit}>
+                  <CardContent className="space-y-5 pt-(--card-spacing)">
+                    <div className="space-y-2">
+                      <label
+                        className="text-sm font-medium"
+                        htmlFor="fiscalYearStartMonth"
+                      >
+                        Fiscal year start month (1–12)
+                      </label>
+                      <input
+                        id="fiscalYearStartMonth"
+                        type="number"
+                        min={1}
+                        max={12}
+                        className="flex h-9 w-full max-w-xs rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+                        {...settingsForm.register('fiscalYearStartMonth', {
+                          valueAsNumber: true,
+                        })}
+                      />
+                    </div>
+                    <div className="space-y-3 rounded-xl border border-border/60 bg-muted/15 p-4">
+                      <label className="flex items-start gap-3 text-sm">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 size-4 rounded border"
+                          {...settingsForm.register('payrollApprovalRequired')}
+                        />
+                        <span>
+                          <span className="font-medium">
+                            Require multi-level payroll approval
+                          </span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            Runs must pass the approval sequence before
+                            execution.
+                          </span>
+                        </span>
+                      </label>
+                      <label className="flex items-start gap-3 text-sm">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 size-4 rounded border"
+                          {...settingsForm.register(
+                            'autoGeneratePayrollItems',
+                          )}
+                        />
+                        <span>
+                          <span className="font-medium">
+                            Auto-generate payroll line items
+                          </span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            Build pay lines from active compensation when a run
+                            is created.
+                          </span>
+                        </span>
+                      </label>
+                      <label className="flex items-start gap-3 text-sm">
+                        <input
+                          type="checkbox"
+                          className="mt-0.5 size-4 rounded border"
+                          {...settingsForm.register(
+                            'notificationEmailEnabled',
+                          )}
+                        />
+                        <span>
+                          <span className="font-medium">
+                            Email notifications preference
+                          </span>
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            Allow workspace email alerts when available.
+                          </span>
+                        </span>
+                      </label>
+                    </div>
+                    {settingsQuery.data?.defaultApprovalSequence?.length ? (
+                      <p className="text-xs text-muted-foreground">
+                        Approval sequence:{' '}
+                        {settingsQuery.data.defaultApprovalSequence.join(
+                          ' → ',
+                        )}
+                      </p>
+                    ) : null}
+                  </CardContent>
+                  <CardFooter>
+                    <Button
+                      type="submit"
+                      disabled={settingsForm.formState.isSubmitting}
+                    >
+                      {settingsForm.formState.isSubmitting
+                        ? 'Saving…'
+                        : 'Save payroll rules'}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </Card>
+            </SettingsSection>
+          </div>
+        </TabsContent>
+      ) : null}
+
+      <TabsContent
+        value="security"
+        className="mt-8 focus-visible:outline-none"
+      >
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-12">
+          <SettingsSection
+            step={1}
+            title="Change password"
+            description={`Update the password for ${user?.email ?? 'your account'}.`}
+          >
+            <Card className="border-border/60 shadow-none">
+              <form onSubmit={onSecuritySubmit}>
+                <CardContent className="max-w-md space-y-4 pt-(--card-spacing)">
+                  <PasswordField
+                    control={securityForm.control}
+                    name="currentPassword"
+                    label="Current password"
                   />
-                  <InputField
-                    control={orgForm.control}
-                    name="legalName"
-                    label="Legal name"
+                  <PasswordField
+                    control={securityForm.control}
+                    name="newPassword"
+                    label="New password"
                   />
-                  <InputField
-                    control={orgForm.control}
-                    name="currency"
-                    label="Payroll currency"
-                  />
-                  <InputField
-                    control={orgForm.control}
-                    name="timezone"
-                    label="Timezone"
+                  <PasswordField
+                    control={securityForm.control}
+                    name="confirmPassword"
+                    label="Confirm new password"
                   />
                 </CardContent>
                 <CardFooter>
                   <Button
                     type="submit"
-                    disabled={orgForm.formState.isSubmitting}
+                    disabled={securityForm.formState.isSubmitting}
                   >
-                    {orgForm.formState.isSubmitting
-                      ? 'Saving…'
-                      : 'Save organization'}
+                    {securityForm.formState.isSubmitting
+                      ? 'Updating…'
+                      : 'Update password'}
                   </Button>
                 </CardFooter>
               </form>
             </Card>
-          ) : null}
+          </SettingsSection>
 
-          {canManageTreasury(user?.role) ? <TreasurySettings /> : null}
-        </TabsContent>
-      ) : null}
-
-      {showPayrollTab ? (
-        <TabsContent value="payroll">
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Payroll rules</CardTitle>
-            <CardDescription>
-              Approval and generation defaults for this workspace.
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={onSettingsSubmit}>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <label
-                  className="text-sm font-medium"
-                  htmlFor="fiscalYearStartMonth"
-                >
-                  Fiscal year start month (1-12)
-                </label>
-                <input
-                  id="fiscalYearStartMonth"
-                  type="number"
-                  min={1}
-                  max={12}
-                  className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-xs outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
-                  value={settingsForm.watch('fiscalYearStartMonth')}
-                  onChange={(e) =>
-                    settingsForm.setValue(
-                      'fiscalYearStartMonth',
-                      Number(e.target.value) || 1
-                    )
-                  }
-                />
-              </div>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="size-4 rounded border"
-                  checked={settingsForm.watch('payrollApprovalRequired')}
-                  onChange={(e) =>
-                    settingsForm.setValue(
-                      'payrollApprovalRequired',
-                      e.target.checked
-                    )
-                  }
-                />
-                Require multi-level payroll approval
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="size-4 rounded border"
-                  checked={settingsForm.watch('autoGeneratePayrollItems')}
-                  onChange={(e) =>
-                    settingsForm.setValue(
-                      'autoGeneratePayrollItems',
-                      e.target.checked
-                    )
-                  }
-                />
-                Auto-generate payroll line items from compensation
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  className="size-4 rounded border"
-                  checked={settingsForm.watch('notificationEmailEnabled')}
-                  onChange={(e) =>
-                    settingsForm.setValue(
-                      'notificationEmailEnabled',
-                      e.target.checked
-                    )
-                  }
-                />
-                Enable email notifications preference
-              </label>
-              {settingsQuery.data?.defaultApprovalSequence?.length ? (
-                <p className="text-xs text-muted-foreground">
-                  Approval sequence:{' '}
-                  {settingsQuery.data.defaultApprovalSequence.join(' → ')}
-                </p>
-              ) : null}
-            </CardContent>
-            <CardFooter>
-              <Button
-                type="submit"
-                disabled={settingsForm.formState.isSubmitting}
-              >
-                {settingsForm.formState.isSubmitting
-                  ? 'Saving…'
-                  : 'Save payroll rules'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
-      </TabsContent>
-      ) : null}
-
-      <TabsContent value="security" className="space-y-4">
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Change password</CardTitle>
-            <CardDescription>
-              Update the password for {user?.email ?? 'your account'}.
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={onSecuritySubmit}>
-            <CardContent className="max-w-md space-y-4">
-              <PasswordField
-                control={securityForm.control}
-                name="currentPassword"
-                label="Current password"
-              />
-              <PasswordField
-                control={securityForm.control}
-                name="newPassword"
-                label="New password"
-              />
-              <PasswordField
-                control={securityForm.control}
-                name="confirmPassword"
-                label="Confirm new password"
-              />
-            </CardContent>
-            <CardFooter>
-              <Button
-                type="submit"
-                disabled={securityForm.formState.isSubmitting}
-              >
-                {securityForm.formState.isSubmitting
-                  ? 'Updating…'
-                  : 'Update password'}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
-        <Card className="border-border/70 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-base">Sessions & 2FA</CardTitle>
-            <CardDescription>
-              Multi-factor authentication and session management will ship with
-              enterprise hardening. Active sessions are revoked on logout today.
-            </CardDescription>
-          </CardHeader>
-        </Card>
+          <SettingsSection
+            step={2}
+            title="Sessions & security"
+            description="Session handling and multi-factor options for this account."
+          >
+            <Card className="border-border/60 shadow-none">
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">
+                  Coming soon
+                </CardTitle>
+                <CardDescription>
+                  Multi-factor authentication and device session management
+                  will ship with enterprise hardening. Active sessions are
+                  revoked on logout today.
+                </CardDescription>
+              </CardHeader>
+            </Card>
+          </SettingsSection>
+        </div>
       </TabsContent>
     </Tabs>
   );

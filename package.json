@@ -3,8 +3,8 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev --filter=web --filter=api",
-    "dev:all": "turbo run dev",
+    "dev": "node api.js && turbo run dev --filter=web --filter=api",
+    "dev:all": "node api.js && turbo run dev",
     "db:up": "docker compose up -d",
     "db:down": "docker compose down",
     "lint": "turbo run lint",

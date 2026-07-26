@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --port 3000",
+    "dev": "node api.js && next dev --port 3000",
     "build": "next build",
-    "start": "next start",
+    "start": "node api.js && next start",
     "lint": "eslint .",
     "check-types": "tsc --noEmit",
     "clean": "rm -rf .next .turbo"
